@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_ac_saas_invoice_mail_wizard_form" model="ir.ui.view">
+        <field name="name">ac.saas.invoice.mail.wizard.form</field>
+        <field name="model">ac.saas.invoice.mail.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Email Composer">
+                <group>
+                    <group string="Invoice dates">
+                        <field name="date_from" attrs="{'readonly': [('prepared', '=', True)]}"/>
+                        <field name="date_to" attrs="{'readonly': [('prepared', '=', True)]}"/>
+                        <field name="prepared" invisible="1"/>
+                    </group>
+                    <group string="ZIP" attrs="{'invisible': [('prepared', '=', False)]}">
+                        <field name="invoice_count"/>
+                        <field name="zip_filename" invisible="1"/>
+                        <field name="zip_file" filename="zip_filename"/>
+                    </group>
+                </group>
+                <group string="Email" attrs="{'invisible': [('prepared', '=', False)]}">
+                    <field name="email_to" placeholder="accountant@example.com"/>
+                    <field name="email_cc" placeholder="optional@example.com"/>
+                    <field name="subject"/>
+                    <field name="body" nolabel="1"/>
+                </group>
+                <footer>
+                    <button name="action_prepare" type="object" string="Prepare invoices"
+                            class="btn-primary"
+                            attrs="{'invisible': [('prepared', '=', True)]}"/>
+                    <button name="action_back" type="object" string="Change dates"
+                            attrs="{'invisible': [('prepared', '=', False)]}"/>
+                    <button name="action_send" type="object" string="Send email"
+                            class="btn-primary"
+                            attrs="{'invisible': [('prepared', '=', False)]}"/>
+                    <button string="Cancel" special="cancel" class="btn-secondary"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_ac_saas_invoice_mail_wizard" model="ir.actions.act_window">
+        <field name="name">Email Composer</field>
+        <field name="res_model">ac.saas.invoice.mail.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+        <field name="groups_id" eval="[(6, 0, [ref('auction_module.group_auction_group_admin')])]"/>
+    </record>
+
+    <menuitem id="menu_ac_saas_invoice_mail"
+              name="Email Composer"
+              parent="ac_saas_manager.menu_ac_saas_root"
+              action="action_ac_saas_invoice_mail_wizard"
+              sequence="13"
+              groups="auction_module.group_auction_group_admin"/>
+    <record id="menu_ac_saas_invoice_mail" model="ir.ui.menu">
+        <field name="groups_id" eval="[(6, 0, [ref('auction_module.group_auction_group_admin')])]"/>
+    </record>
+</odoo>

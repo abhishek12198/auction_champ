@@ -39,6 +39,7 @@ Connects ac_saas_manager + ac_payment_gateway (+ website) for:
         'views/signup_templates.xml',
         'views/website_pricing_templates.xml',
         'views/signup_payment_views.xml',
+        'views/invoice_mail_wizard_views.xml',
     ],
     'installable': True,
     'application': False,

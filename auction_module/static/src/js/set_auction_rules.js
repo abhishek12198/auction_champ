@@ -122,12 +122,21 @@ odoo.define('auction_module.SetAuctionRulesWizard', function (require) {
                     ctx = record.context || {};
                 }
                 var fromAmount = sarInt(ctx.default_from_amount);
-                if (!fromAmount) {
-                    return;
-                }
+                var toAmount = sarInt(ctx.default_to_amount);
+                var increment = sarInt(ctx.default_increment) || 100;
                 record._changes = record._changes || {};
-                record._changes.from_amount = fromAmount;
-                record.data.from_amount = fromAmount;
+                if (fromAmount) {
+                    record._changes.from_amount = fromAmount;
+                    record.data.from_amount = fromAmount;
+                }
+                if (toAmount && !sarInt(record.data.to_amount)) {
+                    record._changes.to_amount = toAmount;
+                    record.data.to_amount = toAmount;
+                }
+                if (!sarInt(record.data.increment)) {
+                    record._changes.increment = increment;
+                    record.data.increment = increment;
+                }
             });
         },
 
@@ -171,6 +180,34 @@ odoo.define('auction_module.SetAuctionRulesWizard', function (require) {
             this._sarBindSteppers($root);
             this._sarPlaceTeamAdd($root);
             this._sarRenderPreview();
+            this._sarSyncSlabAddGate();
+        },
+
+        _sarSyncSlabAddGate: function () {
+            var $root = this._sarRoot();
+            if (!$root.length || !this.state || !this.state.data) {
+                return;
+            }
+            var data = this.state.data;
+            var safe = sarBudgetSafeMax(data);
+            var slabs = sarRelRecords(data.auction_bid_slab_ids);
+            var top = 0;
+            _.each(slabs, function (row) {
+                top = Math.max(top, sarInt(row.data && row.data.to_amount));
+            });
+            var blocked = safe > 0 && slabs.length > 0 && top >= safe;
+            var $add = $root.find('.sar-slabs .o_field_x2many_list_row_add');
+            $add.toggleClass('sar-add-blocked', blocked);
+            var $note = $add.children('.sar-add-note');
+            if (blocked) {
+                if (!$note.length) {
+                    $note = $('<span class="sar-add-note"/>');
+                    $add.append($note);
+                }
+                $note.text('Until is at the budget-safe max (' + sarFmt(safe) + '). Lower it to add another slab.');
+            } else {
+                $note.remove();
+            }
         },
 
         confirmChange: function () {
@@ -180,6 +217,7 @@ odoo.define('auction_module.SetAuctionRulesWizard', function (require) {
                     self._sarRenderPreview();
                     self._sarPlaceTeamAdd(self._sarRoot());
                     self._sarRefreshSafeMaxBtns();
+                    self._sarSyncSlabAddGate();
                 }
                 return resetWidgets;
             });
@@ -340,7 +378,7 @@ odoo.define('auction_module.SetAuctionRulesWizard', function (require) {
          * table for Tier limits.
          */
         _moveToNextLine: function (options) {
-            if (this._sarListKind() === 'slabs' && this.editable) {
+            if (this._sarListKind() === 'slabs' && this.editable && !this._sarCeilingReached()) {
                 options = _.extend({}, options, { forceCreate: true });
             }
             return this._super.apply(this, arguments);
@@ -348,6 +386,9 @@ odoo.define('auction_module.SetAuctionRulesWizard', function (require) {
 
         trigger_up: function (name, info) {
             if (name === 'add_record' && this._sarListKind() === 'slabs') {
+                if (this._sarCeilingReached()) {
+                    return;
+                }
                 // Must pass a new info object into _super — mutating a local
                 // `info = info || {}` does not update arguments when info was undefined.
                 info = _.extend({}, info || {});
@@ -407,8 +448,27 @@ odoo.define('auction_module.SetAuctionRulesWizard', function (require) {
             return this._sarWizardBase();
         },
 
+        _sarCeilingReached: function () {
+            var safe = this._sarBudgetSafeMax();
+            if (!(safe > 0)) {
+                return false;
+            }
+            var top = 0;
+            _.each(this._sarSlabRows(), function (row) {
+                top = Math.max(top, sarInt(row.data && row.data.to_amount));
+            });
+            return top >= safe;
+        },
+
         _sarNextSlabContext: function (existing) {
-            var extra = { default_from_amount: this._sarPrevSlabTo() };
+            var extra = {
+                default_from_amount: this._sarPrevSlabTo(),
+                default_increment: 100,
+            };
+            var safe = this._sarBudgetSafeMax();
+            if (safe > extra.default_from_amount) {
+                extra.default_to_amount = safe;
+            }
             if (!existing) {
                 return [extra];
             }
@@ -583,6 +643,24 @@ odoo.define('auction_module.SetAuctionRulesWizard', function (require) {
                 self._sarRefreshSlabRow($row);
             });
             this._sarLabelAdd(this.$el, 'Add another slab');
+            this._sarSyncSlabAdd();
+        },
+
+        _sarSyncSlabAdd: function () {
+            var blocked = this._sarCeilingReached();
+            var safe = this._sarBudgetSafeMax();
+            var $add = this.$el.find('.o_field_x2many_list_row_add');
+            $add.toggleClass('sar-add-blocked', blocked);
+            var $note = $add.children('.sar-add-note');
+            if (blocked) {
+                if (!$note.length) {
+                    $note = $('<span class="sar-add-note"/>');
+                    $add.append($note);
+                }
+                $note.text('Until is at the budget-safe max (' + sarFmt(safe) + '). Lower it to add another slab.');
+            } else {
+                $note.remove();
+            }
         },
 
         _sarAddSafeMaxBtn: function ($to, $row) {
@@ -626,6 +704,11 @@ odoo.define('auction_module.SetAuctionRulesWizard', function (require) {
             }
             if (to && to < from) {
                 $hint.text('Until should be at least ' + sarFmt(from) + '.');
+                return;
+            }
+            var safe = this._sarBudgetSafeMax();
+            if (to && safe > 0 && to >= safe) {
+                $hint.text('Until is at the budget-safe max. Lower it to add another slab.');
                 return;
             }
             if (!inc) {

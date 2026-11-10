@@ -851,6 +851,16 @@
     border-color: #1e5fa8 !important;
     color: #12203a !important;
 }
+.o_sar_wizard .sar-slabs .o_field_x2many_list_row_add.sar-add-blocked > a {
+    display: none !important;
+}
+.o_sar_wizard .sar-add-note {
+    display: inline-block;
+    margin-top: 4px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #64748b;
+}
 
 /* ── Tier limits: real table (wizard + auction form) ─────────────── */
 .o_ac_tier_table .o_list_view,

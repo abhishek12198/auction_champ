@@ -55,6 +55,7 @@
                         </div>
                     </div>
 
+                    <field name="slab_autofill_to" invisible="1"/>
                     <div class="sar-preview-host"/>
 
                     <div class="sar-section">
@@ -104,7 +105,7 @@
                             <div class="sar-section-titles">
                                 <div class="sar-section-title">Bid slabs</div>
                                 <div class="sar-section-sub">
-                                    First From uses the global base. Use Budget-safe max to fill Until. The next From follows the previous Until.
+                                    A slab is filled from the global base to the budget-safe max, stepping by 100. Edit it anytime. Lower Until below that max to add another slab.
                                 </div>
                             </div>
                         </div>

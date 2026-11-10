@@ -6,3 +6,5 @@ access_ac_saas_upgrade_payment_public,ac.saas.upgrade.payment public,model_ac_sa
 access_ac_saas_signup_payment_manager,ac.saas.signup.payment manager,model_ac_saas_signup_payment,ac_saas_manager.group_saas_manager,1,1,1,1
 access_ac_saas_signup_payment_admin,ac.saas.signup.payment admin,model_ac_saas_signup_payment,auction_module.group_auction_group_admin,1,1,1,1
 access_ac_saas_signup_payment_public,ac.saas.signup.payment public,model_ac_saas_signup_payment,base.group_public,1,0,0,0
+access_ac_saas_invoice_mail_wizard_manager,ac.saas.invoice.mail.wizard manager,model_ac_saas_invoice_mail_wizard,ac_saas_manager.group_saas_manager,0,0,0,0
+access_ac_saas_invoice_mail_wizard_admin,ac.saas.invoice.mail.wizard admin,model_ac_saas_invoice_mail_wizard,auction_module.group_auction_group_admin,1,1,1,1

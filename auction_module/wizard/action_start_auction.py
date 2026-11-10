@@ -68,6 +68,9 @@ class StartAuction(models.TransientModel):
         readonly=True,
     )
     team_count = fields.Integer(compute='_compute_team_count')
+    # Last Until written by the opening-slab helper. Used so a later purse
+    # change can refresh that line without overwriting a value the user edited.
+    slab_autofill_to = fields.Integer()
 
     @api.model
     def default_get(self, fields_list):
@@ -113,11 +116,17 @@ class StartAuction(models.TransientModel):
         if self.base_point < 0:
             self.base_point = 0
         self._apply_single_tier_defaults()
+        self._autofill_opening_slab()
         self._apply_first_slab_from()
 
     @api.onchange('max_players')
     def onchange_max_players(self):
         self._apply_single_tier_defaults()
+        self._autofill_opening_slab()
+
+    @api.onchange('max_points', 'tier_limit_ids')
+    def _onchange_budget_for_slab(self):
+        self._autofill_opening_slab()
 
     @api.onchange('auction_bid_slab_ids')
     def onchange_first_slab_from(self):
@@ -133,6 +142,78 @@ class StartAuction(models.TransientModel):
             line.max_players = self.max_players
         if self.base_point > 0:
             line.base_point = self.base_point
+
+    def _wizard_budget_safe_max(self):
+        """Purse left for one player after reserving the other squad slots.
+
+        Same reserve as the live budget-safe max: remaining slots after this
+        bid, filled from the cheapest tier base (global base when a tier base
+        is 0).
+        """
+        purse = self.max_points or 0
+        squad = self.max_players or 0
+        global_base = self.base_point or 0
+        if purse <= 0:
+            return 0
+        slots = max(squad - 1, 0)
+        tier_bases = []
+        for line in self.tier_limit_ids:
+            bid = line.base_point if line.base_point and line.base_point > 0 else global_base
+            avail = max(line.max_players or 0, 0)
+            if avail:
+                tier_bases.append((bid, avail))
+        reserve = 0
+        left = slots
+        if tier_bases:
+            tier_bases.sort(key=lambda pair: pair[0])
+            for bid, avail in tier_bases:
+                if left <= 0:
+                    break
+                take = min(avail, left)
+                reserve += take * bid
+                left -= take
+            if left > 0:
+                reserve += left * tier_bases[0][0]
+        else:
+            reserve = slots * global_base
+        return max(purse - reserve, 0)
+
+    def _autofill_opening_slab(self):
+        """One slab from the global base to the budget-safe max, step 100.
+
+        Runs once the purse, squad size, and global base are all set. A line
+        the user has edited is left alone. Further slabs stay a manual choice,
+        and only while Until is still below the budget-safe max.
+        """
+        if self.max_points <= 0 or self.max_players <= 0 or self.base_point <= 0:
+            return
+        safe = self._wizard_budget_safe_max()
+        if safe <= 0:
+            return
+        lines = self.auction_bid_slab_ids
+        if not lines:
+            self.auction_bid_slab_ids = [(0, 0, {
+                'from_amount': self.base_point,
+                'to_amount': safe,
+                'increment': 100,
+            })]
+            self.slab_autofill_to = safe
+            return
+        if len(lines) != 1:
+            return
+        line = lines[0]
+        still_auto = (
+            (not line.to_amount or line.to_amount == self.slab_autofill_to)
+            and (not line.from_amount or line.from_amount == self.base_point)
+            and (not line.increment or line.increment == 100)
+        )
+        if not still_auto:
+            return
+        line.from_amount = self.base_point
+        line.to_amount = safe
+        if not line.increment:
+            line.increment = 100
+        self.slab_autofill_to = safe
 
     def _apply_first_slab_from(self):
         """First slab From starts at the global base when the user left it empty."""
@@ -239,7 +320,7 @@ class AuctionBidSlab(models.TransientModel):
 
     from_amount = fields.Integer(required=True)
     to_amount = fields.Integer(required=True)
-    increment = fields.Integer(required=True)
+    increment = fields.Integer(required=True, default=100)
 
 
 class AuctionStartAuctionTierLimit(models.TransientModel):
