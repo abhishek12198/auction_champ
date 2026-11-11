@@ -7,201 +7,233 @@
 <style>
   <t t-raw="font_css"/>
   * { margin: 0; padding: 0; box-sizing: border-box; -webkit-print-color-adjust: exact; }
-  html, body { width: 1080px; height: 1350px; margin: 0; padding: 0; overflow: hidden; background: #06101f; }
-  .sheet { position: relative; width: 1080px; height: 1350px; overflow: hidden; color: #fff; font-family: 'TBLabel', 'Oswald', sans-serif; }
-  .bg { position: absolute; top: 0; left: 0; width: 1080px; height: 1350px; }
-  .veil, .flood { position: absolute; top: 0; left: 0; width: 1080px; height: 1350px; }
-  .brand-logo { width: 196px; height: 30px; display: block; }
-  .head {
-    position: absolute; top: 16px; left: 28px; width: 1024px; height: 104px; z-index: 6;
-    border-collapse: collapse; table-layout: fixed;
-  }
-  .head td { vertical-align: middle; height: 104px; padding: 0; }
-  .tmark { width: 96px; }
-  .tmark img { display: block; width: 96px; height: 96px; }
-  .tmark-ph {
-    width: 96px; height: 96px;
-    font-family: 'TBDisplay', 'Teko', sans-serif;
-    font-size: 36px; line-height: 96px; text-align: center; color: #fff;
-  }
-  .head td.titles { vertical-align: top; padding: 22px 12px 0 16px; }
-  .title-stack { border-collapse: collapse; width: 100%; }
-  .title-stack td { padding: 0; vertical-align: middle; height: auto; }
+  html, body { width: 1080px; height: 1350px; margin: 0; padding: 0; overflow: hidden; background: #071a3a; }
+  .sheet { position: relative; width: 1080px; height: 1350px; overflow: hidden; color: #fff; font-family: 'TBLabel', 'Oswald', sans-serif; background: #071a3a; }
+  .bg, .veil, .flood { position: absolute; top: 0; left: 0; width: 1080px; height: 1350px; }
+  .glow { position: absolute; width: 460px; height: 240px; z-index: 1; }
+  .glow-l { left: -80px; top: -40px; }
+  .glow-r { right: -60px; top: 80px; }
+  .corner { position: absolute; width: 150px; height: 150px; z-index: 7; border: 3px solid rgba(232,194,90,.7); }
+  .corner-br { right: 16px; bottom: 16px; border-left: 0; border-top: 0; border-radius: 0 0 16px 0; }
+
+  .head { position: absolute; top: 28px; left: 48px; width: 984px; height: 86px; z-index: 6; border-collapse: collapse; }
+  .head td { vertical-align: middle; padding: 0; height: 86px; }
+  .brand-cell { width: 250px; }
+  .head-brand .brand-logo { width: 220px; height: 34px; display: block; }
+  .titles { text-align: left; padding-left: 18px; }
   .tourn {
     font-family: 'TBDisplay', 'Teko', sans-serif;
-    color: #fff; line-height: 0.9; letter-spacing: 0.5px; text-align: left;
-    white-space: nowrap; overflow: hidden; text-transform: uppercase;
+    color: #fff; line-height: 0.86; letter-spacing: 1px;
+    text-transform: uppercase; white-space: nowrap; overflow: hidden;
   }
-  .tdesc {
-    position: absolute; top: 86px; left: 140px; width: 560px; z-index: 7;
-    overflow: hidden; text-align: left; white-space: nowrap;
+  .season {
+    display: inline-block; margin-top: 6px; white-space: nowrap;
+    padding: 2px 18px; border: 1.5px solid #e8c25a; border-radius: 8px;
     font-family: 'TBLabel', 'Oswald', sans-serif;
-    color: #d7e2f2; letter-spacing: 1.4px; line-height: 1.15; text-transform: uppercase;
+    font-size: 16px; letter-spacing: 3px; color: #ffe08a;
+    text-transform: uppercase; line-height: 22px;
   }
-  .top5cell { width: 300px; text-align: right; white-space: nowrap; }
-  .gavel { display: inline-block; width: 54px; height: 72px; vertical-align: middle; margin-right: 8px; }
-  .top5 {
+
+  .banner {
+    position: absolute; top: 124px; left: 36px; width: 760px; height: 92px; z-index: 6;
+  }
+  .banner-plate {
+    height: 92px; padding: 0 28px 0 22px;
+    border: 3px solid #f0c14b;
+    background-image: -webkit-linear-gradient(left, #123a86 0%, #1d4ed8 55%, #0b2f6e 100%);
+    box-shadow: 0 0 18px rgba(240,193,75,.45), 0 10px 18px rgba(0,0,0,.35);
+    -webkit-transform: skewX(-12deg);
+  }
+  .banner-top, .banner-bids {
     display: inline-block; vertical-align: middle;
+    -webkit-transform: skewX(12deg);
     font-family: 'TBDisplay', 'Teko', sans-serif;
-    font-size: 54px; line-height: 0.82; letter-spacing: 0.5px; color: #ffe08a;
-    text-shadow: 0 3px 0 #a87812;
-    -webkit-transform: skewX(-8deg);
-    text-align: right;
+    font-size: 78px; line-height: 86px; letter-spacing: 1px;
   }
-  .top5 .bids {
-    display: block;
-    font-family: 'TBStamp', 'Bebas Neue', sans-serif;
-    font-size: 20px; letter-spacing: 6px; color: #f5f8fd;
-    text-shadow: none; padding-top: 2px;
-  }
+  .banner-top { color: #ffffff; text-shadow: 0 3px 0 rgba(0,0,0,.35); padding-left: 8px; }
+  .banner-bids { color: #f6d36a; text-shadow: 0 3px 0 #8a6410; padding-left: 14px; }
+  .gavel { position: absolute; top: 68px; left: 842px; width: 220px; height: 156px; z-index: 8; }
+
   .hero {
-    position: absolute; top: 136px; left: 28px; width: 1024px; height: 548px;
-    border: 3px solid #e8c25a; border-radius: 8px 18px 8px 18px; overflow: hidden;
-    background: #0c1422;
-    box-shadow: 0 0 0 1px rgba(255,214,120,.35), 0 18px 32px rgba(0,0,0,.5);
+    position: absolute; top: 240px; left: 28px; width: 1024px; height: 478px; z-index: 4;
+    border: 3px solid #e8c25a; border-radius: 16px; overflow: hidden;
+    background: #0c2f6e;
+    box-shadow: 0 0 0 1px rgba(255,214,120,.35), 0 16px 28px rgba(0,0,0,.45);
   }
-  .hero-photo { position: absolute; top: 0; left: 0; width: 450px; height: 548px; background: #10192c; overflow: hidden; }
-  .hero-photo img { display: block; width: 450px; height: 548px; }
-  .hero-shade { position: absolute; top: 0; left: 0; width: 450px; height: 548px; }
+  .hero-photo { position: absolute; top: 0; left: 0; width: 430px; height: 478px; overflow: hidden; background: #081428; }
+  .hero-photo img { display: block; width: 430px; height: 478px; }
   .hero-ph {
-    width: 450px; height: 548px;
+    width: 430px; height: 478px;
     font-family: 'TBDisplay', 'Teko', sans-serif;
-    font-size: 140px; line-height: 548px; text-align: center; color: rgba(255,255,255,.4);
+    font-size: 140px; line-height: 478px; text-align: center; color: rgba(255,255,255,.45);
   }
-  .hero-panel { position: absolute; top: 0; left: 450px; width: 574px; height: 548px; background: #0c1422; overflow: hidden; }
-  .panel-hatch { position: absolute; top: 0; left: 0; width: 574px; height: 548px; background-size: 16px 16px; }
+  .hero-panel { position: absolute; top: 0; left: 410px; width: 614px; height: 478px; overflow: hidden; }
   .hero-rank {
-    position: absolute; top: 8px; left: 12px; width: 196px; height: 196px; z-index: 2;
-    border-radius: 12px;
+    position: absolute; top: 16px; left: 18px; width: 128px; height: 168px; z-index: 3;
+    text-align: center;
     font-family: 'TBDisplay', 'Teko', sans-serif;
-    font-size: 72px; line-height: 196px; text-align: center;
+    font-size: 64px; line-height: 168px; color: #fff;
   }
   .rank-medal { display: block; width: 100%; height: 100%; }
   .hero-kicker {
-    position: absolute; top: 36px; left: 220px; width: 336px; z-index: 2;
-    font-family: 'TBLabel', 'Oswald', sans-serif;
-    font-size: 46px; letter-spacing: 0.6px; color: #e8c25a; line-height: 0.9; text-transform: uppercase;
+    position: absolute; top: 28px; left: 160px; width: 420px; z-index: 3;
+    text-align: left;
   }
-  .hero-kicker span { display: block; color: #f5f8fd; letter-spacing: 1px; font-size: 32px; margin-top: 10px; font-family: 'TBStamp', 'Bebas Neue', sans-serif; }
+  .crown { width: 36px; height: 28px; display: block; margin-bottom: 2px; }
+  .kicker-rank {
+    font-family: 'TBLabel', 'Oswald', sans-serif;
+    font-size: 22px; letter-spacing: 2px; color: #ffffff; line-height: 1;
+  }
+  .kicker-buy {
+    font-family: 'TBStamp', 'Bebas Neue', sans-serif;
+    font-size: 28px; letter-spacing: 2px; color: #f6d36a; line-height: 1.05;
+  }
   .hero-name {
-    position: absolute; top: 212px; left: 20px; width: 530px; height: 64px; overflow: hidden; z-index: 2;
+    position: absolute; top: 188px; left: 24px; width: 566px; height: 72px; overflow: hidden; z-index: 3;
     font-family: 'TBDisplay', 'Teko', sans-serif;
-    color: #fff; letter-spacing: 0.6px; line-height: 0.88;
+    color: #fff; letter-spacing: 0.6px; line-height: 0.9;
     white-space: nowrap; text-transform: uppercase;
   }
   .hero-role {
-    position: absolute; top: 276px; left: 20px; width: 530px; z-index: 2;
+    position: absolute; top: 262px; left: 24px; width: 540px; z-index: 3;
     font-family: 'TBLabel', 'Oswald', sans-serif;
-    font-size: 16px; letter-spacing: 2.6px; color: #9eb0c9;
+    font-size: 18px; letter-spacing: 2.4px; color: rgba(255,255,255,.82);
     white-space: nowrap; overflow: hidden; text-transform: uppercase;
   }
-  .hero-team {
-    position: absolute; top: 300px; left: 16px; width: 542px; height: 108px; z-index: 2;
-    border-radius: 10px; border: 3px solid #e8c25a;
+  .role-dot {
+    display: inline-block; width: 16px; height: 16px; margin-right: 8px;
+    border-radius: 8px; background: #f6d36a; vertical-align: -2px;
   }
-  .hero-team img { position: absolute; top: 8px; left: 12px; width: 92px; height: 92px; }
-  .hero-tph {
-    position: absolute; top: 8px; left: 12px; width: 92px; height: 92px; border-radius: 46px;
-    background: #182236; border: 2px solid rgba(255,255,255,.2);
-    color: #fff; font-family: 'TBLabel', 'Oswald', sans-serif; font-size: 24px; line-height: 92px; text-align: center;
+  .hero-team {
+    position: absolute; top: 304px; left: 24px; width: 540px; height: 64px; z-index: 3;
+  }
+  .logo-box {
+    position: absolute; top: 0; left: 0; width: 64px; height: 64px;
+    background: #ffffff; border-radius: 10px; overflow: hidden;
+  }
+  .logo-box img { display: block; width: 64px; height: 64px; }
+  .hero-tph, .row-tph {
+    width: 64px; height: 64px; line-height: 64px; text-align: center;
+    font-family: 'TBLabel', 'Oswald', sans-serif; font-size: 20px; color: #10224f;
   }
   .hero-tname {
-    position: absolute; top: 18px; left: 116px; width: 410px; height: 72px; line-height: 72px;
+    position: absolute; top: 0; left: 80px; width: 450px; height: 64px; line-height: 64px;
     font-family: 'TBDisplay', 'Teko', sans-serif;
     color: #fff; text-transform: uppercase;
     white-space: nowrap; overflow: hidden;
   }
   .hero-price {
-    position: absolute; left: 0; bottom: 0; width: 574px; height: 128px; z-index: 2; overflow: hidden;
-    background-image: -webkit-linear-gradient(135deg, #fff3c4 0%, #e2b034 55%, #a87812 100%);
+    position: absolute; left: 0; bottom: 0; width: 614px; height: 108px; z-index: 3;
+    background-color: #e2b034;
+    background-image: -webkit-linear-gradient(left, #fff3c4 0%, #f0c14b 48%, #c8960c 100%);
   }
-  .price-slash {
-    position: absolute; left: -20px; top: -30px; width: 54px; height: 200px;
-    -webkit-transform: skewX(-16deg);
+  .laurel {
+    position: absolute; top: 22px; width: 42px; height: 64px;
   }
+  .laurel-l { left: 28px; }
+  .laurel-r { right: 28px; }
   .soldfor {
-    position: relative; padding-top: 18px; text-align: center;
+    padding-top: 12px; text-align: center;
     font-family: 'TBLabel', 'Oswald', sans-serif;
-    font-size: 13px; letter-spacing: 3.2px; color: #6d5214; text-transform: uppercase;
+    font-size: 14px; letter-spacing: 3px; color: #6d5214; text-transform: uppercase;
   }
   .hero-amount {
-    position: relative; margin-top: 0; text-align: center;
+    text-align: center;
     font-family: 'TBPrice', 'Anton', sans-serif;
-    color: #1a1404; letter-spacing: 0.6px; line-height: 0.9;
+    color: #1a1404; letter-spacing: 0.5px; line-height: 0.9;
     white-space: nowrap; overflow: hidden;
   }
+
   .row {
-    position: absolute; left: 28px; width: 1024px; height: 106px;
-    background: #0c1526;
-    border: 2px solid rgba(232,194,90,.8);
-    border-radius: 6px 14px 6px 14px;
+    position: absolute; left: 28px; width: 1024px; height: 106px; z-index: 4;
+    background: #0c2a62;
+    border: 2px solid #e8c25a;
+    border-radius: 14px;
     overflow: hidden;
+    box-shadow: 0 8px 16px rgba(0,0,0,.28);
   }
-  .row-hatch { position: absolute; left: 0; top: 0; width: 1024px; height: 106px; background-size: 14px 14px; }
   .row-rank {
-    position: absolute; left: 10px; top: 12px; width: 82px; height: 82px; z-index: 2;
-    border-radius: 10px;
+    position: absolute; left: 12px; top: 13px; width: 80px; height: 80px; z-index: 2;
+    border-radius: 14px;
     font-family: 'TBDisplay', 'Teko', sans-serif;
-    font-size: 36px; line-height: 82px; text-align: center;
+    font-size: 40px; line-height: 80px; text-align: center; color: #fff;
   }
   .row-photo {
-    position: absolute; left: 102px; top: 10px; width: 86px; height: 86px; z-index: 2;
-    background: #10192c; overflow: hidden; border-radius: 8px;
+    position: absolute; left: 104px; top: 13px; width: 80px; height: 80px; z-index: 2;
+    background: #081428; overflow: hidden; border-radius: 10px;
   }
-  .row-photo img { display: block; width: 86px; height: 86px; }
+  .row-photo img { display: block; width: 80px; height: 80px; }
   .row-ph {
-    width: 86px; height: 86px;
+    width: 80px; height: 80px;
     font-family: 'TBDisplay', 'Teko', sans-serif;
-    font-size: 30px; line-height: 86px; text-align: center; color: rgba(255,255,255,.45);
+    font-size: 28px; line-height: 80px; text-align: center; color: rgba(255,255,255,.5);
   }
+  .row-copy { position: absolute; left: 198px; top: 14px; width: 280px; z-index: 2; }
   .row-name {
-    position: absolute; left: 202px; top: 12px; width: 520px; height: 34px; overflow: hidden; z-index: 2;
+    height: 36px; overflow: hidden;
     font-family: 'TBDisplay', 'Teko', sans-serif;
-    color: #fff; letter-spacing: 0.4px; line-height: 34px;
+    color: #fff; letter-spacing: 0.4px; line-height: 36px;
     white-space: nowrap; text-transform: uppercase;
   }
   .row-role {
-    position: absolute; left: 202px; top: 46px; width: 520px; z-index: 2;
+    margin-top: 2px;
     font-family: 'TBLabel', 'Oswald', sans-serif;
-    font-size: 12px; letter-spacing: 1.8px; color: #9eb0c9;
+    font-size: 13px; letter-spacing: 1.4px; color: rgba(255,255,255,.75);
     white-space: nowrap; overflow: hidden; text-transform: uppercase;
   }
-  .row-team { position: absolute; left: 202px; top: 68px; width: 520px; height: 28px; z-index: 2; }
-  .row-team img { position: absolute; top: 0; left: 0; width: 24px; height: 24px; }
-  .row-tph {
-    position: absolute; top: 0; left: 0; width: 24px; height: 24px; border-radius: 12px;
-    background: #182236; color: #fff; font-size: 10px; line-height: 24px; text-align: center;
+  .row-split {
+    position: absolute; left: 490px; top: 22px; width: 2px; height: 62px;
+    background: rgba(232,194,90,.7);
   }
+  .row-team { position: absolute; left: 510px; top: 18px; width: 250px; height: 70px; z-index: 2; }
+  .row-logo {
+    position: absolute; top: 3px; left: 0; width: 64px; height: 64px;
+    background: #fff; border-radius: 10px; overflow: hidden;
+  }
+  .row-logo img { display: block; width: 64px; height: 64px; }
+  .row-tph { width: 64px; height: 64px; line-height: 64px; font-size: 18px; }
   .row-tname {
-    position: absolute; top: 2px; left: 32px; width: 470px;
-    font-family: 'TBDisplay', 'Teko', sans-serif;
-    color: #e7eef8; line-height: 22px; text-transform: uppercase;
-    white-space: nowrap; overflow: hidden;
+    position: absolute; top: 8px; left: 74px; width: 170px; height: 52px; line-height: 26px;
+    font-family: 'TBLabel', 'Oswald', sans-serif;
+    color: #fff; text-transform: uppercase;
+    overflow: hidden;
   }
-  .row-pts {
-    position: absolute; right: 16px; top: 18px; width: 250px; text-align: right; z-index: 2;
+  .row-price {
+    position: absolute; right: 12px; top: 16px; width: 210px; height: 74px; z-index: 2;
+    border-radius: 10px; text-align: center; overflow: hidden;
+    background-color: #e2b034;
+    background-image: -webkit-linear-gradient(left, #fff3c4 0%, #f0c14b 55%, #d7a21a 100%);
   }
   .row-sold {
+    padding-top: 8px;
     font-family: 'TBLabel', 'Oswald', sans-serif;
-    font-size: 11px; letter-spacing: 2px; color: #e8c25a; text-transform: uppercase;
+    font-size: 11px; letter-spacing: 1.6px; color: #6d5214; text-transform: uppercase;
   }
   .row-amount {
     font-family: 'TBPrice', 'Anton', sans-serif;
-    color: #ffe08a; line-height: 0.9; margin-top: 2px;
+    color: #1a1404; line-height: 1; margin-top: 2px;
     white-space: nowrap; overflow: hidden;
   }
+
   .foot {
-    position: absolute; left: 0; top: 1248px; width: 1080px; height: 70px;
+    position: absolute; left: 0; top: 1248px; width: 1080px; height: 70px; z-index: 6;
     text-align: center;
+  }
+  .foot-edition {
+    position: absolute; left: 36px; top: 20px;
     font-family: 'TBLabel', 'Oswald', sans-serif;
-    color: rgba(255,255,255,.7);
+    font-size: 16px; letter-spacing: 1.4px; color: #ffe08a;
+    text-transform: uppercase; white-space: nowrap;
   }
   .foot-line { margin: 0 auto; border-collapse: collapse; }
   .foot-line td { vertical-align: middle; padding: 0; }
   .powered {
-    font-size: 15px; letter-spacing: 2.6px; white-space: nowrap;
-    padding-right: 12px; line-height: 1;
+    font-family: 'TBLabel', 'Oswald', sans-serif;
+    font-size: 16px; letter-spacing: 3px; color: rgba(255,255,255,.8);
+    white-space: nowrap;
   }
+  .foot-gap { width: 16px; font-size: 0; line-height: 0; }
+  .foot .brand-logo { width: 180px; height: 28px; display: block; }
   <t t-raw="theme_css"/>
 </style>
 </head>
@@ -210,30 +242,32 @@
   <img class="bg" t-att-src="stadium_uri" width="1080" height="1350" alt=""/>
   <div class="veil"></div>
   <div class="flood"></div>
+  <div class="glow glow-l"></div>
+  <div class="glow glow-r"></div>
+  <div class="corner corner-br"></div>
 
   <table class="head">
     <tr>
-      <td class="tmark">
-        <t t-if="tournament_logo_uri">
-          <img t-att-src="tournament_logo_uri" width="96" height="96" alt=""/>
-        </t>
-        <t t-else="">
-          <div class="tmark-ph"><t t-esc="tournament_initials"/></div>
-        </t>
+      <td class="brand-cell">
+        <div class="head-brand"><t t-raw="brand_logo_svg"/></div>
       </td>
       <td class="titles">
         <div class="tourn" t-att-style="title_style"><t t-esc="tournament_name"/></div>
-      </td>
-      <td class="top5cell">
-        <t t-if="gavel_uri">
-          <img class="gavel" t-att-src="gavel_uri" alt=""/>
+        <t t-if="description">
+          <div class="season" t-att-style="desc_style"><t t-esc="description"/></div>
         </t>
-        <div class="top5">TOP 5<span class="bids">BIDS</span></div>
       </td>
     </tr>
   </table>
-  <t t-if="description">
-    <div class="tdesc" t-att-style="desc_style"><t t-esc="description"/></div>
+
+  <div class="banner">
+    <div class="banner-plate">
+      <span class="banner-top">TOP 5</span>
+      <span class="banner-bids">BIDS</span>
+    </div>
+  </div>
+  <t t-if="gavel_uri">
+    <img class="gavel" t-att-src="gavel_uri" width="220" height="156" alt=""/>
   </t>
 
   <t t-foreach="cards" t-as="card">
@@ -241,35 +275,49 @@
       <div class="hero">
         <div class="hero-photo">
           <t t-if="card['photo_uri']">
-            <img t-att-src="card['photo_uri']" width="450" height="548" alt=""/>
+            <img t-att-src="card['photo_uri']" width="430" height="478" alt=""/>
           </t>
           <t t-else="">
             <div class="hero-ph"><t t-esc="card['initials']"/></div>
           </t>
-          <div class="hero-shade"></div>
         </div>
         <div class="hero-panel">
-          <div class="panel-hatch"></div>
           <div class="hero-rank" t-att-style="card['badge_style']">
             <t t-if="card['medal_uri']">
               <img class="rank-medal" t-att-src="card['medal_uri']" alt=""/>
             </t>
             <t t-else=""><t t-esc="card['rank']"/></t>
           </div>
-          <div class="hero-kicker">RANK ONE<span>BIGGEST BUY</span></div>
+          <div class="hero-kicker">
+            <svg class="crown" viewBox="0 0 36 28" xmlns="http://www.w3.org/2000/svg">
+              <path d="M4 22 L8 8 L14 16 L18 4 L22 16 L28 8 L32 22 Z" fill="#f6d36a"/>
+              <rect x="4" y="22" width="28" height="4" rx="1" fill="#e2b034"/>
+            </svg>
+            <div class="kicker-rank">RANK ONE</div>
+            <div class="kicker-buy">BIGGEST BUY</div>
+          </div>
           <div class="hero-name" t-att-style="card['name_style']"><t t-esc="card['player_name']"/></div>
-          <div class="hero-role"><t t-esc="card['role']"/></div>
+          <div class="hero-role"><span class="role-dot"></span><t t-esc="card['role']"/></div>
           <div class="hero-team">
-            <t t-if="card['team_logo_uri']">
-              <img t-att-src="card['team_logo_uri']" width="92" height="92" alt=""/>
-            </t>
-            <t t-else="">
-              <div class="hero-tph"><t t-esc="card['team_initials']"/></div>
-            </t>
+            <div class="logo-box">
+              <t t-if="card['team_logo_uri']">
+                <img t-att-src="card['team_logo_uri']" width="64" height="64" alt=""/>
+              </t>
+              <t t-else="">
+                <div class="hero-tph"><t t-esc="card['team_initials']"/></div>
+              </t>
+            </div>
             <div class="hero-tname" t-att-style="card['team_style']"><t t-esc="card['team_name']"/></div>
           </div>
           <div class="hero-price">
-            <div class="price-slash"></div>
+            <svg class="laurel laurel-l" viewBox="0 0 42 64" xmlns="http://www.w3.org/2000/svg">
+              <path d="M30 6 C18 10 10 22 12 34 C8 28 6 20 10 12 C16 8 24 6 30 6 Z" fill="#8a6410"/>
+              <path d="M28 18 C16 22 10 34 14 48 C10 40 8 30 14 22 C18 16 24 16 28 18 Z" fill="#a87812"/>
+            </svg>
+            <svg class="laurel laurel-r" viewBox="0 0 42 64" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 6 C24 10 32 22 30 34 C34 28 36 20 32 12 C26 8 18 6 12 6 Z" fill="#8a6410"/>
+              <path d="M14 18 C26 22 32 34 28 48 C32 40 34 30 28 22 C24 16 18 16 14 18 Z" fill="#a87812"/>
+            </svg>
             <div class="soldfor">SOLD FOR</div>
             <div class="hero-amount" t-att-style="card['amount_style']"><t t-esc="card['points_display']"/></div>
           </div>
@@ -278,7 +326,6 @@
     </t>
     <t t-else="">
       <div class="row" t-att-style="card['row_style']">
-        <div class="row-hatch"></div>
         <div class="row-rank" t-att-style="card['badge_style']">
           <t t-if="card['medal_uri']">
             <img class="rank-medal" t-att-src="card['medal_uri']" alt=""/>
@@ -287,24 +334,29 @@
         </div>
         <div class="row-photo">
           <t t-if="card['photo_uri']">
-            <img t-att-src="card['photo_uri']" width="86" height="86" alt=""/>
+            <img t-att-src="card['photo_uri']" width="80" height="80" alt=""/>
           </t>
           <t t-else="">
             <div class="row-ph"><t t-esc="card['initials']"/></div>
           </t>
         </div>
-        <div class="row-name" t-att-style="card['name_style']"><t t-esc="card['player_name']"/></div>
-        <div class="row-role"><t t-esc="card['role']"/></div>
+        <div class="row-copy">
+          <div class="row-name" t-att-style="card['name_style']"><t t-esc="card['player_name']"/></div>
+          <div class="row-role"><span class="role-dot"></span><t t-esc="card['role']"/></div>
+        </div>
+        <div class="row-split"></div>
         <div class="row-team">
-          <t t-if="card['team_logo_uri']">
-            <img t-att-src="card['team_logo_uri']" width="24" height="24" alt=""/>
-          </t>
-          <t t-else="">
-            <div class="row-tph"><t t-esc="card['team_initials']"/></div>
-          </t>
+          <div class="row-logo">
+            <t t-if="card['team_logo_uri']">
+              <img t-att-src="card['team_logo_uri']" width="64" height="64" alt=""/>
+            </t>
+            <t t-else="">
+              <div class="row-tph"><t t-esc="card['team_initials']"/></div>
+            </t>
+          </div>
           <div class="row-tname" t-att-style="card['team_style']"><t t-esc="card['team_name']"/></div>
         </div>
-        <div class="row-pts">
+        <div class="row-price">
           <div class="row-sold">SOLD FOR</div>
           <div class="row-amount" t-att-style="card['amount_style']"><t t-esc="card['points_display']"/></div>
         </div>
@@ -313,10 +365,12 @@
   </t>
 
   <div class="foot">
+    <div class="foot-edition"><t t-esc="edition_label"/></div>
     <table class="foot-line" align="center">
       <tr>
         <td class="powered">POWERED BY</td>
-        <td class="brand"><t t-raw="brand_logo_svg"/></td>
+        <td class="foot-gap">&#160;</td>
+        <td><t t-raw="brand_logo_svg"/></td>
       </tr>
     </table>
   </div>

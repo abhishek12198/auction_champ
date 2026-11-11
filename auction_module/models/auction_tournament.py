@@ -2398,78 +2398,66 @@ class AuctionTournament(models.Model):
         paint['key'] = theme
         return paint
 
+    @staticmethod
+    def _top_bid_rgb(hex_color):
+        h = (hex_color or '#000000').lstrip('#')
+        if len(h) == 3:
+            h = ''.join(ch * 2 for ch in h)
+        return int(h[0:2], 16), int(h[2:4], 16), int(h[4:6], 16)
+
+    @classmethod
+    def _top_bid_mix(cls, a, b, t):
+        ar, ag, ab = cls._top_bid_rgb(a)
+        br, bg, bb = cls._top_bid_rgb(b)
+        t = max(0.0, min(1.0, float(t)))
+        return '#%02x%02x%02x' % (
+            int(ar + (br - ar) * t),
+            int(ag + (bg - ag) * t),
+            int(ab + (bb - ab) * t),
+        )
+
+    @classmethod
+    def _top_bid_base(cls, paint):
+        """Theme night colour. Saturated themes darken their own ink; pale ones keep the paper."""
+        ink = paint['ink']
+        r, g, b = cls._top_bid_rgb(ink)
+        mx, mn = max(r, g, b), min(r, g, b)
+        sat = 0 if not mx else (mx - mn) / float(mx)
+        if sat < 0.28:
+            return paint['paper']
+        return cls._top_bid_mix(ink, '#000000', 0.62)
+
     def _top_bid_theme_css(self, paint):
         """Concrete colours for wkhtml. CSS variables are not reliable there."""
         def rgba(hex_color, alpha):
-            h = (hex_color or '#000000').lstrip('#')
-            r, g, b = int(h[0:2], 16), int(h[2:4], 16), int(h[4:6], 16)
+            r, g, b = self._top_bid_rgb(hex_color)
             return 'rgba(%d,%d,%d,%.2f)' % (r, g, b, alpha)
 
-        paper = paint['paper']
-        if paint['light']:
-            stops = (0.50, 0.74, 0.90)
-        else:
-            stops = (0.04, 0.22, 0.55)
-        veil = '-webkit-linear-gradient(top, %s 0%%, %s 30%%, %s 100%%)' % (
-            rgba(paper, stops[0]), rgba(paper, stops[1]), rgba(paper, stops[2]))
-        flood = '-webkit-linear-gradient(left, %s 0%%, rgba(0,0,0,0) 32%%, rgba(0,0,0,0) 68%%, %s 100%%)' % (
-            rgba(paint['ink'], 0.34 if not paint['light'] else 0.16),
-            rgba(paint['bright'], 0.28 if not paint['light'] else 0.12),
-        )
-        price = (
-            '-webkit-linear-gradient(135deg, %s 0%%, %s 42%%, %s 100%%)'
-            % (paint['bright'], paint['ink'], paint['gold_dark'])
-        )
-        hatch_opacity = 0.34 if not paint['light'] else 0.20
-        hatch = (
-            "url(\"data:image/svg+xml;utf8,"
-            "<svg xmlns='http://www.w3.org/2000/svg' width='22' height='22'>"
-            "<line x1='0' y1='22' x2='22' y2='0' stroke='%s' stroke-opacity='%.2f' stroke-width='1'/>"
-            "</svg>\")"
-        ) % (paint['ink'], hatch_opacity)
-        shade = '-webkit-linear-gradient(135deg, %s 0%%, rgba(0,0,0,0) 46%%, rgba(0,0,0,.28) 100%%)' % rgba(
-            paint['ink'], 0.38 if not paint['light'] else 0.18)
+        base = self._top_bid_base(paint)
+        panel = self._top_bid_mix(base, paint['ink'], 0.34)
+        deep = self._top_bid_mix(base, '#000000', 0.28)
+        veil = '-webkit-linear-gradient(top, %s 0%%, %s 34%%, %s 100%%)' % (
+            rgba(base, 0.72), rgba(base, 0.84), rgba(deep, 0.94))
+        flood = '-webkit-linear-gradient(top, %s 0%%, rgba(0,0,0,0) 26%%)' % rgba(paint['bright'], 0.55)
+        glow = '-webkit-radial-gradient(circle, %s 0%%, rgba(0,0,0,0) 68%%)' % rgba(paint['ink'], 0.55)
         return (
-            "html,body{background:%(paper)s;}"
-            ".sheet{color:%(value)s;}"
+            "html,body,.sheet{background:%(base)s;color:#ffffff;}"
             ".veil{background-image:%(veil)s;}"
             ".flood{background-image:%(flood)s;}"
-            ".tmark-ph,.tourn,.hero-name,.row-name,.row-tname{color:%(value)s;}"
-            ".hero-team{background-color:%(team_bar)s;border-color:%(ink)s;}"
-            ".hero-tname{color:%(bright)s;}"
-            ".tdesc,.hero-role,.row-role,.foot,.powered{color:%(label)s;}"
-            ".top5{color:%(ink)s;text-shadow:0 3px 0 %(gold_dark)s;}"
-            ".top5 .bids{color:%(value)s;text-shadow:none;}"
-            ".hero{border-color:%(ink)s;background:%(panel)s;"
-            "box-shadow:0 0 0 1px %(gold_dark)s, 0 16px 28px rgba(0,0,0,.45);}"
-            ".hero-photo,.hero-panel,.row{background:%(panel)s;}"
-            ".row{border-color:%(ink)s;box-shadow:0 0 0 1px %(gold_dark)s;}"
-            ".hero-shade{background-image:%(shade)s;}"
-            ".panel-hatch,.row-hatch{background-image:%(hatch)s;background-repeat:repeat;}"
-            ".hero-ph,.row-ph{color:%(label)s;background:%(paper)s;}"
-            ".hero-kicker{color:%(ink)s;}"
-            ".hero-kicker span{color:%(value)s;}"
-            ".hero-tph,.row-tph{background:%(paper)s;color:%(value)s;border-color:%(ink)s;}"
-            ".hero-price{background-color:%(ink)s;background-image:%(price)s;}"
-            ".price-slash{background:%(slash)s;}"
-            ".soldfor,.hero-amount{color:%(onbar)s;}"
-            ".row-sold,.row-amount{color:%(ink)s;}"
+            ".glow{background-image:%(glow)s;}"
+            ".hero,.hero-panel,.row{background:%(panel)s;}"
+            ".banner-plate{background-color:%(panel)s;background-image:-webkit-linear-gradient(left, %(deep)s 0%%, %(panel)s 55%%, %(deep)s 100%%);}"
+            ".hero-photo{background:%(deep)s;}"
+            ".hero-ph,.row-ph{background:%(deep)s;color:rgba(255,255,255,.55);}"
+            ".tourn,.hero-name,.row-name,.hero-tname,.row-tname{color:#ffffff;}"
+            ".season{color:#ffe08a;border-color:#e8c25a;}"
         ) % {
-            'paper': paper,
-            'panel': paint['panel'],
-            'ink': paint['ink'],
-            'value': paint['value'],
-            'label': paint['label'],
-            'bright': paint['bright'],
-            'gold_dark': paint['gold_dark'],
-            'onbar': paint['onbar'],
+            'base': base,
+            'panel': panel,
+            'deep': deep,
             'veil': veil,
             'flood': flood,
-            'price': price,
-            'hatch': hatch,
-            'shade': shade,
-            'slash': rgba('#FFFFFF', 0.22),
-            'team_bar': rgba(paint['ink'], 0.22),
+            'glow': glow,
         }
 
     def _top_bid_medal_uri(self, metal, number, size=240):
@@ -2603,7 +2591,7 @@ class AuctionTournament(models.Model):
                 resample = Image.Resampling.LANCZOS
             except AttributeError:
                 resample = Image.LANCZOS
-            im.thumbnail((120, 86), resample)
+            im.thumbnail((420, 280), resample)
             out = BytesIO()
             im.save(out, format='PNG')
             return 'data:image/png;base64,' + base64.b64encode(out.getvalue()).decode('ascii')
@@ -2761,12 +2749,8 @@ class AuctionTournament(models.Model):
 
         paint = self._top_bid_palette()
         medal_for = {1: 'gold', 2: 'silver', 3: 'bronze'}
-        if paint['light']:
-            plain_badge = 'background:%s;color:%s;border:2px solid %s;' % (
-                paint['panel'], paint['ink'], paint['ink'])
-        else:
-            plain_badge = 'background:%s;color:%s;border:2px solid %s;' % (
-                paint['paper'], paint['value'], paint['ink'])
+        plain_badge = 'background:%s;color:#ffffff;border:2px solid #e8c25a;' % (
+            self._top_bid_mix(paint['ink'], '#000000', 0.18))
         cards = []
         for index, line in enumerate(lines, start=1):
             player = line.player_id
@@ -2778,18 +2762,18 @@ class AuctionTournament(models.Model):
             points_display = self.format_points(line.points or 0)
             is_hero = index == 1
             if is_hero:
-                photo_box = (900, 1096)
+                photo_box = (880, 1016)
             else:
-                photo_box = (256, 256)
+                photo_box = (200, 200)
             cards.append({
                 'rank': index,
                 'is_hero': is_hero,
-                'row_style': 'top:%dpx;' % (702 + (index - 2) * 118),
+                'row_style': 'top:%dpx;' % (736 + (index - 2) * 118),
                 'medal_uri': self._top_bid_medal_uri(metal, index) if metal else '',
                 'badge_style': '' if metal else plain_badge,
                 'player_name': player_name,
                 'name_style': 'font-size:%dpx;' % (
-                    self._top_bid_name_size(player_name) + (16 if is_hero else 0)
+                    self._top_bid_name_size(player_name) + (20 if is_hero else 0)
                 ),
                 'initials': self._top_bid_initials(player.name),
                 'role': self._top_bid_role(player),
@@ -2797,8 +2781,8 @@ class AuctionTournament(models.Model):
                 'team_name': team_name,
                 'team_style': 'font-size:%dpx;' % self._top_bid_team_size(
                     team_name,
-                    400 if is_hero else 420,
-                    48 if is_hero else 22,
+                    360 if is_hero else 210,
+                    28 if is_hero else 18,
                 ),
                 'team_logo_uri': self._top_bid_logo_box(team.logo, 280 if is_hero else 64) if team else '',
                 'team_initials': self._top_bid_initials(team.name if team else 'Team'),
@@ -2817,14 +2801,16 @@ class AuctionTournament(models.Model):
                 'font_css': self._top_bid_font_css(),
                 'theme_css': self._top_bid_theme_css(paint),
                 'stadium_uri': self._top_bid_stadium_uri(),
-                'brand_logo_svg': self._top_bid_brand_svg(paint['value']),
+                'brand_logo_svg': self._top_bid_brand_svg('#FFFFFF'),
                 'tournament_name': tournament_name,
-                'title_style': 'font-size:%dpx;' % min(34, self._top_bid_title_size(tournament_name)),
+                'title_style': 'font-size:%dpx;' % self._top_bid_team_size(
+                    tournament_name, 560, 36, 22),
                 'gavel_uri': self._top_bid_gavel_uri(),
                 'description': description,
                 'desc_style': 'font-size:%dpx;' % min(15, self._top_bid_desc_size(description)),
                 'tournament_logo_uri': self._top_bid_logo_box(self.logo, 400),
                 'tournament_initials': self._top_bid_initials(tournament_name),
+                'edition_label': Player._CARD_EDITIONS.get(paint.get('key') or '', 'Auction Edition'),
                 'cards': cards,
             })
             if isinstance(html, bytes):
@@ -2980,7 +2966,7 @@ class AuctionTournament(models.Model):
         ).format(**c)
 
     def action_download_auction_rules(self):
-        """Download a landscape sheet of this tournament's auction rules."""
+        """Download the auction rules poster at the Top 5 bids size, 1080×1350."""
         import shutil
         from datetime import datetime
 
@@ -3050,23 +3036,34 @@ class AuctionTournament(models.Model):
                 'A single player cannot be sold above %s.' % self.format_points(auction.max_points)
             )
 
-        tier_h = min(520, 108 + max(len(tiers), 1) * 44)
-        slab_h = min(300, 108 + max(len(slabs), 1) * 44)
-        keys_top = 384 + slab_h + 16
-        keys_h = min(300, 64 + len(key_points) * 44)
-        if keys_top + keys_h > 988:
-            keys_h = max(120, 988 - keys_top)
+        panel_top = 492
+        footer_limit = 1258
+        gap = 14
+        tier_h = 96 + max(len(tiers), 1) * 42
+        slab_h = 96 + max(len(slabs), 1) * 42
+        keys_h = 64 + len(key_points) * 36
+        slab_top = panel_top + tier_h + gap
+        keys_top = slab_top + slab_h + gap
+        overflow = (keys_top + keys_h) - footer_limit
+        if overflow > 0:
+            tier_cut = min(overflow, max(0, tier_h - 150))
+            tier_h -= tier_cut
+            overflow -= tier_cut
+            slab_top = panel_top + tier_h + gap
+            keys_top = slab_top + slab_h + gap
+            if overflow > 0:
+                keys_h = max(110, keys_h - overflow)
 
         tournament_name = (self.name or 'Tournament').upper()
         n = len(tournament_name)
-        if n <= 16:
-            title_px = 64
-        elif n <= 26:
-            title_px = 52
-        elif n <= 36:
-            title_px = 42
+        if n <= 14:
+            title_px = 46
+        elif n <= 22:
+            title_px = 38
+        elif n <= 32:
+            title_px = 30
         else:
-            title_px = 32
+            title_px = 24
 
         workdir = Player._card_workdir()
         jpg = None
@@ -3088,14 +3085,15 @@ class AuctionTournament(models.Model):
                 'slabs': slabs,
                 'key_points': key_points,
                 'tier_style': 'height:%dpx;' % tier_h,
-                'slab_style': 'height:%dpx;' % slab_h,
+                'slab_style': 'top:%dpx;height:%dpx;' % (slab_top, slab_h),
                 'keys_style': 'top:%dpx;height:%dpx;' % (keys_top, keys_h),
+                'gavel_style': 'top:%dpx;' % (slab_top + 12),
                 'theme_css': self._rules_poster_theme_css(),
                 'mallet_uri': self._rules_poster_mallet_uri(),
             })
             if isinstance(html, bytes):
                 html = html.decode('utf-8')
-            jpg = self._top_bid_html_to_jpg(str(html), workdir, binary, 1920, 1080)
+            jpg = self._top_bid_html_to_jpg(str(html), workdir, binary, 1080, 1350)
         finally:
             shutil.rmtree(workdir, ignore_errors=True)
         if not jpg:
