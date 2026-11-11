@@ -1980,6 +1980,21 @@ class Auction(http.Controller):
             '<!DOCTYPE html><html><body data-auction-queue="empty"></body></html>'
         )
 
+    def _resume_tiers(self, tournament, players):
+        """Tiers offered on the resume screen. Icon Tier is not a choice here."""
+        Tier = request.env['auction.player.tier'].sudo()
+        tiers = Tier.browse()
+        if tournament:
+            tiers = Tier.search([
+                ('tournament_id', '=', tournament.id),
+                ('is_an_icon_tier', '=', False),
+            ], order='name asc')
+        if not tiers:
+            tiers = players.mapped('tier_id').filtered(
+                lambda tier: tier and not tier.is_an_icon_tier
+            )
+        return tiers
+
     def _render_auction_resume(self, tournament, db_name, theme, auction_ids,
                                draft_players, unsold_players, auction_players,
                                draft_count, unsold_count, sold_count, auction_count,
@@ -2109,13 +2124,10 @@ class Auction(http.Controller):
                     t_domain + [('state', '=', 'auction'), ('icon_player', '=', False)],
                     order='sl_no asc, name asc',
                 )
-                Tier = request.env['auction.player.tier'].sudo()
-                tiers = Tier.search(
-                    [('tournament_id', '=', tournament_id.id)],
-                    order='name asc',
+                tiers = self._resume_tiers(
+                    tournament_id,
+                    draft_players | unsold_players | auction_players,
                 )
-                if not tiers:
-                    tiers = (draft_players | unsold_players | auction_players).mapped('tier_id')
                 html = self._render_auction_resume(
                     tournament_id, db_name, theme, auction_ids,
                     draft_players, unsold_players, auction_players,
@@ -2267,13 +2279,9 @@ class Auction(http.Controller):
                         t_domain + [('state', '=', 'unsold')],
                         order='sl_no asc, name asc',
                     )
-                    Tier = request.env['auction.player.tier'].sudo()
-                    tiers = Tier.search(
-                        [('tournament_id', '=', tournament_id.id)],
-                        order='name asc',
+                    tiers = self._resume_tiers(
+                        tournament_id, draft_players | unsold_players,
                     )
-                    if not tiers:
-                        tiers = (draft_players | unsold_players).mapped('tier_id')
                     html = self._render_auction_resume(
                         tournament_id, db_name, theme, auction_ids,
                         draft_players, unsold_players, Player.browse(),
@@ -2376,13 +2384,25 @@ class Auction(http.Controller):
                         if not players:
                             result['error'] = 'No eligible players found'
                         else:
+                            opened = len(players)
                             result = {
                                 'ok': True,
-                                'opened': len(players),
+                                'opened': opened,
                                 'redirect': display_url,
                                 'error': None,
                             }
-        # Prefer browser redirect (form submit) so presentation reloads reliably
+                            wants_json = 'application/json' in (
+                                request.httprequest.headers.get('Accept') or ''
+                            )
+                            if not wants_json:
+                                title = (
+                                    'Loading player for auction'
+                                    if opened == 1 else
+                                    'Loading players for auction'
+                                )
+                                return self._showcase_loading_page(
+                                    display_url, tournament, title=title,
+                                )
         wants_json = 'application/json' in (request.httprequest.headers.get('Accept') or '')
         if result.get('ok') and not wants_json:
             return werkzeug.utils.redirect(result['redirect'], 303)

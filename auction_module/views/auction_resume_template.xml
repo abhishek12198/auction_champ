@@ -1,17 +1,143 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
 <!--
-  Auction Resume Screen
-  Shown when In-Auction players are exhausted but Draft / Unsold remain.
-  Theme follows tournament.player_display_template.
+  Auction resume screen.
+  Shown when the live queue is empty, or when every squad is full and
+  players are still In Auction. Icon Tier is never offered as a filter.
 -->
+<template id="auction_resume_player_card">
+  <div class="ar-card"
+       role="listitem"
+       t-att-data-id="p.id"
+       t-att-data-label="(p.name or '').upper()"
+       t-att-data-name="(p.name or '').lower()"
+       t-att-data-sl-no="str(p.sl_no or '')"
+       t-att-data-tier-id="p.tier_id.id if p.tier_id and not p.tier_id.is_an_icon_tier else ''"
+       t-att-data-tier-name="(p.tier_id.name or '').lower() if p.tier_id and not p.tier_id.is_an_icon_tier else ''"
+       t-att-data-search="' '.join(filter(None, [
+            str(p.sl_no or ''),
+            (p.name or '').lower(),
+            (p.tier_id.name or '').lower() if p.tier_id and not p.tier_id.is_an_icon_tier else '',
+            (p.role or '').lower(),
+            (p.dominant_position_id.name or '').lower() if p.dominant_position_id else '',
+       ]))">
+    <input class="ar-check" type="checkbox" t-att-value="p.id" t-att-aria-label="(p.name or 'Player').upper()"/>
+    <t t-if="p.photo">
+      <img class="ar-photo" loading="lazy"
+           t-att-src="'/%s/auction/public/image/auction.team.player/%d/photo' % (db, p.id)"
+           alt=""/>
+    </t>
+    <t t-else="">
+      <div class="ar-photo ar-photo-ph" aria-hidden="true"><t t-esc="(p.name or '?')[:1].upper()"/></div>
+    </t>
+    <div class="ar-who">
+      <div class="ar-idline">
+        <span class="ar-player"><t t-esc="(p.name or '').upper()"/></span>
+        <span class="ar-meta">
+          <t t-if="p.tournament_type == 'football' and p.dominant_position_id">
+            <t t-esc="p.dominant_position_id.name"/>
+          </t>
+          <t t-else="">
+            <t t-esc="p.role or 'Player'"/>
+          </t>
+          <t t-if="p.sl_no"> · <t t-esc="p.sl_no"/></t>
+          <t t-if="p.tier_id and not p.tier_id.is_an_icon_tier"> · <t t-esc="p.tier_id.name"/></t>
+        </span>
+      </div>
+      <span class="ar-picked">Selected</span>
+    </div>
+    <button type="button" class="ar-send-one" t-att-data-open-one="p.id">
+      <span class="ar-send-long">Call this player</span>
+      <span class="ar-send-short">Call</span>
+    </button>
+  </div>
+</template>
+
+<template id="auction_resume_chooser">
+  <div class="ar-pools" role="group" aria-label="Player pool">
+    <button type="button"
+            t-attf-class="ar-pool #{'is-on' if start_pool == 'draft' else ''}"
+            data-pool-pick="draft"
+            t-att-aria-pressed="'true' if start_pool == 'draft' else 'false'">
+      <span class="ar-pool-name">Draft</span>
+      <span class="ar-pool-count"><t t-esc="draft_count or 0"/></span>
+      <span class="ar-pool-note">Never called</span>
+    </button>
+    <button type="button"
+            t-attf-class="ar-pool #{'is-on' if start_pool == 'unsold' else ''}"
+            data-pool-pick="unsold"
+            t-att-aria-pressed="'true' if start_pool == 'unsold' else 'false'">
+      <span class="ar-pool-name">Unsold</span>
+      <span class="ar-pool-count"><t t-esc="unsold_count or 0"/></span>
+      <span class="ar-pool-note">Called, not sold</span>
+    </button>
+  </div>
+  <t t-if="sold_count">
+    <button type="button" class="ar-complete-btn ar-complete-inline">Declare auction complete</button>
+  </t>
+  <label class="ar-search-label">
+    <span class="ar-sr">Search players</span>
+    <input class="ar-search" type="search" placeholder="Search serial or name" data-search="pool" autocomplete="off"/>
+  </label>
+  <div class="ar-chips">
+    <t t-if="live_tiers">
+      <div class="ar-filters" data-tier-filters="pool" role="group" aria-label="Tier">
+        <button type="button" class="ar-tier-chip is-active" data-tier-id="">
+          <span class="ar-tier-name">All</span>
+          <span class="ar-tier-count">0</span>
+        </button>
+        <t t-foreach="live_tiers" t-as="tier">
+          <button type="button" class="ar-tier-chip"
+                  t-att-data-tier-id="tier.id"
+                  t-att-style="tier.color and ('border-color:%s;color:%s' % (tier.color, tier.color)) or None">
+            <span class="ar-tier-name"><t t-esc="tier.name"/></span>
+            <span class="ar-tier-count">0</span>
+          </button>
+        </t>
+      </div>
+    </t>
+  </div>
+  <div class="ar-pickbar">
+    <button type="button" class="ar-select-all" data-select-all="pool">
+      <span class="ar-select-all-label">Select all</span>
+      <span class="ar-select-all-count" hidden="hidden">0</span>
+    </button>
+    <span class="ar-tier-summary" data-tier-summary="pool"></span>
+  </div>
+  <div class="ar-panel" data-panel="draft" aria-label="Draft players"
+       t-att-hidden="start_pool != 'draft' and 'hidden' or None">
+    <t t-if="not draft_players">
+      <p class="ar-empty">No draft players left.</p>
+    </t>
+    <p class="ar-nomatch" hidden="hidden">No players match this search.</p>
+    <div class="ar-list" role="list">
+      <t t-foreach="draft_players" t-as="p">
+        <t t-call="auction_module.auction_resume_player_card"/>
+      </t>
+    </div>
+  </div>
+  <div class="ar-panel" data-panel="unsold" aria-label="Unsold players"
+       t-att-hidden="start_pool != 'unsold' and 'hidden' or None">
+    <t t-if="not unsold_players">
+      <p class="ar-empty">No unsold players left.</p>
+    </t>
+    <p class="ar-nomatch" hidden="hidden">No players match this search.</p>
+    <div class="ar-list" role="list">
+      <t t-foreach="unsold_players" t-as="p">
+        <t t-call="auction_module.auction_resume_player_card"/>
+      </t>
+    </div>
+  </div>
+  <p class="ar-note">Calling a player puts them on stage and resumes the live auction.</p>
+</template>
+
 <template id="auction_resume_template" name="Auction Resume — Open Players">
 <html lang="en" t-att-data-theme="theme or 'vanilla'">
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <t t-call="auction_module.page_head_favicon"/>
-  <title>Open Players — <t t-esc="tournament.name if tournament else 'Auction'"/> | AuctionChamp</title>
+  <t t-call="auction_module.page_head_favicon"/>
+  <title>Continue the auction — <t t-esc="tournament.name if tournament else 'Auction'"/> | AuctionChamp</title>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700;800&amp;family=Open+Sans:wght@400;600&amp;display=swap" rel="stylesheet"/>
   <style>
     :root {
@@ -23,7 +149,7 @@
       --r-surface: rgba(255,255,255,0.05);
       --r-border: rgba(255,255,255,0.10);
       --r-text: #e8edf8;
-      --r-muted: rgba(232,237,248,0.55);
+      --r-muted: rgba(232,237,248,0.72);
       --r-glow: rgba(59,114,232,0.35);
       --r-draft: #38bdf8;
       --r-unsold: #f87171;
@@ -31,99 +157,100 @@
       --r-sold: #34d399;
       --r-danger: #ef4444;
       --r-ok: #22c55e;
+      --r-on-primary: #111111;
       --r-radius: 16px;
     }
     <t t-if="theme == 'cherry'">
     :root {
-      --r-primary: #DC143C; --r-primary-dk: #8B0000; --r-accent: #FF6B6B;
+      --r-primary: #DC143C; --r-primary-dk: #8B0000; --r-accent: #FF6B6B; --r-on-primary: #ffffff;
       --r-bg: #0a0008; --r-bg2: #1a0008; --r-border: rgba(220,20,60,0.28);
-      --r-text: #f5e8e8; --r-muted: rgba(245,232,232,0.55); --r-glow: rgba(220,20,60,0.45);
+      --r-text: #f5e8e8; --r-muted: rgba(245,232,232,0.78); --r-glow: rgba(220,20,60,0.45);
       --r-draft: #fb7185; --r-unsold: #fca5a5; --r-sold: #86efac;
     }
     </t>
     <t t-elif="theme == 'butterscotch'">
     :root {
-      --r-primary: #F5C842; --r-primary-dk: #C8960C; --r-accent: #FFE082;
+      --r-primary: #F5C842; --r-primary-dk: #C8960C; --r-accent: #FFE082; --r-on-primary: #111111;
       --r-bg: #0d0d1f; --r-bg2: #1a1400; --r-border: rgba(245,200,66,0.25);
-      --r-text: #fff8e1; --r-muted: rgba(255,248,225,0.55); --r-glow: rgba(245,200,66,0.40);
+      --r-text: #fff8e1; --r-muted: rgba(255,248,225,0.78); --r-glow: rgba(245,200,66,0.40);
       --r-draft: #fde68a; --r-unsold: #fca5a5; --r-sold: #86efac;
     }
     </t>
     <t t-elif="theme == 'strawberry'">
     :root {
-      --r-primary: #C2185B; --r-primary-dk: #880E4F; --r-accent: #F48FB1;
+      --r-primary: #C2185B; --r-primary-dk: #880E4F; --r-accent: #F48FB1; --r-on-primary: #ffffff;
       --r-bg: #1a0010; --r-bg2: #2d0018; --r-border: rgba(194,24,91,0.28);
-      --r-text: #fce4ec; --r-muted: rgba(252,228,236,0.55); --r-glow: rgba(194,24,91,0.45);
+      --r-text: #fce4ec; --r-muted: rgba(252,228,236,0.78); --r-glow: rgba(194,24,91,0.45);
       --r-draft: #f9a8d4; --r-unsold: #fca5a5; --r-sold: #86efac;
     }
     </t>
     <t t-elif="theme == 'pistah'">
     :root {
-      --r-primary: #6BBF4E; --r-primary-dk: #2E7D32; --r-accent: #A8E063;
+      --r-primary: #6BBF4E; --r-primary-dk: #2E7D32; --r-accent: #A8E063; --r-on-primary: #111111;
       --r-bg: #060e08; --r-bg2: #0d1f11; --r-border: rgba(107,191,78,0.25);
-      --r-text: #e8f5e9; --r-muted: rgba(232,245,233,0.55); --r-glow: rgba(107,191,78,0.42);
+      --r-text: #e8f5e9; --r-muted: rgba(232,245,233,0.78); --r-glow: rgba(107,191,78,0.42);
       --r-draft: #86efac; --r-unsold: #fca5a5; --r-sold: #4ade80;
     }
     </t>
     <t t-elif="theme == 'blueberry'">
     :root {
-      --r-primary: #3B82F6; --r-primary-dk: #1E3A8A; --r-accent: #93C5FD;
+      --r-primary: #3B82F6; --r-primary-dk: #1E3A8A; --r-accent: #93C5FD; --r-on-primary: #111111;
       --r-bg: #050a14; --r-bg2: #0d1830; --r-border: rgba(59,130,246,0.28);
-      --r-text: #ffffff; --r-muted: rgba(255,255,255,0.55); --r-glow: rgba(59,130,246,0.42);
+      --r-text: #ffffff; --r-muted: rgba(255,255,255,0.78); --r-glow: rgba(59,130,246,0.42);
       --r-draft: #93c5fd; --r-unsold: #fca5a5; --r-sold: #60a5fa;
       --r-auction: #93C5FD; --r-danger: #ef4444; --r-ok: #60a5fa;
-      --r-surface: rgba(59,130,246,0.08); --r-radius: 16px;
+      --r-surface: rgba(59,130,246,0.08);
     }
     </t>
     <t t-elif="theme == 'blackberry'">
     :root {
-      --r-primary: #7629D9; --r-primary-dk: #4C1D95; --r-accent: #A77BFF;
+      --r-primary: #7629D9; --r-primary-dk: #4C1D95; --r-accent: #A77BFF; --r-on-primary: #ffffff;
       --r-bg: #101113; --r-bg2: #222328; --r-border: rgba(167,123,255,0.28);
-      --r-text: #ffffff; --r-muted: rgba(191,195,204,0.72); --r-glow: rgba(118,41,217,0.32);
+      --r-text: #ffffff; --r-muted: rgba(191,195,204,0.86); --r-glow: rgba(118,41,217,0.32);
       --r-draft: #A77BFF; --r-unsold: #fca5a5; --r-sold: #7629D9;
       --r-auction: #A77BFF; --r-danger: #ef4444; --r-ok: #7629D9;
-      --r-surface: rgba(118,41,217,0.08); --r-radius: 16px;
+      --r-surface: rgba(118,41,217,0.08);
     }
     </t>
     <t t-elif="theme == 'standard'">
     :root {
-      --r-primary: #F5A623; --r-primary-dk: #F5A623; --r-accent: #1058B0;
+      --r-primary: #F5A623; --r-primary-dk: #F5A623; --r-accent: #1058B0; --r-on-primary: #111111;
       --r-bg: #FFFFFF; --r-bg2: #FFFFFF; --r-border: #E2E8F0;
-      --r-text: #1A202C; --r-muted: rgba(26,32,44,0.55); --r-glow: rgba(16,88,176,0.10);
+      --r-text: #1A202C; --r-muted: #4A5568; --r-glow: rgba(16,88,176,0.10);
       --r-draft: #1058B0; --r-unsold: #e53935; --r-sold: #2e7d32;
     }
     </t>
     <t t-elif="theme == 'lemon'">
     :root {
-      --r-primary: #E8C200; --r-primary-dk: #B89600; --r-accent: #F5D84A;
+      --r-primary: #E8C200; --r-primary-dk: #B89600; --r-accent: #F5D84A; --r-on-primary: #111111;
       --r-bg: #12100a; --r-bg2: #1a1608; --r-border: rgba(232,194,0,0.25);
-      --r-text: #fffdf0; --r-muted: rgba(255,253,240,0.55); --r-glow: rgba(232,194,0,0.42);
+      --r-text: #fffdf0; --r-muted: rgba(255,253,240,0.78); --r-glow: rgba(232,194,0,0.42);
       --r-draft: #ffe082; --r-unsold: #fca5a5; --r-sold: #86efac;
     }
     </t>
 
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    html, body {
-      min-height: 100%;
-      background: var(--r-bg);
-      color: var(--r-text);
-      font-family: 'Open Sans', system-ui, sans-serif;
-    }
+    html, body { min-height: 100%; background: var(--r-bg); color: var(--r-text); }
     body {
-      background-image:
-        radial-gradient(ellipse 70% 50% at 20% -10%, var(--r-glow), transparent 55%),
-        radial-gradient(ellipse 50% 40% at 100% 100%, rgba(255,255,255,0.03), transparent 50%);
+      font-family: 'Open Sans', system-ui, sans-serif;
       background-color: var(--r-bg);
+      background-image: radial-gradient(ellipse 70% 50% at 20% -10%, var(--r-glow), transparent 55%);
     }
-
+    button, input { font: inherit; color: inherit; }
+    button { cursor: pointer; }
+    .ar-sr {
+      position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+      overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+    }
     .ar-shell {
-      max-width: 1280px;
+      --ar-dock: 24px;
+      max-width: 1120px;
       margin: 0 auto;
-      padding: 20px 18px 28px;
+      padding: 16px 16px 20px;
+      min-height: 100vh;
       display: flex;
       flex-direction: column;
-      gap: 18px;
-      min-height: 100vh;
+      gap: 14px;
       position: relative;
     }
     .ar-shell.ar-busy::after {
@@ -131,427 +258,365 @@
       position: absolute;
       inset: 0;
       background: rgba(0,0,0,0.35);
-      backdrop-filter: blur(2px);
-      border-radius: inherit;
-      z-index: 20;
+      z-index: 40;
     }
-
-    /* Header */
-    .ar-header {
+    .ar-head, .ar-stat, .ar-pool, .ar-card, .ar-search, .ar-tier-chip, .ar-actions, .ar-stuck {
+      background: var(--r-bg2);
+      border: 1px solid var(--r-border);
+    }
+    html[data-theme="standard"] .ar-stat,
+    html[data-theme="standard"] .ar-pool,
+    html[data-theme="standard"] .ar-card,
+    html[data-theme="standard"] .ar-search,
+    html[data-theme="standard"] .ar-tier-chip,
+    html[data-theme="standard"] .ar-actions,
+    html[data-theme="standard"] .ar-stuck {
+      background: #f7f8fa;
+    }
+    html[data-theme="standard"] .ar-head {
+      background: #1058B0;
+      border-color: #1058B0;
+      color: #fff;
+    }
+    html[data-theme="standard"] .ar-head .ar-title { color: #fff; }
+    html[data-theme="standard"] .ar-head .ar-sub { color: rgba(255, 255, 255, 0.92); }
+    html[data-theme="standard"] .ar-head .ar-logo,
+    html[data-theme="standard"] .ar-head .ar-logo-ph {
+      background: #fff;
+      border-color: rgba(255, 255, 255, 0.55);
+      color: #1058B0;
+    }
+    html[data-theme="standard"] .ar-section-title { color: #1058B0; }
+    .ar-head {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 16px;
-      flex-wrap: wrap;
-      padding: 18px 22px;
+      gap: 12px;
+      padding: 14px;
       border-radius: var(--r-radius);
-      background: linear-gradient(135deg, var(--r-bg2), rgba(255,255,255,0.03));
-      border: 1px solid var(--r-border);
-      box-shadow: 0 10px 40px rgba(0,0,0,0.25);
     }
-    .ar-brand {
-      display: flex;
-      align-items: center;
-      gap: 14px;
-      min-width: 0;
-      flex: 1;
-    }
-    .ar-logo {
-      width: 56px; height: 56px;
-      border-radius: 12px;
-      object-fit: contain;
-      background: rgba(0,0,0,0.25);
+    .ar-brand { display: flex; align-items: center; gap: 12px; min-width: 0; }
+    .ar-logo, .ar-logo-ph {
+      width: 48px; height: 48px; flex: 0 0 48px;
+      border-radius: 12px; object-fit: contain;
+      background: rgba(0,0,0,0.18);
       border: 1px solid var(--r-border);
-      padding: 4px;
-      flex-shrink: 0;
     }
     .ar-logo-ph {
-      width: 56px; height: 56px;
-      border-radius: 12px;
       display: grid; place-items: center;
-      background: rgba(255,255,255,0.06);
-      border: 1px solid var(--r-border);
-      font-size: 1.4rem;
-      flex-shrink: 0;
+      font-family: 'Montserrat', sans-serif; font-weight: 800;
     }
-    .ar-title-wrap { min-width: 0; }
-    .ar-eyebrow {
-      font-family: 'Montserrat', sans-serif;
-      font-size: .68rem;
-      font-weight: 700;
-      letter-spacing: 2px;
-      text-transform: uppercase;
-      color: var(--r-accent);
-      margin-bottom: 4px;
+    .ar-title-wrap { min-width: 0; flex: 1; }
+    .ar-title, .ar-sub {
+      display: block;
+      max-width: 100%;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
     .ar-title {
       font-family: 'Montserrat', sans-serif;
-      font-size: clamp(1.15rem, 2.4vw, 1.55rem);
-      font-weight: 800;
-      line-height: 1.2;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
+      font-size: clamp(0.85rem, 2.2vw, 1.45rem);
+      font-weight: 800; line-height: 1.15;
     }
-    .ar-sub {
-      margin-top: 4px;
-      font-size: .88rem;
-      color: var(--r-muted);
-      max-width: 42rem;
-    }
-    .ar-hdr-right {
-      display: flex;
-      flex-direction: column;
-      align-items: flex-end;
-      gap: 6px;
-      flex-shrink: 0;
-    }
-    .ar-powered {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 8px 12px;
-      border-radius: 12px;
-      background: rgba(255,255,255,0.04);
-      border: 1px solid var(--r-border);
-    }
-    .ar-powered-by {
-      font-size: .62rem;
-      font-weight: 700;
-      letter-spacing: 1.4px;
-      text-transform: uppercase;
-      color: var(--r-muted);
-    }
-    .ar-powered-logo {
-      height: 28px;
-      width: auto;
-      display: block;
-    }
-    .ar-hdr-logo-link {
-      display: inline-flex;
-      align-items: center;
-      text-decoration: none;
-      opacity: 0.95;
-      transition: opacity .15s ease, transform .15s ease;
-    }
-    .ar-hdr-logo-link:hover { opacity: 1; transform: scale(1.04); }
-
-    /* Stats */
+    .ar-sub { margin-top: 2px; color: var(--r-muted); line-height: 1.3; font-size: 0.82rem; }
+    .ar-backend { flex: 0 0 auto; }
+    .ar-powered-logo { height: 28px; width: auto; display: block; }
     .ar-stats {
       display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-      gap: 12px;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
     }
     .ar-stat {
-      border-radius: 14px;
-      padding: 14px 12px;
-      text-align: center;
-      background: var(--r-surface);
-      border: 1px solid var(--r-border);
-    }
-    .ar-stat-num {
-      font-family: 'Montserrat', sans-serif;
-      font-size: clamp(1.5rem, 3vw, 2rem);
-      font-weight: 800;
-      line-height: 1;
-      font-variant-numeric: tabular-nums;
-    }
-    .ar-stat-lbl {
-      margin-top: 6px;
-      font-size: .68rem;
-      font-weight: 700;
-      letter-spacing: 1.4px;
-      text-transform: uppercase;
-      color: var(--r-muted);
-    }
-    .ar-stat-draft .ar-stat-num { color: var(--r-draft); }
-    .ar-stat-unsold .ar-stat-num { color: var(--r-unsold); }
-    .ar-stat-sold .ar-stat-num { color: var(--r-sold); }
-    .ar-stat-auction .ar-stat-num { color: var(--r-auction); }
-    .ar-banner-full {
-      margin: 0 0 18px;
-      padding: 14px 18px;
-      border-radius: var(--r-radius);
-      border: 1px solid color-mix(in srgb, var(--r-accent) 45%, transparent);
-      background: color-mix(in srgb, var(--r-accent) 12%, transparent);
-      color: var(--r-text);
-      font-size: 14px;
-      line-height: 1.45;
-    }
-    .ar-banner-full strong { color: var(--r-accent); }
-    .ar-panel-auction .ar-badge {
-      color: var(--r-auction);
-      background: color-mix(in srgb, var(--r-auction) 18%, transparent);
-    }
-    .ar-stat-open .ar-stat-num { color: var(--r-accent); }
-
-    /* Panels */
-    .ar-panels {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 16px;
-      flex: 1;
-      min-height: 0;
-    }
-    .ar-panel {
+      border-radius: 12px;
+      padding: 10px 8px;
       display: flex;
       flex-direction: column;
-      min-height: 420px;
-      max-height: min(68vh, 720px);
-      border-radius: var(--r-radius);
-      background: linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02));
-      border: 1px solid var(--r-border);
-      overflow: hidden;
+      gap: 2px;
+      min-width: 0;
     }
-    .ar-panel-head {
+    .ar-stat-label { color: var(--r-muted); font-size: .78rem; }
+    .ar-stat-value {
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 800;
+      font-size: clamp(1.25rem, 3vw, 1.7rem);
+    }
+    .ar-stat-live { border-color: var(--r-auction); }
+    .ar-layout { display: block; min-width: 0; }
+    .ar-main { min-width: 0; display: flex; flex-direction: column; gap: 12px; }
+    .ar-stuck, .ar-actions, .ar-more {
+      border-radius: var(--r-radius);
+    }
+    .ar-stuck { padding: 12px; display: flex; flex-direction: column; gap: 10px; }
+    .ar-section-title {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 1rem; font-weight: 800;
+    }
+    .ar-pools {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+    }
+    .ar-pool {
+      min-height: 52px;
+      border-radius: 14px;
+      padding: 10px 12px;
       display: flex;
+      flex-wrap: wrap;
       align-items: center;
       justify-content: space-between;
-      gap: 10px;
-      flex-wrap: wrap;
-      padding: 14px 16px;
-      border-bottom: 1px solid var(--r-border);
-      background: rgba(0,0,0,0.18);
+      gap: 4px 8px;
+      text-align: left;
     }
-    .ar-panel-title {
-      font-family: 'Montserrat', sans-serif;
-      font-weight: 700;
-      font-size: .95rem;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    .ar-badge {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      min-width: 28px;
-      height: 24px;
-      padding: 0 8px;
-      border-radius: 999px;
-      font-size: .75rem;
-      font-weight: 800;
-      background: rgba(255,255,255,0.08);
-    }
-    .ar-panel-draft .ar-badge { color: var(--r-draft); background: color-mix(in srgb, var(--r-draft) 18%, transparent); }
-    .ar-panel-unsold .ar-badge { color: var(--r-unsold); background: color-mix(in srgb, var(--r-unsold) 18%, transparent); }
-
-    .ar-toolbar {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-      align-items: center;
-      width: 100%;
-    }
-    .ar-filters {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-      width: 100%;
-      margin-bottom: 2px;
-    }
-    .ar-tier-chip {
-      appearance: none;
-      border: 1px solid var(--r-border);
-      background: rgba(0,0,0,0.28);
-      color: var(--r-text);
-      border-radius: 999px;
-      padding: 5px 11px;
-      font-size: .72rem;
-      font-weight: 700;
-      letter-spacing: .04em;
-      text-transform: uppercase;
-      cursor: pointer;
-      transition: background .15s ease, border-color .15s ease, box-shadow .15s ease;
-    }
-    .ar-tier-chip:hover { border-color: var(--r-primary); }
-    .ar-tier-chip.is-active {
-      background: color-mix(in srgb, var(--r-primary) 28%, transparent);
+    .ar-pool.is-on,
+    html[data-theme] .ar-pool.is-on {
+      background: var(--r-primary);
       border-color: var(--r-primary);
-      box-shadow: 0 0 0 2px var(--r-glow);
-      color: #fff;
+      box-shadow: none;
+      color: var(--r-on-primary);
     }
-    .ar-tier-chip .ar-chip-count {
-      margin-left: 5px;
-      opacity: .75;
-      font-weight: 800;
+    .ar-pool.is-on .ar-pool-note { color: var(--r-on-primary); }
+    .ar-pool-name, .ar-pool-count { font-family: 'Montserrat', sans-serif; font-weight: 800; }
+    .ar-pool-count { font-size: 1.15rem; }
+    .ar-pool-note { display: none; color: var(--r-muted); flex-basis: 100%; font-size: .82rem; }
+    .ar-complete-btn, .ar-send-all {
+      background: none; border: 0; color: var(--r-text);
+      text-decoration: underline; text-underline-offset: 3px;
+      padding: 8px 4px; min-height: 44px; cursor: pointer;
     }
+    .ar-complete-inline { display: block; text-align: left; }
+    .ar-search-label { display: block; }
     .ar-search {
-      flex: 1;
-      min-width: 140px;
-      height: 36px;
-      border-radius: 10px;
-      border: 1px solid var(--r-border);
-      background: rgba(0,0,0,0.25);
-      color: var(--r-text);
+      width: 100%;
+      min-height: 48px;
+      border-radius: 12px;
       padding: 0 12px;
-      font-size: .85rem;
       outline: none;
     }
-    .ar-search:focus { border-color: var(--r-primary); box-shadow: 0 0 0 3px var(--r-glow); }
-    .ar-search::placeholder { color: var(--r-muted); }
-    .ar-row[hidden] { display: none !important; }
-
-    .ar-list {
-      flex: 1;
-      overflow-y: auto;
-      padding: 8px;
-      -webkit-overflow-scrolling: touch;
+    .ar-search:focus { border-color: var(--r-primary-dk); }
+    .ar-chips { display: flex; align-items: center; gap: 8px; min-width: 0; }
+    .ar-filters {
+      display: flex; gap: 8px; overflow-x: auto; flex: 1 1 auto; min-width: 0;
+      scrollbar-width: none;
     }
-    .ar-empty {
-      padding: 40px 16px;
-      text-align: center;
-      color: var(--r-muted);
-      font-size: .9rem;
-    }
-
-    .ar-row {
-      display: grid;
-      grid-template-columns: 28px 44px 1fr auto auto;
-      gap: 10px;
+    .ar-filters::-webkit-scrollbar { display: none; }
+    .ar-tier-chip, .ar-select-all { flex: 0 0 auto; }
+    .ar-tier-chip {
+      display: inline-flex;
       align-items: center;
-      padding: 10px;
-      border-radius: 12px;
-      border: 1px solid transparent;
-      transition: background .15s ease, border-color .15s ease;
+      gap: 6px;
+      min-height: 36px;
+      border-radius: 999px;
+      padding: 0 12px;
+      background: transparent;
     }
-    .ar-row:hover { background: rgba(255,255,255,0.04); }
-    .ar-row.is-selected {
-      background: rgba(59,114,232,0.14);
-      border-color: rgba(59,114,232,0.40);
-    }
-    .ar-row input[type="checkbox"] {
-      width: 16px; height: 16px;
-      accent-color: var(--r-primary);
-      cursor: pointer;
-    }
-    .ar-btn-sm {
-      height: 32px;
-      padding: 0 10px;
-      font-size: .72rem;
-      border-radius: 8px;
-    }
-    .ar-avatar {
-      width: 44px; height: 44px;
-      border-radius: 10px;
-      object-fit: cover;
-      background: rgba(255,255,255,0.06);
-      border: 1px solid var(--r-border);
-    }
-    .ar-avatar-ph {
-      width: 44px; height: 44px;
-      border-radius: 10px;
-      display: grid; place-items: center;
-      background: rgba(255,255,255,0.06);
-      border: 1px solid var(--r-border);
-      color: var(--r-muted);
-      font-weight: 700;
-      font-size: .85rem;
-    }
-    .ar-meta { min-width: 0; }
-    .ar-name {
+    .ar-tier-count {
       font-family: 'Montserrat', sans-serif;
-      font-weight: 700;
-      font-size: .92rem;
-      letter-spacing: 0.04em;
-      text-transform: uppercase;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
+      font-weight: 800;
+      font-variant-numeric: tabular-nums;
     }
-    .ar-role {
-      margin-top: 2px;
-      font-size: .75rem;
-      font-weight: 600;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-      color: var(--r-muted);
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-    .ar-tier {
-      font-size: .68rem;
-      font-weight: 700;
-      letter-spacing: .6px;
-      text-transform: uppercase;
-      padding: 4px 8px;
-      border-radius: 8px;
-      border: 1px solid var(--r-border);
-      background: rgba(0,0,0,0.2);
-      white-space: nowrap;
-    }
-
-    .ar-panel-foot {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-      padding: 12px 14px;
-      border-top: 1px solid var(--r-border);
-      background: rgba(0,0,0,0.18);
-    }
-
-    .ar-btn {
-      appearance: none;
-      border: 0;
-      border-radius: 11px;
-      height: 40px;
-      padding: 0 14px;
-      font-family: 'Montserrat', sans-serif;
-      font-size: .78rem;
-      font-weight: 700;
-      letter-spacing: .4px;
-      cursor: pointer;
-      transition: transform .12s ease, opacity .12s ease, box-shadow .12s ease;
-      white-space: nowrap;
-    }
-    .ar-btn:hover { transform: translateY(-1px); }
-    .ar-btn:active { transform: translateY(0); }
-    .ar-btn:disabled { opacity: .45; cursor: not-allowed; transform: none; }
-    .ar-btn-primary {
-      background: linear-gradient(135deg, var(--r-primary), var(--r-primary-dk));
-      color: #fff;
-      box-shadow: 0 8px 22px var(--r-glow);
-    }
-    html[data-theme="butterscotch"] .ar-btn-primary { color: #1a1200; }
-    html[data-theme="standard"] .ar-btn-primary { color: #1A202C; }
-    html[data-theme="lemon"] .ar-btn-primary { color: #1a1608; }
-    .ar-btn-ghost {
-      background: rgba(255,255,255,0.06);
-      color: var(--r-text);
-      border: 1px solid var(--r-border);
-    }
-    .ar-btn-danger {
-      background: linear-gradient(135deg, #ef4444, #b91c1c);
-      color: #fff;
-      box-shadow: 0 8px 22px rgba(239,68,68,0.28);
-    }
-
-    .ar-footer {
+    .ar-pickbar {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 14px;
+      gap: 8px 12px;
       flex-wrap: wrap;
-      padding: 16px 18px;
-      border-radius: var(--r-radius);
+    }
+    .ar-select-all {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      text-decoration: none;
       border: 1px solid var(--r-border);
-      background: rgba(0,0,0,0.22);
+      border-radius: 10px;
+      background: var(--r-bg2);
+      color: var(--r-text);
+      padding: 0 10px 0 14px;
+      min-height: 42px;
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 800;
+      cursor: pointer;
+      box-shadow: 0 2px 0 rgba(0, 0, 0, 0.18), 0 8px 16px rgba(0, 0, 0, 0.12);
     }
-    .ar-footer-note {
-      color: var(--r-muted);
-      font-size: .86rem;
-      max-width: 40rem;
-      line-height: 1.45;
+    .ar-select-all:active {
+      transform: translateY(1px);
+      box-shadow: 0 1px 0 rgba(0, 0, 0, 0.18);
     }
-    .ar-footer-actions {
+    html[data-theme="standard"] .ar-select-all { background: #fff; }
+    .ar-select-all-count {
+      min-width: 1.7em;
+      padding: 3px 8px;
+      border-radius: 999px;
+      border: 1px solid var(--r-border);
+      background: transparent;
+      color: inherit;
+      font-variant-numeric: tabular-nums;
+      line-height: 1.2;
+      text-align: center;
+    }
+    .ar-select-all-count[hidden] { display: none !important; }
+    .ar-tier-summary {
+      margin-left: auto;
+      font-weight: 700;
+      text-align: right;
+    }
+    .ar-tier-chip.is-active { border-color: var(--r-primary-dk); box-shadow: inset 0 0 0 1px var(--r-primary-dk); }
+    .ar-panel { display: flex; flex-direction: column; gap: 8px; }
+    .ar-panel[hidden] { display: none !important; }
+    .ar-list { display: flex; flex-direction: column; gap: 8px; }
+    .ar-card.is-offpage { display: none !important; }
+    .ar-pager {
       display: flex;
       align-items: center;
-      gap: 12px;
-      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: 8px;
     }
-
-    /* Brand strip / powered-by (matches live board and thank-you) */
+    .ar-pager[hidden] { display: none !important; }
+    .ar-pager-btn {
+      flex: 0 0 auto;
+      min-height: 40px;
+      padding: 0 12px;
+      border-radius: 10px;
+      border: 1px solid var(--r-border);
+      background: var(--r-bg2);
+      font-weight: 700;
+    }
+    .ar-pager-btn:disabled { opacity: 0.4; cursor: default; }
+    .ar-pager-label {
+      flex: 1 1 auto;
+      min-width: 0;
+      text-align: center;
+      font-weight: 700;
+      font-size: 0.9rem;
+    }
+    html[data-theme="standard"] .ar-pager-btn { background: #fff; }
+    .ar-card {
+      display: grid;
+      grid-template-columns: 28px 48px minmax(0, 1fr) auto;
+      gap: 10px;
+      align-items: center;
+      min-height: 68px;
+      padding: 8px;
+      border-radius: 14px;
+      position: relative;
+      cursor: pointer;
+    }
+    .ar-card.is-static { grid-template-columns: 48px minmax(0, 1fr); cursor: default; }
+    .ar-card.is-selected { border-color: var(--r-primary-dk); box-shadow: inset 0 0 0 1px var(--r-primary-dk); }
+    .ar-card:focus-within { outline: 2px solid var(--r-primary-dk); outline-offset: 2px; }
+    .ar-check {
+      width: 22px;
+      height: 22px;
+      margin: 0;
+      justify-self: center;
+      accent-color: var(--r-primary-dk);
+      cursor: pointer;
+    }
+    .ar-photo, .ar-photo-ph {
+      width: 48px; height: 48px; border-radius: 10px; object-fit: cover;
+      background: rgba(127,127,127,0.18);
+    }
+    .ar-photo-ph {
+      display: grid; place-items: center;
+      font-family: 'Montserrat', sans-serif; font-weight: 800;
+    }
+    .ar-who { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+    .ar-player { font-weight: 700; overflow-wrap: anywhere; text-transform: uppercase; letter-spacing: 0.03em; }
+    .ar-meta, .ar-note, .ar-empty, .ar-nomatch { color: var(--r-muted); }
+    .ar-picked { display: none; font-weight: 700; font-size: .82rem; }
+    .ar-card.is-selected .ar-picked { display: inline; }
+    .ar-send-one {
+      min-height: 44px;
+      padding: 0 10px;
+      border-radius: 10px;
+      border: 1px solid var(--r-border);
+      background: transparent;
+      font-weight: 700;
+    }
+    .ar-send-short { display: none; }
+    .ar-empty, .ar-nomatch, .ar-note { line-height: 1.45; }
+    .ar-nomatch[hidden] { display: none !important; }
+    .ar-more {
+      border: 1px solid var(--r-border);
+      border-radius: var(--r-radius);
+      padding: 0 12px 12px;
+    }
+    .ar-more[open] { display: flex; flex-direction: column; gap: 12px; }
+    .ar-more > summary {
+      min-height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 8px 0;
+      list-style: none;
+      cursor: pointer;
+      font-weight: 700;
+    }
+    .ar-more > summary::-webkit-details-marker { display: none; }
+    .ar-badge {
+      min-width: 28px; text-align: center;
+      border-radius: 999px; padding: 2px 8px;
+      border: 1px solid var(--r-border);
+      font-family: 'Montserrat', sans-serif;
+    }
+    .ar-rail { min-width: 0; }
+    .ar-actions {
+      border-radius: 16px;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .ar-actions-pick, .ar-actions-full { display: flex; flex-direction: column; gap: 8px; }
+    .ar-shell:not(.is-full) .ar-actions-full { display: none; }
+    .ar-shell.is-full:not(.is-choosing) .ar-actions-pick { display: none; }
+    .ar-shell.is-choosing .ar-actions-full .ar-complete-btn { display: none; }
+    .ar-count { font-family: 'Montserrat', sans-serif; font-weight: 800; }
+    .ar-count[hidden] { display: none !important; }
+    .ar-tier-picks { display: none; flex-direction: column; gap: 6px; }
+    .ar-tier-picks[hidden] { display: none !important; }
+    .ar-tier-pick {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      min-height: 44px;
+      padding: 6px 12px;
+      border-radius: 12px;
+      border: 1px solid var(--r-border);
+      background: rgba(127, 127, 127, 0.08);
+    }
+    .ar-tier-pick-name { min-width: 0; font-weight: 700; }
+    .ar-tier-pick-count {
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 800;
+      font-size: 1.15rem;
+      font-variant-numeric: tabular-nums;
+    }
+    html[data-theme="standard"] .ar-tier-pick { background: #fff; }
+    .ar-btn {
+      min-height: 48px;
+      padding: 0 14px;
+      border-radius: 12px;
+      border: 1px solid transparent;
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 800;
+      cursor: pointer;
+    }
+    .ar-btn:disabled { opacity: .5; cursor: not-allowed; }
+    .ar-btn-primary { background: var(--r-primary-dk); color: #fff; }
+    html[data-theme="butterscotch"] .ar-btn-primary,
+    html[data-theme="standard"] .ar-btn-primary,
+    html[data-theme="lemon"] .ar-btn-primary { color: #1a1200; }
+    .ar-btn-ghost {
+      background: transparent;
+      color: var(--r-text);
+      border-color: var(--r-border);
+    }
+    .ar-btn-danger { background: #991b1b; color: #fff; }
+    .ar-send, .ar-mark { width: 100%; }
+    .ar-complete-rail { border-top: 1px solid var(--r-border); margin-top: 4px; text-align: center; }
     .ar-brand-strip {
       margin-top: auto;
       display: flex;
@@ -559,320 +624,172 @@
       justify-content: center;
       gap: 12px;
       flex-wrap: wrap;
-      padding: 18px 16px 8px;
+      padding: 16px 8px 4px;
       text-align: center;
       border-top: 1px solid var(--r-border);
     }
-    .ar-brand-strip-logo {
-      height: 28px;
-      width: auto;
-      opacity: 0.95;
-    }
-    .ar-brand-strip-text {
-      font-size: .82rem;
-      color: var(--r-muted);
-      letter-spacing: 0.4px;
-    }
+    .ar-brand-strip-logo { height: 26px; width: auto; }
+    .ar-brand-strip-text { font-size: .82rem; color: var(--r-muted); }
     .ar-brand-strip-text strong {
       color: var(--r-accent);
       font-family: 'Montserrat', sans-serif;
-      font-weight: 800;
     }
-    .ar-brand-strip-sep {
-      width: 4px;
-      height: 4px;
-      border-radius: 50%;
-      background: var(--r-border);
-    }
+    html[data-theme="standard"] .ar-brand-strip-text strong { color: var(--r-primary-dk); }
     .ar-toast {
       position: fixed;
       left: 50%;
-      bottom: 24px;
-      transform: translateX(-50%) translateY(20px);
-      background: rgba(15,23,42,0.95);
+      bottom: var(--ar-dock, 24px);
+      transform: translateX(-50%) translateY(12px);
+      background: #0f172a;
       color: #fff;
-      border: 1px solid rgba(255,255,255,0.12);
       border-radius: 12px;
       padding: 12px 16px;
-      font-size: .88rem;
       opacity: 0;
       pointer-events: none;
-      transition: .25s ease;
-      z-index: 50;
+      z-index: 60;
       max-width: min(90vw, 420px);
       text-align: center;
     }
     .ar-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
-
-    /* ── Custom confirm modal ───────────────────────────────────────── */
     .ar-modal-backdrop {
-      position: fixed;
-      inset: 0;
-      z-index: 100;
-      display: none;
-      align-items: center;
-      justify-content: center;
-      padding: 18px;
-      background: rgba(0,0,0,0.72);
-      backdrop-filter: blur(8px);
-      -webkit-backdrop-filter: blur(8px);
-      animation: arFadeIn .18s ease;
+      position: fixed; inset: 0; z-index: 100;
+      display: none; align-items: center; justify-content: center;
+      padding: 18px; background: rgba(0,0,0,0.72);
     }
     .ar-modal-backdrop.show { display: flex; }
-    @keyframes arFadeIn {
-      from { opacity: 0; }
-      to { opacity: 1; }
-    }
-    @keyframes arPop {
-      from { opacity: 0; transform: translateY(12px) scale(0.96); }
-      to { opacity: 1; transform: translateY(0) scale(1); }
-    }
     .ar-modal {
       width: min(100%, 440px);
       border-radius: 20px;
-      background:
-        linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02)),
-        var(--r-bg2);
+      background: var(--r-bg2);
       border: 1px solid var(--r-border);
-      box-shadow: 0 24px 60px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.04) inset;
-      padding: 28px 24px 20px;
+      padding: 24px 20px 18px;
       text-align: center;
-      animation: arPop .22s ease;
-      position: relative;
-      overflow: hidden;
-    }
-    .ar-modal::before {
-      content: '';
-      position: absolute;
-      top: -40%;
-      left: 50%;
-      width: 220px;
-      height: 220px;
-      transform: translateX(-50%);
-      background: radial-gradient(circle, var(--r-glow), transparent 70%);
-      pointer-events: none;
+      color: var(--r-text);
     }
     .ar-modal-icon {
-      width: 64px;
-      height: 64px;
-      margin: 0 auto 16px;
-      border-radius: 18px;
-      display: grid;
-      place-items: center;
-      font-size: 1.7rem;
-      position: relative;
-      background: rgba(255,255,255,0.06);
+      width: 56px; height: 56px; margin: 0 auto 12px;
+      border-radius: 16px; display: grid; place-items: center; font-size: 1.5rem;
       border: 1px solid var(--r-border);
-      box-shadow: 0 8px 24px var(--r-glow);
-    }
-    .ar-modal.is-danger .ar-modal-icon {
-      background: rgba(239,68,68,0.14);
-      border-color: rgba(239,68,68,0.35);
-      box-shadow: 0 8px 24px rgba(239,68,68,0.28);
-    }
-    .ar-modal.is-ok .ar-modal-icon {
-      background: rgba(34,197,94,0.12);
-      border-color: rgba(34,197,94,0.32);
-      box-shadow: 0 8px 24px rgba(34,197,94,0.22);
     }
     .ar-modal-title {
       font-family: 'Montserrat', sans-serif;
-      font-size: 1.2rem;
-      font-weight: 800;
-      letter-spacing: 0.2px;
-      margin-bottom: 8px;
-      position: relative;
+      font-size: 1.15rem; font-weight: 800; margin-bottom: 8px;
     }
-    .ar-modal-msg {
-      color: var(--r-muted);
-      font-size: .92rem;
-      line-height: 1.55;
-      margin-bottom: 22px;
-      position: relative;
-    }
-    .ar-modal-msg strong { color: var(--r-text); font-weight: 700; }
-    .ar-modal-actions {
-      display: flex;
-      gap: 10px;
-      justify-content: center;
-      flex-wrap: wrap;
-      position: relative;
-    }
+    .ar-modal-msg { color: var(--r-muted); line-height: 1.5; margin-bottom: 18px; }
+    .ar-modal-msg strong { color: var(--r-text); }
+    .ar-modal-actions { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
     .ar-modal-actions .ar-btn { min-width: 120px; }
 
-    /* ── Laptop / large screens: spacious, premium layout ───────────── */
-    @media (min-width: 1024px) {
-      .ar-shell {
-        max-width: 1440px;
-        padding: 32px 36px 40px;
-        gap: 24px;
+    @media (max-width: 639px) {
+      .ar-shell { padding-left: 10px; padding-right: 10px; }
+      .ar-head { flex-wrap: nowrap; gap: 6px; padding: 8px 10px; }
+      .ar-brand { gap: 6px; }
+      .ar-logo, .ar-logo-ph { width: 28px; height: 28px; flex-basis: 28px; border-radius: 8px; }
+      .ar-powered-logo { height: 14px; }
+      .ar-send-long { display: none; }
+      .ar-send-short { display: inline; }
+      .ar-shell { padding-bottom: calc(var(--ar-dock, 180px) + 8px); }
+      .ar-rail {
+        position: fixed; left: 0; right: 0; bottom: 0; z-index: 30;
+        padding-bottom: env(safe-area-inset-bottom);
       }
-      .ar-header {
-        padding: 26px 30px;
-        gap: 22px;
-        border-radius: 20px;
+      .ar-actions {
+        border-radius: 16px 16px 0 0;
+        border-bottom: 0;
       }
-      .ar-logo, .ar-logo-ph {
-        width: 72px; height: 72px;
-        border-radius: 16px;
+    }
+    @media (min-width: 640px) {
+      .ar-shell { padding: 20px 24px 28px; }
+      .ar-pool { min-height: 72px; align-content: center; }
+      .ar-pool-note { display: block; }
+      .ar-idline { display: flex; flex-wrap: wrap; gap: 0 8px; align-items: baseline; }
+    }
+    @media (min-width: 640px) and (max-width: 899px) {
+      .ar-shell { padding-bottom: calc(var(--ar-dock, 96px) + 8px); }
+      .ar-rail {
+        position: fixed; left: 0; right: 0; bottom: 0; z-index: 30;
+        padding: 0 24px env(safe-area-inset-bottom);
       }
-      .ar-eyebrow {
-        font-size: .72rem;
-        letter-spacing: 2.6px;
-        margin-bottom: 6px;
+      .ar-actions { border-radius: 16px 16px 0 0; border-bottom: 0; }
+      .ar-actions-pick {
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr) auto;
+        align-items: center;
+        gap: 8px;
       }
-      .ar-title {
-        font-size: clamp(1.55rem, 2vw, 2rem);
-        letter-spacing: 0.02em;
-        white-space: normal;
-      }
-      .ar-sub {
-        margin-top: 8px;
-        font-size: .98rem;
-        line-height: 1.55;
-        max-width: 48rem;
-      }
-      .ar-stats {
+      .ar-send { width: auto; }
+      .ar-send-all { justify-self: end; text-align: right; }
+      .ar-actions-full .ar-mark { width: 100%; }
+    }
+    @media (max-width: 899px) {
+      .ar-complete-rail { display: none; }
+      .ar-shell.is-full:not(.is-choosing) .ar-actions-full .ar-complete-btn { display: block; }
+      .ar-tier-picks { display: none !important; }
+      .ar-shell.is-searching { padding-bottom: 16px; }
+      .ar-shell.is-searching .ar-rail { display: none; }
+    }
+    @media (min-width: 900px) {
+      .ar-shell { max-width: 1200px; padding: 28px 32px 36px; }
+      .ar-layout {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 300px;
         gap: 16px;
-        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+        align-items: start;
       }
-      .ar-stat {
-        padding: 22px 16px;
-        border-radius: 18px;
-        background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02));
-        box-shadow: 0 10px 28px rgba(0,0,0,0.18);
-      }
-      .ar-stat-num { font-size: clamp(1.85rem, 2.4vw, 2.4rem); }
-      .ar-stat-lbl {
-        margin-top: 10px;
-        font-size: .74rem;
-        letter-spacing: 1.8px;
-      }
-      .ar-panels {
-        gap: 22px;
-        align-items: stretch;
-      }
-      .ar-panels:has(> .ar-panel:nth-child(3)) {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-      }
-      .ar-panel {
-        min-height: 560px;
-        max-height: min(72vh, 820px);
-        border-radius: 20px;
-        box-shadow: 0 16px 40px rgba(0,0,0,0.22);
-      }
-      .ar-panel-head {
-        padding: 18px 20px;
-        gap: 14px;
-      }
-      .ar-panel-title { font-size: 1.05rem; gap: 10px; }
-      .ar-toolbar { gap: 10px; }
-      .ar-filters { gap: 8px; margin-bottom: 4px; }
-      .ar-tier-chip { padding: 7px 14px; font-size: .76rem; }
-      .ar-search {
-        height: 42px;
-        border-radius: 12px;
-        font-size: .9rem;
-        padding: 0 14px;
-        min-width: 200px;
-      }
-      .ar-list { padding: 12px 14px; }
-      .ar-row {
-        grid-template-columns: 32px 60px minmax(0, 1fr) auto auto;
-        gap: 14px;
-        padding: 14px 14px;
-        border-radius: 14px;
-        margin-bottom: 6px;
-      }
-      .ar-row:last-child { margin-bottom: 0; }
-      .ar-avatar, .ar-avatar-ph {
-        width: 60px; height: 60px;
-        border-radius: 14px;
-      }
-      .ar-avatar-ph { font-size: 1.05rem; }
-      .ar-name {
-        font-size: 1.05rem;
-        letter-spacing: 0.06em;
-      }
-      .ar-role {
-        margin-top: 4px;
-        font-size: .8rem;
-        letter-spacing: 0.08em;
-      }
-      .ar-tier {
-        font-size: .74rem;
-        padding: 6px 12px;
-        border-radius: 10px;
-        letter-spacing: 0.08em;
-      }
-      .ar-btn {
-        height: 44px;
-        padding: 0 18px;
-        font-size: .82rem;
-        border-radius: 12px;
-      }
-      .ar-btn-sm {
-        height: 36px;
-        padding: 0 12px;
-        font-size: .76rem;
-      }
-      .ar-panel-foot { padding: 16px 18px; gap: 10px; }
-      .ar-footer {
-        padding: 20px 24px;
-        border-radius: 18px;
-        gap: 18px;
-      }
-      .ar-footer-note {
-        font-size: .92rem;
-        max-width: 46rem;
-        line-height: 1.55;
-      }
-      .ar-banner-full {
-        padding: 18px 22px;
-        font-size: .98rem;
-        border-radius: 16px;
-      }
+      .ar-rail { position: sticky; top: 16px; }
+      .ar-complete-inline { display: none; }
+      .ar-tier-picks { display: flex; }
+      .ar-actions-pick .ar-complete-rail { display: block; }
     }
-    @media (min-width: 1440px) {
-      .ar-shell {
-        max-width: 1600px;
-        padding: 40px 48px 48px;
-        gap: 28px;
-      }
-      .ar-panel {
-        min-height: 620px;
-        max-height: min(74vh, 900px);
-      }
-      .ar-row {
-        grid-template-columns: 36px 68px minmax(0, 1fr) auto auto;
-        padding: 16px 16px;
-        gap: 16px;
-      }
-      .ar-avatar, .ar-avatar-ph {
-        width: 68px; height: 68px;
-        border-radius: 16px;
-      }
-      .ar-name { font-size: 1.12rem; }
-      .ar-role { font-size: .84rem; }
+    .ar-loader {
+      position: fixed;
+      inset: 0;
+      z-index: 200;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+      padding: 28px 12px;
+      text-align: center;
+      background:
+        radial-gradient(ellipse 70% 50% at 50% 30%, var(--r-glow), transparent 60%),
+        var(--r-bg);
+      color: var(--r-text);
     }
-
-    @media (max-width: 960px) {
-      .ar-panels { grid-template-columns: 1fr; }
-      .ar-panel { max-height: none; min-height: 320px; }
-      .ar-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .ar-loader[hidden] { display: none !important; }
+    .ar-loader-spin {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      border: 3px solid var(--r-border);
+      border-top-color: var(--r-primary);
+      animation: arSpin .8s linear infinite;
     }
-    @media (max-width: 560px) {
-      .ar-shell { padding: 12px 10px 20px; gap: 12px; }
-      .ar-header { padding: 14px; }
-      .ar-hdr-right { width: 100%; align-items: flex-start; }
-      .ar-row { grid-template-columns: 24px 40px 1fr auto; }
-      .ar-tier { display: none; }
-      .ar-footer { flex-direction: column; align-items: stretch; }
-      .ar-footer-actions { width: 100%; }
-      .ar-btn { width: 100%; }
-      .ar-panel-foot .ar-btn { flex: 1; }
-      .ar-brand-strip { flex-direction: column; gap: 8px; }
-      .ar-brand-strip-sep { display: none; }
+    .ar-loader-spin { align-self: center; }
+    .ar-loader-title,
+    .ar-loader-sub {
+      align-self: stretch;
+      width: 100%;
+      min-width: 0;
+      max-width: none;
+      text-align: center;
+      white-space: nowrap;
+      overflow: hidden;
+    }
+    .ar-loader-title {
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 800;
+      font-size: 1.35rem;
+      letter-spacing: .02em;
+      text-transform: uppercase;
+      line-height: 1.2;
+    }
+    .ar-loader-sub { color: var(--r-muted); font-size: 0.95rem; }
+    @keyframes arSpin { to { transform: rotate(360deg); } }
+    @media (prefers-reduced-motion: reduce) {
+      .ar-toast { transition: none; }
+      .ar-loader-spin { animation: none; border-top-color: var(--r-primary); }
     }
   </style>
 </head>
@@ -884,18 +801,20 @@
   <t t-set="mark_unsold_url" t-value="'/%s/auction/display_auction/%s/resume/mark-unsold' % (db, slug)"/>
   <t t-set="squads_full" t-value="squads_full or False"/>
   <t t-set="auction_count" t-value="auction_count or 0"/>
+  <t t-set="start_pool" t-value="'unsold' if not (draft_count or 0) and (unsold_count or 0) else 'draft'"/>
+  <t t-set="live_tiers" t-value="tiers.filtered(lambda t: not t.is_an_icon_tier) if tiers else tiers"/>
 
-  <!-- Hidden form used by JS for bulk open / complete (server redirects to presentation) -->
   <form id="ar-action-form" method="POST" t-att-action="open_url" style="display:none;">
     <input type="hidden" name="player_ids" id="ar-player-ids" value=""/>
   </form>
 
-  <div class="ar-shell"
+  <div t-attf-class="ar-shell #{squads_full and 'is-full' or ''}"
+       t-att-data-pool="start_pool"
        t-att-data-open-url="open_url"
        t-att-data-complete-url="complete_url"
        t-att-data-mark-unsold-url="mark_unsold_url">
 
-    <header class="ar-header">
+    <header class="ar-head">
       <div class="ar-brand">
         <t t-if="tournament and tournament.logo">
           <img class="ar-logo"
@@ -903,337 +822,168 @@
                t-att-alt="tournament.name"/>
         </t>
         <t t-else="">
-          <div class="ar-logo-ph">🏆</div>
+          <div class="ar-logo-ph" aria-hidden="true"><t t-esc="(tournament.name or 'A')[:1].upper()"/></div>
         </t>
         <div class="ar-title-wrap">
-          <div class="ar-eyebrow">
-            <t t-if="squads_full">All Squads Full</t>
-            <t t-else="">Auction Queue Empty</t>
-          </div>
           <h1 class="ar-title"><t t-esc="tournament.name if tournament else 'Auction'"/></h1>
           <p class="ar-sub">
-            <t t-if="squads_full">
-              Every team squad is full, but
-              <strong><t t-esc="auction_count"/></strong>
-              player(s) are still In Auction and cannot be sold.
-              Mark them as Unsold to clear the live queue, or open Draft / Unsold later if you expand squad sizes.
-            </t>
-            <t t-else="">
-              The live auction queue is empty. Choose Draft or Unsold players below to continue.
-              <t t-if="sold_count">
-                Or declare the auction complete to show the Thank You screen.
-              </t>
-            </t>
+            <t t-if="squads_full">Teams are full. Clear the players still on stage.</t>
+            <t t-else="">The stage is clear. Pick players, then call them.</t>
           </p>
         </div>
       </div>
-      <div class="ar-hdr-right">
-      <a href="/web" title="Go to AuctionChamp backend" class="ar-hdr-logo-link">
-        <img class="ar-powered-logo"
-             src="/auction_module/static/src/assets/images/logo.svg"
-             alt="AuctionChamp"/>
+      <a href="/web" title="Go to AuctionChamp backend" class="ar-backend">
+        <img class="ar-powered-logo" src="/auction_module/static/src/assets/images/logo.svg" alt="AuctionChamp"/>
       </a>
-      </div>
     </header>
 
-    <t t-if="squads_full">
-      <div class="ar-banner-full">
-        <strong>Squads full.</strong>
-        Remaining In Auction players have nowhere to go — mark them all as Unsold to continue.
+    <section class="ar-stats" aria-label="Auction progress">
+      <div class="ar-stat">
+        <span class="ar-stat-label">SOLD</span>
+        <span class="ar-stat-value"><t t-esc="sold_count or 0"/></span>
       </div>
-    </t>
-
-    <section class="ar-stats">
-      <t t-if="squads_full">
-        <div class="ar-stat ar-stat-auction">
-          <div class="ar-stat-num"><t t-esc="auction_count"/></div>
-          <div class="ar-stat-lbl">In Auction</div>
-        </div>
-      </t>
-      <div class="ar-stat ar-stat-draft">
-        <div class="ar-stat-num"><t t-esc="draft_count"/></div>
-        <div class="ar-stat-lbl">Draft</div>
+      <div class="ar-stat">
+        <span class="ar-stat-label">WAITING</span>
+        <span class="ar-stat-value"><t t-esc="(draft_count or 0) + (unsold_count or 0)"/></span>
       </div>
-      <div class="ar-stat ar-stat-unsold">
-        <div class="ar-stat-num"><t t-esc="unsold_count"/></div>
-        <div class="ar-stat-lbl">Unsold</div>
-      </div>
-      <div class="ar-stat ar-stat-sold">
-        <div class="ar-stat-num"><t t-esc="sold_count"/></div>
-        <div class="ar-stat-lbl">Sold</div>
-      </div>
-      <div class="ar-stat ar-stat-open">
-        <div class="ar-stat-num"><t t-esc="(draft_count or 0) + (unsold_count or 0)"/></div>
-        <div class="ar-stat-lbl">Still Available</div>
+      <div t-attf-class="ar-stat #{'ar-stat-live' if auction_count else ''}">
+        <span class="ar-stat-label">ON STAGE</span>
+        <span class="ar-stat-value"><t t-esc="auction_count"/></span>
       </div>
     </section>
 
-    <section class="ar-panels">
-      <t t-if="squads_full">
-        <!-- Remaining In Auction (cannot be sold — squads full) -->
-        <div class="ar-panel ar-panel-auction" data-panel="auction">
-          <div class="ar-panel-head">
-            <div class="ar-panel-title">
-              Remaining In Auction
-              <span class="ar-badge"><t t-esc="auction_count"/></span>
-            </div>
-            <div class="ar-toolbar">
-              <t t-if="tiers">
-                <div class="ar-filters" data-tier-filters="auction">
-                  <button type="button" class="ar-tier-chip is-active" data-tier-id="">All</button>
-                  <t t-foreach="tiers" t-as="tier">
-                    <button type="button" class="ar-tier-chip"
-                            t-att-data-tier-id="tier.id"
-                            t-att-style="tier.color and ('border-color:%s;color:%s' % (tier.color, tier.color)) or None">
-                      <t t-esc="tier.name"/>
-                    </button>
-                  </t>
-                </div>
-              </t>
-              <input class="ar-search" type="search"
-                     placeholder="Search serial, name or tier…"
-                     data-search="auction"
-                     autocomplete="off"/>
-            </div>
-          </div>
-          <div class="ar-list" id="ar-list-auction">
-            <t t-if="not auction_players">
-              <div class="ar-empty">No players left In Auction.</div>
+    <div class="ar-layout">
+      <div class="ar-main">
+        <t t-if="squads_full">
+          <section class="ar-stuck" aria-label="Players still on stage">
+            <h2 class="ar-section-title">Still on stage</h2>
+            <label class="ar-search-label">
+              <span class="ar-sr">Search players still on stage</span>
+              <input class="ar-search" type="search" placeholder="Search serial or name" data-search="auction" autocomplete="off"/>
+            </label>
+            <t t-if="live_tiers">
+              <div class="ar-filters" data-tier-filters="auction" role="group" aria-label="Tier">
+                <button type="button" class="ar-tier-chip is-active" data-tier-id="">
+                  <span class="ar-tier-name">All</span>
+                  <span class="ar-tier-count">0</span>
+                </button>
+                <t t-foreach="live_tiers" t-as="tier">
+                  <button type="button" class="ar-tier-chip"
+                          t-att-data-tier-id="tier.id"
+                          t-att-style="tier.color and ('border-color:%s;color:%s' % (tier.color, tier.color)) or None">
+                    <span class="ar-tier-name"><t t-esc="tier.name"/></span>
+                    <span class="ar-tier-count">0</span>
+                  </button>
+                </t>
+              </div>
+              <p class="ar-tier-summary" data-tier-summary="auction"></p>
             </t>
-            <t t-foreach="auction_players" t-as="p">
-              <div class="ar-row"
-                   t-att-data-id="p.id"
-                   t-att-data-name="(p.name or '').lower()"
-                   t-att-data-sl-no="str(p.sl_no or '')"
-                   t-att-data-tier-id="p.tier_id.id if p.tier_id else ''"
-                   t-att-data-tier-name="(p.tier_id.name or '').lower() if p.tier_id else ''"
-                   t-att-data-search="' '.join(filter(None, [str(p.sl_no or ''), (p.name or '').lower(), (p.tier_id.name or '').lower() if p.tier_id else '', (p.role or '').lower()]))">
-                <span/>
-                <t t-if="p.photo">
-                  <img class="ar-avatar"
-                       t-att-src="'/%s/auction/public/image/auction.team.player/%d/photo' % (db, p.id)"
-                       alt=""/>
-                </t>
-                <t t-else="">
-                  <div class="ar-avatar-ph"><t t-esc="(p.name or '?')[:1].upper()"/></div>
-                </t>
-                <div class="ar-meta">
-                  <div class="ar-name"><t t-esc="p.name"/></div>
-                  <div class="ar-role">
-                    <t t-if="p.tournament_type == 'football' and p.dominant_position_id">
-                      <t t-esc="p.dominant_position_id.name"/>
+            <div class="ar-panel" data-panel="auction">
+              <t t-if="not auction_players">
+                <p class="ar-empty">No players left on stage.</p>
+              </t>
+              <p class="ar-nomatch" hidden="hidden">No players match this search.</p>
+              <div class="ar-list" role="list">
+                <t t-foreach="auction_players" t-as="p">
+                  <div class="ar-card is-static"
+                       role="listitem"
+                       t-att-data-id="p.id"
+                       t-att-data-name="(p.name or '').lower()"
+                       t-att-data-sl-no="str(p.sl_no or '')"
+                       t-att-data-tier-id="p.tier_id.id if p.tier_id and not p.tier_id.is_an_icon_tier else ''"
+                       t-att-data-tier-name="(p.tier_id.name or '').lower() if p.tier_id and not p.tier_id.is_an_icon_tier else ''"
+                       t-att-data-search="' '.join(filter(None, [
+                            str(p.sl_no or ''),
+                            (p.name or '').lower(),
+                            (p.tier_id.name or '').lower() if p.tier_id and not p.tier_id.is_an_icon_tier else '',
+                            (p.role or '').lower(),
+                       ]))">
+                    <t t-if="p.photo">
+                      <img class="ar-photo" loading="lazy"
+                           t-att-src="'/%s/auction/public/image/auction.team.player/%d/photo' % (db, p.id)"
+                           alt=""/>
                     </t>
                     <t t-else="">
-                      <t t-esc="p.role or '—'"/>
+                      <div class="ar-photo ar-photo-ph" aria-hidden="true"><t t-esc="(p.name or '?')[:1].upper()"/></div>
                     </t>
-                    <t t-if="p.sl_no"> · #<t t-esc="p.sl_no"/></t>
+                    <div class="ar-who">
+                      <span class="ar-player"><t t-esc="(p.name or '').upper()"/></span>
+                      <span class="ar-meta">
+                        <t t-if="p.tournament_type == 'football' and p.dominant_position_id">
+                          <t t-esc="p.dominant_position_id.name"/>
+                        </t>
+                        <t t-else="">
+                          <t t-esc="p.role or 'Player'"/>
+                        </t>
+                        <t t-if="p.sl_no"> · <t t-esc="p.sl_no"/></t>
+                        <t t-if="p.tier_id and not p.tier_id.is_an_icon_tier"> · <t t-esc="p.tier_id.name"/></t>
+                      </span>
+                    </div>
                   </div>
-                </div>
-                <t t-if="p.tier_id">
-                  <span class="ar-tier" t-att-style="'border-color:%s;color:%s' % (p.tier_id.color or '#7f8c8d', p.tier_id.color or '#7f8c8d')">
-                    <t t-esc="p.tier_id.name"/>
-                  </span>
-                </t>
-                <t t-else=""><span/></t>
-              </div>
-            </t>
-          </div>
-          <div class="ar-panel-foot">
-            <button type="button" class="ar-btn ar-btn-danger" id="ar-mark-unsold-btn"
-                    t-att-disabled="(not auction_count) and 'disabled' or None">
-              Mark All Remaining as Unsold
-            </button>
-          </div>
-        </div>
-      </t>
-
-      <!-- Draft -->
-      <div class="ar-panel ar-panel-draft" data-panel="draft">
-        <div class="ar-panel-head">
-          <div class="ar-panel-title">
-            Draft Players
-            <span class="ar-badge"><t t-esc="draft_count"/></span>
-          </div>
-          <div class="ar-toolbar">
-            <t t-if="tiers">
-              <div class="ar-filters" data-tier-filters="draft">
-                <button type="button" class="ar-tier-chip is-active" data-tier-id="">All</button>
-                <t t-foreach="tiers" t-as="tier">
-                  <button type="button" class="ar-tier-chip"
-                          t-att-data-tier-id="tier.id"
-                          t-att-style="tier.color and ('border-color:%s;color:%s' % (tier.color, tier.color)) or None">
-                    <t t-esc="tier.name"/>
-                  </button>
                 </t>
               </div>
-            </t>
-            <input class="ar-search" type="search"
-                   placeholder="Search serial, name or tier…"
-                   data-search="draft"
-                   autocomplete="off"/>
-            <button type="button" class="ar-btn ar-btn-ghost" data-select-all="draft">Select All</button>
-          </div>
-        </div>
-        <div class="ar-list" id="ar-list-draft">
-          <t t-if="not draft_players">
-            <div class="ar-empty">No draft players left.</div>
-          </t>
-          <t t-foreach="draft_players" t-as="p">
-            <div class="ar-row"
-                 t-att-data-id="p.id"
-                 t-att-data-name="(p.name or '').lower()"
-                 t-att-data-sl-no="str(p.sl_no or '')"
-                 t-att-data-tier-id="p.tier_id.id if p.tier_id else ''"
-                 t-att-data-tier-name="(p.tier_id.name or '').lower() if p.tier_id else ''"
-                 t-att-data-search="' '.join(filter(None, [str(p.sl_no or ''), (p.name or '').lower(), (p.tier_id.name or '').lower() if p.tier_id else '', (p.role or '').lower()]))">
-              <input type="checkbox" t-att-value="p.id"/>
-              <t t-if="p.photo">
-                <img class="ar-avatar"
-                     t-att-src="'/%s/auction/public/image/auction.team.player/%d/photo' % (db, p.id)"
-                     alt=""/>
-              </t>
-              <t t-else="">
-                <div class="ar-avatar-ph"><t t-esc="(p.name or '?')[:1].upper()"/></div>
-              </t>
-              <div class="ar-meta">
-                <div class="ar-name"><t t-esc="p.name"/></div>
-                <div class="ar-role">
-                  <t t-if="p.tournament_type == 'football' and p.dominant_position_id">
-                    <t t-esc="p.dominant_position_id.name"/>
-                  </t>
-                  <t t-else="">
-                    <t t-esc="p.role or '—'"/>
-                  </t>
-                  <t t-if="p.sl_no"> · #<t t-esc="p.sl_no"/></t>
-                </div>
-              </div>
-              <t t-if="p.tier_id">
-                <span class="ar-tier" t-att-style="'border-color:%s;color:%s' % (p.tier_id.color or '#7f8c8d', p.tier_id.color or '#7f8c8d')">
-                  <t t-esc="p.tier_id.name"/>
-                </span>
-              </t>
-              <t t-else=""><span/></t>
-              <button type="button" class="ar-btn ar-btn-primary ar-btn-sm" t-att-data-open-one="p.id">Open</button>
             </div>
-          </t>
-        </div>
-        <div class="ar-panel-foot">
-          <button type="button" class="ar-btn ar-btn-primary" data-open="draft">Open Selected</button>
-          <button type="button" class="ar-btn ar-btn-ghost" data-open-all="draft">Open All Draft</button>
-        </div>
-      </div>
-
-      <!-- Unsold -->
-      <div class="ar-panel ar-panel-unsold" data-panel="unsold">
-        <div class="ar-panel-head">
-          <div class="ar-panel-title">
-            Unsold Players
-            <span class="ar-badge"><t t-esc="unsold_count"/></span>
-          </div>
-          <div class="ar-toolbar">
-            <t t-if="tiers">
-              <div class="ar-filters" data-tier-filters="unsold">
-                <button type="button" class="ar-tier-chip is-active" data-tier-id="">All</button>
-                <t t-foreach="tiers" t-as="tier">
-                  <button type="button" class="ar-tier-chip"
-                          t-att-data-tier-id="tier.id"
-                          t-att-style="tier.color and ('border-color:%s;color:%s' % (tier.color, tier.color)) or None">
-                    <t t-esc="tier.name"/>
-                  </button>
-                </t>
-              </div>
-            </t>
-            <input class="ar-search" type="search"
-                   placeholder="Search serial, name or tier…"
-                   data-search="unsold"
-                   autocomplete="off"/>
-            <button type="button" class="ar-btn ar-btn-ghost" data-select-all="unsold">Select All</button>
-          </div>
-        </div>
-        <div class="ar-list" id="ar-list-unsold">
-          <t t-if="not unsold_players">
-            <div class="ar-empty">No unsold players left.</div>
-          </t>
-          <t t-foreach="unsold_players" t-as="p">
-            <div class="ar-row"
-                 t-att-data-id="p.id"
-                 t-att-data-name="(p.name or '').lower()"
-                 t-att-data-sl-no="str(p.sl_no or '')"
-                 t-att-data-tier-id="p.tier_id.id if p.tier_id else ''"
-                 t-att-data-tier-name="(p.tier_id.name or '').lower() if p.tier_id else ''"
-                 t-att-data-search="' '.join(filter(None, [str(p.sl_no or ''), (p.name or '').lower(), (p.tier_id.name or '').lower() if p.tier_id else '', (p.role or '').lower()]))">
-              <input type="checkbox" t-att-value="p.id"/>
-              <t t-if="p.photo">
-                <img class="ar-avatar"
-                     t-att-src="'/%s/auction/public/image/auction.team.player/%d/photo' % (db, p.id)"
-                     alt=""/>
-              </t>
-              <t t-else="">
-                <div class="ar-avatar-ph"><t t-esc="(p.name or '?')[:1].upper()"/></div>
-              </t>
-              <div class="ar-meta">
-                <div class="ar-name"><t t-esc="p.name"/></div>
-                <div class="ar-role">
-                  <t t-if="p.tournament_type == 'football' and p.dominant_position_id">
-                    <t t-esc="p.dominant_position_id.name"/>
-                  </t>
-                  <t t-else="">
-                    <t t-esc="p.role or '—'"/>
-                  </t>
-                  <t t-if="p.sl_no"> · #<t t-esc="p.sl_no"/></t>
-                </div>
-              </div>
-              <t t-if="p.tier_id">
-                <span class="ar-tier" t-att-style="'border-color:%s;color:%s' % (p.tier_id.color or '#7f8c8d', p.tier_id.color or '#7f8c8d')">
-                  <t t-esc="p.tier_id.name"/>
-                </span>
-              </t>
-              <t t-else=""><span/></t>
-              <button type="button" class="ar-btn ar-btn-primary ar-btn-sm" t-att-data-open-one="p.id">Open</button>
-            </div>
-          </t>
-        </div>
-        <div class="ar-panel-foot">
-          <button type="button" class="ar-btn ar-btn-primary" data-open="unsold">Open Selected</button>
-          <button type="button" class="ar-btn ar-btn-ghost" data-open-all="unsold">Open All Unsold</button>
-        </div>
-      </div>
-    </section>
-
-    <footer class="ar-footer">
-      <p class="ar-footer-note">
-        Opening players moves them to <strong>In Auction</strong> and starts / resumes the live presentation.
-        <t t-if="sold_count">
-          Only declare complete when you are finished with Draft and Unsold players.
+          </section>
+          <details class="ar-more" id="ar-chooser">
+            <summary>
+              <span>Draft and unsold</span>
+              <span class="ar-badge"><t t-esc="(draft_count or 0) + (unsold_count or 0)"/></span>
+            </summary>
+            <t t-call="auction_module.auction_resume_chooser"/>
+          </details>
         </t>
-      </p>
-      <t t-if="sold_count">
-        <div class="ar-footer-actions">
-          <button type="button" class="ar-btn ar-btn-danger" id="ar-complete-btn">
-            Declare Auction Complete
-          </button>
+        <t t-else="">
+          <t t-call="auction_module.auction_resume_chooser"/>
+        </t>
+      </div>
+
+      <aside class="ar-rail" aria-label="Actions">
+        <div class="ar-actions">
+          <div class="ar-actions-full">
+            <button type="button" class="ar-btn ar-btn-danger ar-mark" id="ar-mark-unsold-btn"
+                    t-att-disabled="(not auction_count) and 'disabled' or None">
+              Mark all as unsold
+            </button>
+            <p class="ar-note">Draft and unsold players stay available. Open them again after a squad has room.</p>
+            <t t-if="sold_count">
+              <button type="button" class="ar-complete-btn">Declare auction complete</button>
+            </t>
+          </div>
+          <div class="ar-actions-pick">
+            <div class="ar-count">0 selected</div>
+            <div class="ar-tier-picks" hidden="hidden"></div>
+            <button type="button" class="ar-btn ar-btn-primary ar-send" data-open="pool" disabled="disabled">Select players</button>
+            <button type="button" class="ar-send-all" data-open-all="pool">
+              <t t-if="start_pool == 'unsold'">Call all Unsold</t>
+              <t t-else="">Call all Draft</t>
+            </button>
+            <t t-if="sold_count">
+              <button type="button" class="ar-complete-btn ar-complete-rail">Declare auction complete</button>
+            </t>
+          </div>
         </div>
-      </t>
-    </footer>
+      </aside>
+    </div>
 
     <div class="ar-brand-strip">
-      <a href="/web" title="Go to AuctionChamp backend" class="ar-hdr-logo-link">
-        <img class="ar-brand-strip-logo"
-             src="/auction_module/static/src/assets/images/logo.svg"
-             alt="AuctionChamp"/>
+      <a href="/web" title="Go to AuctionChamp backend">
+        <img class="ar-brand-strip-logo" src="/auction_module/static/src/assets/images/logo.svg" alt="AuctionChamp"/>
       </a>
-      <span class="ar-brand-strip-sep"/>
-      <div class="ar-brand-strip-text">
-        Powered by <strong>AuctionChamp</strong> · All rights reserved
-      </div>
+      <div class="ar-brand-strip-text">Powered by <strong>AuctionChamp</strong> · All rights reserved</div>
     </div>
   </div>
 
-  <div class="ar-toast" id="ar-toast"></div>
+  <div class="ar-loader" id="ar-loader" hidden="hidden" role="status" aria-live="polite">
+    <div class="ar-loader-spin" aria-hidden="true"></div>
+    <p class="ar-loader-title" id="ar-loader-title">Calling players into the auction</p>
+    <p class="ar-loader-sub">The stage is getting ready</p>
+  </div>
+
+  <div class="ar-toast" id="ar-toast" role="status"></div>
 
   <div class="ar-modal-backdrop" id="ar-modal" role="dialog" aria-modal="true" aria-hidden="true">
     <div class="ar-modal" id="ar-modal-card">
-      <div class="ar-modal-icon" id="ar-modal-icon">✨</div>
+      <div class="ar-modal-icon" id="ar-modal-icon">🎯</div>
       <div class="ar-modal-title" id="ar-modal-title">Confirm</div>
       <div class="ar-modal-msg" id="ar-modal-msg"></div>
       <div class="ar-modal-actions">
@@ -1289,7 +1039,7 @@
       modalCard.classList.remove('is-danger', 'is-ok');
       if (opts.danger) modalCard.classList.add('is-danger');
       else modalCard.classList.add('is-ok');
-      modalIcon.textContent = opts.icon || (opts.danger ? '🏁' : '🚀');
+      modalIcon.textContent = opts.icon || (opts.danger ? '🏁' : '🎯');
       modalTitle.textContent = opts.title || 'Confirm';
       modalMsg.innerHTML = opts.message || '';
       modalOk.textContent = opts.confirmLabel || 'Confirm';
@@ -1312,29 +1062,217 @@
     if (ev.key === 'Enter') closeModal(true);
   });
 
-  function panel(name) {
-    return document.querySelector('.ar-panel[data-panel="' + name + '"]');
+  function poolName() {
+    return shell.getAttribute('data-pool') || 'draft';
   }
-
+  function resolveName(name) {
+    return name === 'pool' ? poolName() : name;
+  }
+  function panel(name) {
+    return document.querySelector('.ar-panel[data-panel="' + resolveName(name) + '"]');
+  }
+  function esc(value) {
+    return String(value || '').replace(/[&<>"']/g, function (ch) {
+      return {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[ch];
+    });
+  }
   function activeTier(name) {
-    var wrap = document.querySelector('[data-tier-filters="' + name + '"]');
+    var key = name === 'pool' ? 'pool' : resolveName(name);
+    var wrap = document.querySelector('[data-tier-filters="' + key + '"]');
     if (!wrap) return [];
     return Array.prototype.map.call(
       wrap.querySelectorAll('.ar-tier-chip.is-active[data-tier-id]'),
       function (btn) { return String(btn.getAttribute('data-tier-id') || ''); }
     ).filter(function (id) { return id !== ''; });
   }
+  var pageState = {};
 
-  function applyPanelFilters(name) {
+  function pageSize() {
+    if (window.matchMedia('(min-width: 900px)').matches) return 12;
+    if (window.matchMedia('(min-width: 640px)').matches) return 10;
+    return 8;
+  }
+
+  function ensurePager(p) {
+    if (!p.querySelector('.ar-list') || p.querySelector('.ar-pager')) return;
+    function make() {
+      var nav = document.createElement('nav');
+      nav.className = 'ar-pager';
+      nav.setAttribute('aria-label', 'Player pages');
+      nav.hidden = true;
+      var prev = document.createElement('button');
+      prev.type = 'button';
+      prev.className = 'ar-pager-btn';
+      prev.setAttribute('data-step', 'prev');
+      prev.textContent = 'Previous';
+      var label = document.createElement('span');
+      label.className = 'ar-pager-label';
+      var next = document.createElement('button');
+      next.type = 'button';
+      next.className = 'ar-pager-btn';
+      next.setAttribute('data-step', 'next');
+      next.textContent = 'Next';
+      nav.appendChild(prev);
+      nav.appendChild(label);
+      nav.appendChild(next);
+      nav.addEventListener('click', function (ev) {
+        var btn = ev.target.closest('[data-step]');
+        if (!btn || btn.disabled) return;
+        var key = p.getAttribute('data-panel');
+        var cur = pageState[key] || 0;
+        pageState[key] = btn.getAttribute('data-step') === 'next' ? cur + 1 : cur - 1;
+        applyPaging(key, true);
+      });
+      return nav;
+    }
+    var list = p.querySelector('.ar-list');
+    var top = make();
+    list.parentNode.insertBefore(top, list);
+    list.parentNode.insertBefore(make(), list.nextSibling);
+  }
+
+  function noun(n) {
+    return n === 1 ? 'player' : 'players';
+  }
+
+  function refreshTierCounts(name) {
+    var key = name === 'pool' ? 'pool' : resolveName(name);
+    var p = panel(key);
+    if (!p) return;
+    var counts = { '': 0 };
+    var matched = { '': 0 };
+    p.querySelectorAll('.ar-card').forEach(function (row) {
+      counts[''] += 1;
+      if (!row.hidden) matched[''] += 1;
+      var tid = String(row.getAttribute('data-tier-id') || '');
+      if (!tid) return;
+      counts[tid] = (counts[tid] || 0) + 1;
+      if (!row.hidden) matched[tid] = (matched[tid] || 0) + 1;
+    });
+    var wrap = document.querySelector('[data-tier-filters="' + key + '"]');
+    if (wrap) {
+      wrap.querySelectorAll('.ar-tier-chip').forEach(function (btn) {
+        var tid = String(btn.getAttribute('data-tier-id') || '');
+        var n = counts[tid] || 0;
+        var slot = btn.querySelector('.ar-tier-count');
+        if (slot) slot.textContent = String(n);
+        var nameEl = btn.querySelector('.ar-tier-name');
+        var label = nameEl ? nameEl.textContent : 'Tier';
+        btn.setAttribute('aria-label', label + ', ' + n + ' ' + noun(n));
+      });
+    }
+    var summary = document.querySelector('[data-tier-summary="' + key + '"]');
+    if (!summary) return;
+    var active = wrap ? Array.prototype.filter.call(
+      wrap.querySelectorAll('.ar-tier-chip.is-active'),
+      function (btn) { return String(btn.getAttribute('data-tier-id') || '') !== ''; }
+    ) : [];
+    if (!active.length) {
+      var shownAll = matched[''] || 0;
+      var totalAll = counts[''] || 0;
+      summary.textContent = shownAll === totalAll
+        ? (shownAll + ' ' + noun(shownAll))
+        : (shownAll + ' of ' + totalAll + ' ' + noun(totalAll));
+      return;
+    }
+    var names = [];
+    var total = 0;
+    var shown = 0;
+    active.forEach(function (btn) {
+      var tid = String(btn.getAttribute('data-tier-id') || '');
+      var nameEl = btn.querySelector('.ar-tier-name');
+      names.push(nameEl ? nameEl.textContent : 'Tier');
+      total += counts[tid] || 0;
+      shown += matched[tid] || 0;
+    });
+    summary.textContent = shown === total
+      ? (shown + ' ' + noun(shown) + ' in ' + names.join(', '))
+      : (shown + ' of ' + total + ' ' + noun(total) + ' in ' + names.join(', '));
+  }
+
+  function setSelectAll(btn, label, count) {
+    var name = btn.querySelector('.ar-select-all-label');
+    var num = btn.querySelector('.ar-select-all-count');
+    if (!name || !num) {
+      btn.textContent = count ? (label + ' ' + count) : label;
+      return;
+    }
+    name.textContent = label;
+    num.hidden = !count;
+    if (count) num.textContent = String(count);
+  }
+
+  function updateSelectAllLabel() {
+    document.querySelectorAll('[data-select-all]').forEach(function (btn) {
+      var p = panel(btn.getAttribute('data-select-all'));
+      if (!p) return;
+      var rows = p.querySelectorAll('.ar-card:not([hidden])');
+      var allOn = rows.length && Array.prototype.every.call(rows, function (row) {
+        var cb = row.querySelector('input[type="checkbox"]');
+        return cb && cb.checked;
+      });
+      if (!rows.length) {
+        btn.classList.remove('is-clear');
+        setSelectAll(btn, 'Select all', 0);
+      } else if (allOn) {
+        btn.classList.add('is-clear');
+        setSelectAll(btn, 'Clear all', rows.length);
+      } else {
+        btn.classList.remove('is-clear');
+        setSelectAll(btn, 'Select all', rows.length);
+      }
+    });
+  }
+
+  function applyPaging(name, scroll) {
     var p = panel(name);
     if (!p) return;
-    var input = p.querySelector('[data-search="' + name + '"]');
+    ensurePager(p);
+    var key = p.getAttribute('data-panel');
+    var matches = [];
+    p.querySelectorAll('.ar-card').forEach(function (row) {
+      if (!row.hidden) matches.push(row);
+    });
+    var size = pageSize();
+    var pages = Math.max(1, Math.ceil(matches.length / size) || 1);
+    var page = pageState[key] || 0;
+    if (page > pages - 1) page = pages - 1;
+    if (page < 0) page = 0;
+    pageState[key] = page;
+    var start = page * size;
+    matches.forEach(function (row, i) {
+      row.classList.toggle('is-offpage', i < start || i >= start + size);
+    });
+    var from = matches.length ? (start + 1) : 0;
+    var to = Math.min(start + size, matches.length);
+    p.querySelectorAll('.ar-pager').forEach(function (nav) {
+      nav.hidden = matches.length <= size;
+      var label = nav.querySelector('.ar-pager-label');
+      if (label) label.textContent = matches.length ? (from + '–' + to + ' of ' + matches.length) : '';
+      var prev = nav.querySelector('[data-step="prev"]');
+      var next = nav.querySelector('[data-step="next"]');
+      if (prev) prev.disabled = page <= 0;
+      if (next) next.disabled = page >= pages - 1;
+    });
+    updateSelectAllLabel();
+    if (scroll) {
+      var top = p.querySelector('.ar-pager');
+      if (top && !top.hidden) top.scrollIntoView({ block: 'start' });
+    }
+  }
+
+  function applyPanelFilters(name, resetPage) {
+    var key = name === 'pool' ? 'pool' : resolveName(name);
+    var p = panel(key);
+    if (!p) return;
+    var input = document.querySelector('[data-search="' + key + '"]');
     var q = ((input && input.value) || '').trim().toLowerCase();
-    // Strip leading # from serial searches like "#12"
     if (q.charAt(0) === '#') q = q.slice(1).trim();
-    var tierIds = activeTier(name);
+    var tierIds = activeTier(key);
     var allMode = !tierIds.length;
-    p.querySelectorAll('.ar-row').forEach(function (row) {
+    var any = false;
+    var cards = p.querySelectorAll('.ar-card');
+    cards.forEach(function (row) {
       var hay = (
         (row.getAttribute('data-search') || '') + ' ' +
         (row.getAttribute('data-name') || '') + ' ' +
@@ -1344,14 +1282,24 @@
       var matchSearch = !q || hay.indexOf(q) !== -1;
       var rowTier = String(row.getAttribute('data-tier-id') || '');
       var matchTier = allMode || (rowTier && tierIds.indexOf(rowTier) !== -1);
-      row.hidden = !(matchSearch && matchTier);
+      var show = matchSearch && matchTier;
+      row.hidden = !show;
+      if (show) any = true;
     });
+    var nomatch = p.querySelector('.ar-nomatch');
+    if (nomatch) nomatch.hidden = any || !cards.length;
+    if (resetPage) pageState[p.getAttribute('data-panel')] = 0;
+    applyPaging(p.getAttribute('data-panel'));
+    refreshTierCounts(key);
   }
 
   document.querySelectorAll('[data-search]').forEach(function (input) {
     input.addEventListener('input', function () {
-      applyPanelFilters(input.getAttribute('data-search'));
+      applyPanelFilters(input.getAttribute('data-search'), true);
+      renderSelection();
     });
+    input.addEventListener('focus', function () { shell.classList.add('is-searching'); fitBar(); });
+    input.addEventListener('blur', function () { shell.classList.remove('is-searching'); fitBar(); });
   });
 
   document.querySelectorAll('[data-tier-filters]').forEach(function (wrap) {
@@ -1360,7 +1308,6 @@
       btn.addEventListener('click', function () {
         var tid = String(btn.getAttribute('data-tier-id') || '');
         if (!tid) {
-          // "All" — clear other chips, activate All
           wrap.querySelectorAll('.ar-tier-chip').forEach(function (b) {
             b.classList.toggle('is-active', !String(b.getAttribute('data-tier-id') || ''));
           });
@@ -1368,12 +1315,12 @@
           var allBtn = wrap.querySelector('.ar-tier-chip[data-tier-id=""]');
           if (allBtn) allBtn.classList.remove('is-active');
           btn.classList.toggle('is-active');
-          // If nothing selected, fall back to All
           if (!wrap.querySelector('.ar-tier-chip.is-active[data-tier-id]:not([data-tier-id=""])')) {
             if (allBtn) allBtn.classList.add('is-active');
           }
         }
-        applyPanelFilters(name);
+        applyPanelFilters(name, true);
+        renderSelection();
       });
     });
   });
@@ -1382,35 +1329,114 @@
     var p = panel(name);
     if (!p) return [];
     return Array.prototype.map.call(
-      p.querySelectorAll('input[type="checkbox"]:checked'),
+      p.querySelectorAll('.ar-card:not([hidden]) input[type="checkbox"]:checked'),
       function (el) { return parseInt(el.value, 10); }
     ).filter(Boolean);
   }
-
   function allVisibleIds(name) {
     var p = panel(name);
     if (!p) return [];
     return Array.prototype.map.call(
-      p.querySelectorAll('.ar-row:not([hidden]) input[type="checkbox"]'),
+      p.querySelectorAll('.ar-card:not([hidden]) input[type="checkbox"]'),
       function (el) { return parseInt(el.value, 10); }
     ).filter(Boolean);
   }
-
   function syncSelected(row) {
     var cb = row.querySelector('input[type="checkbox"]');
     row.classList.toggle('is-selected', !!(cb && cb.checked));
   }
+  function renderSelection() {
+    var name = poolName();
+    var ids = selectedIds(name);
+    var countEl = document.querySelector('.ar-count');
+    if (countEl) {
+      countEl.hidden = !!ids.length;
+      countEl.textContent = ids.length === 1 ? '1 selected' : (ids.length + ' selected');
+    }
+    var send = document.querySelector('.ar-send');
+    if (send) {
+      send.disabled = !ids.length;
+      send.textContent = !ids.length
+        ? 'Select players'
+        : (ids.length === 1 ? 'Call 1 player' : ('Call ' + ids.length + ' players'));
+    }
+    var sendAll = document.querySelector('.ar-send-all');
+    if (sendAll) sendAll.textContent = 'Call all ' + (name === 'unsold' ? 'Unsold' : 'Draft');
+    var picks = document.querySelector('.ar-tier-picks');
+    if (picks) {
+      while (picks.firstChild) picks.removeChild(picks.firstChild);
+      var groups = {};
+      var order = [];
+      ids.forEach(function (id) {
+        var card = document.querySelector('.ar-panel[data-panel="' + name + '"] .ar-card[data-id="' + id + '"]');
+        var key = (card && card.getAttribute('data-tier-id')) || '';
+        if (!groups[key]) {
+          var chip = key
+            ? document.querySelector('[data-tier-filters="pool"] .ar-tier-chip[data-tier-id="' + key + '"] .ar-tier-name')
+            : null;
+          var raw = (card && card.getAttribute('data-tier-name')) || '';
+          groups[key] = { count: 0, label: chip ? chip.textContent : (raw ? raw.toUpperCase() : 'Other') };
+          order.push(key);
+        }
+        groups[key].count += 1;
+      });
+      var chipOrder = [];
+      document.querySelectorAll('[data-tier-filters="pool"] .ar-tier-chip').forEach(function (btn) {
+        var tid = String(btn.getAttribute('data-tier-id') || '');
+        if (tid) chipOrder.push(tid);
+      });
+      order.sort(function (a, b) {
+        var ia = chipOrder.indexOf(a);
+        var ib = chipOrder.indexOf(b);
+        return (ia < 0 ? 999 : ia) - (ib < 0 ? 999 : ib);
+      });
+      order.forEach(function (key) {
+        var box = document.createElement('div');
+        box.className = 'ar-tier-pick';
+        var label = document.createElement('span');
+        label.className = 'ar-tier-pick-name';
+        label.textContent = groups[key].label;
+        var count = document.createElement('span');
+        count.className = 'ar-tier-pick-count';
+        count.textContent = String(groups[key].count);
+        box.appendChild(label);
+        box.appendChild(count);
+        picks.appendChild(box);
+      });
+      picks.hidden = !order.length;
+    }
+    fitBar();
+    updateSelectAllLabel();
+  }
 
-  document.querySelectorAll('.ar-row').forEach(function (row) {
+  document.querySelectorAll('.ar-card').forEach(function (row) {
     var cb = row.querySelector('input[type="checkbox"]');
     if (!cb) return;
-    cb.addEventListener('change', function () { syncSelected(row); });
+    cb.addEventListener('change', function () { syncSelected(row); renderSelection(); });
     row.addEventListener('click', function (ev) {
       if (ev.target.closest('button') || ev.target.closest('input')) return;
       cb.checked = !cb.checked;
       syncSelected(row);
+      renderSelection();
     });
     syncSelected(row);
+  });
+
+  document.querySelectorAll('[data-pool-pick]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var name = btn.getAttribute('data-pool-pick');
+      shell.setAttribute('data-pool', name);
+      document.querySelectorAll('[data-pool-pick]').forEach(function (other) {
+        var on = other.getAttribute('data-pool-pick') === name;
+        other.classList.toggle('is-on', on);
+        other.setAttribute('aria-pressed', on ? 'true' : 'false');
+      });
+      document.querySelectorAll('.ar-panel[data-panel="draft"], .ar-panel[data-panel="unsold"]').forEach(function (p) {
+        p.hidden = p.getAttribute('data-panel') !== name;
+      });
+      applyPanelFilters('pool');
+      renderSelection();
+    });
   });
 
   document.querySelectorAll('[data-select-all]').forEach(function (btn) {
@@ -1418,31 +1444,101 @@
       var name = btn.getAttribute('data-select-all');
       var p = panel(name);
       if (!p) return;
-      var rows = p.querySelectorAll('.ar-row:not([hidden])');
-      var allOn = Array.prototype.every.call(rows, function (row) {
-        var cb = row.querySelector('input[type="checkbox"]');
-        return cb && cb.checked;
-      });
+      var rows = p.querySelectorAll('.ar-card:not([hidden])');
+      var boxes = [];
       rows.forEach(function (row) {
         var cb = row.querySelector('input[type="checkbox"]');
-        if (!cb) return;
-        cb.checked = !allOn;
+        if (cb) boxes.push(row);
+      });
+      if (!boxes.length) {
+        toast('No players to select');
+        return;
+      }
+      var allOn = boxes.every(function (row) {
+        return row.querySelector('input[type="checkbox"]').checked;
+      });
+      boxes.forEach(function (row) {
+        row.querySelector('input[type="checkbox"]').checked = !allOn;
         syncSelected(row);
       });
+      renderSelection();
     });
   });
+
+  function fitLine(el, max, min) {
+    if (!el) return;
+    var size = max;
+    el.style.fontSize = size + 'px';
+    var guard = 0;
+    while (el.scrollWidth > el.clientWidth + 1 && size > min && guard < 40) {
+      size -= 0.5;
+      el.style.fontSize = size.toFixed(1) + 'px';
+      guard += 1;
+    }
+  }
+  function fitTitle() {
+    var wide = window.matchMedia('(min-width: 900px)').matches;
+    var mid = window.matchMedia('(min-width: 640px)').matches;
+    fitLine(document.querySelector('.ar-title'), wide ? 23 : (mid ? 18 : 15), 8);
+    fitLine(document.querySelector('.ar-sub'), wide ? 15 : (mid ? 13 : 11), 8);
+  }
+  function fitLoader() {
+    var loader = document.getElementById('ar-loader');
+    if (!loader || loader.hidden) return;
+    var wide = window.matchMedia('(min-width: 900px)').matches;
+    var mid = window.matchMedia('(min-width: 640px)').matches;
+    fitLine(document.getElementById('ar-loader-title'), wide ? 28 : (mid ? 22 : 18), 10);
+    fitLine(document.querySelector('.ar-loader-sub'), wide ? 18 : 16, 11);
+  }
+  function fitBar() {
+    var rail = document.querySelector('.ar-rail');
+    if (!rail) return;
+    var narrow = window.matchMedia('(max-width: 899px)').matches;
+    var searching = shell.classList.contains('is-searching');
+    if (narrow && !searching) {
+      var height = rail.offsetHeight || 0;
+      shell.style.paddingBottom = (height + 12) + 'px';
+      shell.style.setProperty('--ar-dock', (height + 16) + 'px');
+    } else {
+      shell.style.paddingBottom = '';
+      shell.style.setProperty('--ar-dock', '24px');
+    }
+  }
+  window.addEventListener('resize', function () {
+    fitBar();
+    fitTitle();
+    fitLoader();
+    document.querySelectorAll('.ar-panel').forEach(function (p) {
+      applyPaging(p.getAttribute('data-panel'));
+    });
+  });
+  var chooser = document.getElementById('ar-chooser');
+  if (chooser) {
+    shell.classList.toggle('is-choosing', chooser.open);
+    chooser.addEventListener('toggle', function () {
+      shell.classList.toggle('is-choosing', chooser.open);
+      fitBar();
+    });
+  }
 
   function doSubmitOpen(ids) {
     busy = true;
     shell.classList.add('ar-busy');
-    toast('Opening ' + ids.length + ' player(s)…');
+    var loader = document.getElementById('ar-loader');
+    var loaderTitle = document.getElementById('ar-loader-title');
+    if (loaderTitle) {
+      loaderTitle.textContent = ids.length === 1
+        ? 'Calling the player into the auction'
+        : 'Calling players into the auction';
+    }
+    if (loader) loader.hidden = false;
+    fitLoader();
     form.setAttribute('action', openUrl);
     form.setAttribute('method', 'POST');
     idsInput.name = 'player_ids';
     idsInput.value = ids.join(',');
     form.submit();
   }
-
   function submitOpen(ids, opts) {
     if (busy) return;
     if (!ids || !ids.length) {
@@ -1453,23 +1549,22 @@
     var label = count === 1 ? 'this player' : ('<strong>' + count + '</strong> players');
     arConfirm({
       icon: '🎯',
-      title: opts && opts.title ? opts.title : 'Open into Auction?',
+      title: opts && opts.title ? opts.title : 'Call these players into the auction?',
       message: (opts && opts.message) ||
-        ('Move ' + label + ' to <strong>In Auction</strong> and resume the live presentation?'),
-      confirmLabel: count === 1 ? 'Open Player' : ('Open ' + count + ' Players'),
+        ('Call ' + label + ' into the live auction and resume the presentation?'),
+      confirmLabel: count === 1 ? 'Call player' : ('Call ' + count + ' players'),
       danger: false,
     }).then(function (ok) {
       if (ok) doSubmitOpen(ids);
     });
   }
-
   function submitComplete() {
     if (busy) return;
     arConfirm({
       icon: '🏁',
-      title: 'Declare Auction Complete?',
-      message: 'This will show the <strong>Thank You</strong> screen with final team squads. You can still reopen Draft or Unsold later from the backend if needed.',
-      confirmLabel: 'Yes, Complete',
+      title: 'Declare auction complete?',
+      message: 'This shows the <strong>Thank You</strong> screen with the final squads. Draft and Unsold players can still be opened later from the backend.',
+      confirmLabel: 'Yes, complete',
       danger: true,
     }).then(function (ok) {
       if (!ok) return;
@@ -1482,20 +1577,19 @@
       form.submit();
     });
   }
-
   function submitMarkUnsold() {
     if (busy || !markUnsoldUrl) return;
     arConfirm({
       icon: '📭',
-      title: 'Mark remaining as Unsold?',
-      message: 'All players still <strong>In Auction</strong> will be moved to <strong>Unsold</strong>. Team squads are already full, so they cannot be sold.',
-      confirmLabel: 'Mark All Unsold',
+      title: 'Mark remaining as unsold?',
+      message: 'Every player still <strong>In Auction</strong> moves to <strong>Unsold</strong>. The squads are already full, so they cannot be sold.',
+      confirmLabel: 'Mark all unsold',
       danger: true,
     }).then(function (ok) {
       if (!ok) return;
       busy = true;
       shell.classList.add('ar-busy');
-      toast('Marking remaining players as Unsold…');
+      toast('Marking remaining players as unsold…');
       form.setAttribute('action', markUnsoldUrl);
       form.setAttribute('method', 'POST');
       idsInput.name = 'player_ids';
@@ -1507,23 +1601,25 @@
   document.querySelectorAll('[data-open]').forEach(function (btn) {
     btn.addEventListener('click', function () {
       var name = btn.getAttribute('data-open');
+      var pool = resolveName(name);
       submitOpen(selectedIds(name), {
-        title: name === 'unsold' ? 'Open Unsold Players?' : 'Open Draft Players?',
+        title: pool === 'unsold' ? 'Call these unsold players?' : 'Call these draft players?',
       });
     });
   });
   document.querySelectorAll('[data-open-all]').forEach(function (btn) {
     btn.addEventListener('click', function () {
       var name = btn.getAttribute('data-open-all');
+      var pool = resolveName(name);
       var ids = allVisibleIds(name);
       if (!ids.length) {
-        toast('No players to open');
+        toast('No players to call');
         return;
       }
       submitOpen(ids, {
-        title: name === 'unsold' ? 'Open All Unsold?' : 'Open All Draft?',
-        message: 'Move all <strong>' + ids.length + '</strong> visible ' + name +
-          ' players to <strong>In Auction</strong> and resume the presentation?',
+        title: pool === 'unsold' ? 'Call all unsold players?' : 'Call all draft players?',
+        message: 'Call all <strong>' + ids.length + '</strong> ' + pool +
+          ' players into the live auction and resume the presentation?',
       });
     });
   });
@@ -1533,24 +1629,29 @@
       ev.stopPropagation();
       var id = parseInt(btn.getAttribute('data-open-one'), 10);
       if (!id) return;
-      var row = btn.closest('.ar-row');
-      var pname = row ? (row.querySelector('.ar-name') || {}).textContent : '';
+      var row = btn.closest('.ar-card');
+      var pname = row ? (row.getAttribute('data-label') || '') : '';
       submitOpen([id], {
-        title: 'Open Player?',
-        message: 'Move <strong>' + (pname || 'this player') +
-          '</strong> to <strong>In Auction</strong> and resume the live presentation?',
+        title: 'Call this player into the auction?',
+        message: 'Call <strong>' + esc(pname || 'this player') +
+          '</strong> into the live auction and resume the presentation?',
       });
     });
   });
-
-  var completeBtn = document.getElementById('ar-complete-btn');
-  if (completeBtn) {
-    completeBtn.addEventListener('click', submitComplete);
-  }
+  document.querySelectorAll('.ar-complete-btn').forEach(function (btn) {
+    btn.addEventListener('click', submitComplete);
+  });
   var markUnsoldBtn = document.getElementById('ar-mark-unsold-btn');
-  if (markUnsoldBtn) {
-    markUnsoldBtn.addEventListener('click', submitMarkUnsold);
-  }
+  if (markUnsoldBtn) markUnsoldBtn.addEventListener('click', submitMarkUnsold);
+
+  document.querySelectorAll('.ar-panel').forEach(function (p) {
+    applyPaging(p.getAttribute('data-panel'));
+  });
+  refreshTierCounts('pool');
+  refreshTierCounts('auction');
+  renderSelection();
+  fitBar();
+  fitTitle();
 })();
   ]]></script>
 </body>

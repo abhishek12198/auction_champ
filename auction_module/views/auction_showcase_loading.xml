@@ -18,13 +18,14 @@
                     }
                     .ac-sc-load {
                         min-height: 100%;
+                        width: 100%;
                         display: flex;
                         flex-direction: column;
                         align-items: center;
                         justify-content: center;
                         gap: 1rem;
                         text-align: center;
-                        padding: 2rem;
+                        padding: 2rem 12px;
                         box-sizing: border-box;
                     }
                     .ac-sc-logo,
@@ -46,11 +47,18 @@
                         font-weight: 700;
                     }
                     .ac-sc-title {
+                        align-self: stretch;
+                        width: 100%;
+                        min-width: 0;
+                        max-width: 100%;
                         font-size: clamp(1.6rem, 4vw, 2.5rem);
                         font-weight: 800;
-                        letter-spacing: .04em;
+                        letter-spacing: .02em;
                         margin: 0;
                         text-transform: uppercase;
+                        white-space: nowrap;
+                        overflow: hidden;
+                        line-height: 1.15;
                     }
                     .ac-sc-tour {
                         font-size: clamp(1rem, 2.2vw, 1.25rem);
@@ -373,9 +381,25 @@
                     <div class="ac-sc-theme-chip" t-esc="(theme or 'lemon').replace('_', ' ').title()"/>
                     <div class="ac-sc-spinner" aria-hidden="true"></div>
                 </div>
-                <script type="text/javascript" t-att-data-redirect="redirect_url">
+                <script type="text/javascript" t-att-data-redirect="redirect_url"><![CDATA[
                     (function () {
                         var el = document.currentScript;
+                        function fitSplash() {
+                            var title = document.querySelector('.ac-sc-title');
+                            if (!title) return;
+                            var wide = window.matchMedia('(min-width: 900px)').matches;
+                            var size = wide ? 40 : 26;
+                            var min = 11;
+                            title.style.fontSize = size + 'px';
+                            var guard = 0;
+                            while (title.scrollWidth > title.clientWidth + 1 && size > min && guard < 60) {
+                                size -= 0.5;
+                                title.style.fontSize = size.toFixed(1) + 'px';
+                                guard += 1;
+                            }
+                        }
+                        fitSplash();
+                        window.addEventListener('resize', fitSplash);
                         if (!el) { return; }
                         var url = el.getAttribute('data-redirect');
                         if (!url) { return; }
@@ -383,7 +407,7 @@
                             window.location.replace(url);
                         }, 450);
                     })();
-                </script>
+                ]]></script>
             </body>
         </html>
     </template>
