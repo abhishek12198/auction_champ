@@ -410,6 +410,7 @@ odoo.define('auction_module.TournamentSettingsUser', function (require) {
                     this._btn('Restore Transactions', {action: 'action_open_revoke_transactions', icon: 'fa-undo', cls: 'tsu-btn-gold'}),
                     this._btn('Bid Summary', this._bidSummaryOpenOpts(d)),
                     this._btn('Live Board', this._liveBoardOpenOpts(d)),
+                    this._btn('Squad Modification', {action: 'action_open_squad_view', icon: 'fa-users', cls: 'tsu-btn-blue'}),
                 ].join('')),
                 '<div class="tsu-grid tsu-grid-4">',
                     this._card({

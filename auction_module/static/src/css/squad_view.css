@@ -1,16 +1,37 @@
 /* Squad View — isolated. All rules stay under .ac-sv-app / .o_ac_squad_view. */
 
-.o_content > .o_ac_squad_view,
-.o_action > .o_ac_squad_view,
-.o_ac_squad_view {
+/* This screen is the action itself. Desktop hides that bar, so show it
+   again and let this box be the one that scrolls. */
+.o_action.o_ac_squad_view {
     width: 100% !important;
     max-width: none !important;
-    min-height: calc(100vh - 46px) !important;
+    height: 100% !important;
+    max-height: 100% !important;
+    min-height: 0 !important;
     margin: 0 !important;
     padding: 0 !important;
     background: #f4f6fa !important;
-    overflow: auto !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    scrollbar-width: auto !important;
     box-sizing: border-box !important;
+}
+
+.o_action.o_ac_squad_view::-webkit-scrollbar {
+    display: block !important;
+    width: 14px !important;
+    height: 14px !important;
+}
+
+.o_action.o_ac_squad_view::-webkit-scrollbar-thumb {
+    background: #8b95a5 !important;
+    border-radius: 8px !important;
+}
+
+.o_action.o_ac_squad_view::-webkit-scrollbar-button:single-button {
+    display: block !important;
+    height: 16px !important;
+    background-color: #d5dbe3 !important;
 }
 
 .ac-sv-app {
@@ -26,8 +47,11 @@
     --ac-sv-font: 'Segoe UI', Tahoma, sans-serif;
     display: flex !important;
     flex-direction: column !important;
+    flex: 0 0 auto !important;
     width: 100% !important;
-    min-height: calc(100vh - 46px) !important;
+    height: auto !important;
+    min-height: auto !important;
+    overflow: visible !important;
     margin: 0 !important;
     padding: 0 !important;
     background: #f4f6fa !important;
@@ -150,10 +174,12 @@
 }
 
 .ac-sv-app .ac-sv-body {
+    flex: 0 0 auto !important;
     padding: 16px 16px 28px !important;
     display: flex !important;
     flex-direction: column !important;
     gap: 14px !important;
+    overflow: visible !important;
 }
 
 .ac-sv-app .ac-sv-team {
@@ -490,6 +516,11 @@
     color: #2563eb !important;
 }
 
+.ac-sv-app .ac-sv-btn-sell {
+    background: #f5a623 !important;
+    color: #111111 !important;
+}
+
 .ac-sv-app .ac-sv-empty,
 .ac-sv-app .ac-sv-empty-row {
     padding: 22px 16px !important;
@@ -732,4 +763,53 @@
     min-height: 0 !important;
     border: 0 !important;
     background: #071428 !important;
+}
+
+.ac-sv-app .ac-sv-unsold {
+    margin: 0 !important;
+    background: var(--ac-sv-white) !important;
+    border: 1px solid var(--ac-sv-line) !important;
+}
+
+.ac-sv-app .ac-sv-unsold-head {
+    display: flex !important;
+    align-items: baseline !important;
+    justify-content: space-between !important;
+    gap: 12px !important;
+    padding: 12px 14px !important;
+    background: #0d1e3a !important;
+    color: #fff !important;
+}
+
+.ac-sv-app .ac-sv-unsold-head h2 {
+    font-size: 15px !important;
+    font-weight: 800 !important;
+    letter-spacing: .04em !important;
+    color: #fff !important;
+}
+
+.ac-sv-app .ac-sv-unsold-head p {
+    font-size: 12px !important;
+    font-weight: 700 !important;
+    color: #fdce33 !important;
+}
+
+.ac-sv-app .ac-sv-unsold-list {
+    display: grid !important;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)) !important;
+    gap: 10px !important;
+    padding: 12px !important;
+}
+
+.ac-sv-app .ac-sv-unsold-card {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    gap: 8px !important;
+    min-width: 0 !important;
+    padding: 12px 10px !important;
+    border: 1px solid #e2e8f0 !important;
+    background: #fff !important;
+    text-align: center !important;
+    list-style: none !important;
 }

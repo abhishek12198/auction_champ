@@ -30,7 +30,9 @@
                             <i class="fa fa-shield" title="Team"/> Select Team
                             <span class="asp-section-hint">This tournament only</span>
                         </div>
-                        <field name="team_selection" widget="selection_badge"/>
+                        <field name="ineligible_team_ids" invisible="1"/>
+                        <field name="team_selection" widget="selection_badge"
+                               options="{'disabled_teams_field': 'ineligible_team_ids'}"/>
                         <field name="team_id" invisible="1" required="0"
                                options="{'no_open': True, 'no_create': True}"/>
                         <field name="team_auction_id" invisible="1"/>

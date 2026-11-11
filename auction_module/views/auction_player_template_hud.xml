@@ -22,7 +22,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="1"/>
     <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&amp;family=Barlow+Semi+Condensed:wght@500;600;700&amp;family=Bebas+Neue&amp;family=Exo+2:wght@500;600;700;800;900&amp;family=Oswald:wght@500;600;700&amp;display=swap" rel="stylesheet"/>
     <link rel="stylesheet" href="/auction_module/static/src/css/display_hud_themes.css?v=889pj"/>
-    <link rel="stylesheet" href="/auction_module/static/src/css/display_hud.css?v=895pj"/>
+    <link rel="stylesheet" href="/auction_module/static/src/css/display_hud.css?v=896tier"/>
     <link rel="stylesheet" href="/auction_module/static/src/css/bid_clock.css?v=6"/>
     <style id="hud-pj-fonts">
       html, body { font-family: 'Exo 2', 'Barlow Condensed', sans-serif !important; }
@@ -131,9 +131,14 @@
         <div class="hud-photo-overlay">
           <div class="hud-player-name" data-sm-name=""><t t-esc="player.name.upper()"/></div>
           <div class="hud-overlay-badges">
+            <t t-set="tier_color" t-value="(player.tier_id.color or '') if player.tier_id else ''"/>
+            <t t-set="tier_ink" t-value="'#12243f' if (tier_color or '').lower() in ('#ffffff', '#f39c12', '#2ecc71', '#e67e22', '#1abc9c', '#f1c40f') else '#ffffff'"/>
             <t t-set="hud_role_label" t-value="(player.kabaddi_role_label() if player.tournament_type == 'kabaddi' else (player.dominant_position_id.name if player.tournament_type == 'football' and player.dominant_position_id else (player.badminton_card_labels()['category'] if player.tournament_type == 'badminton' else (player.role or ''))))"/>
             <t t-if="hud_role_label">
-              <div class="hud-role-tag" data-sm-role=""><t t-esc="hud_role_label"/></div>
+              <div class="hud-role-tag" data-sm-role=""
+                   t-attf-style="{{ ('background:%s !important;color:%s !important;' % (tier_color, tier_ink)) if tier_color else '' }}">
+                <t t-esc="hud_role_label"/>
+              </div>
             </t>
             <t t-if="player.effective_base_price">
               <div class="hud-base-badge">
@@ -149,7 +154,7 @@
         <div class="hud-tier-strip">
           <t t-if="player.tier_id">
             <span class="hud-tier-hex"
-                  t-att-style="('background:' + player.tier_id.color + ';') if player.tier_id.color else None">
+                  t-attf-style="--tier-fill: #{tier_color or '#3498db'}; --tier-ink: #{tier_ink}; background: #{tier_color or '#3498db'} !important; color: #{tier_ink} !important;">
               <t t-esc="player.tier_id.name"/>
             </span>
           </t>

@@ -26,13 +26,31 @@ odoo.define('auction_module.SelectionBadgeWidget', function (require) {
             this._renderBadges(false);
         },
 
+        _disabledTeamIds: function () {
+            var fieldName = this.nodeOptions && this.nodeOptions.disabled_teams_field;
+            var raw = fieldName && this.recordData ? this.recordData[fieldName] : '';
+            var ids = {};
+            if (!raw) {
+                return ids;
+            }
+            String(raw).split(',').forEach(function (part) {
+                var id = part.trim();
+                if (id) {
+                    ids[id] = true;
+                }
+            });
+            return ids;
+        },
+
         _renderBadges: function (editable) {
             var self = this;
+            var disabled = this._disabledTeamIds();
             this.$el.empty();
 
             _.each(this.field.selection, function (option) {
                 var value = option[0];
                 var label = option[1];
+                var isDisabled = !!disabled[String(value)];
 
                 var $badge = $('<button type="button">')
                     .addClass('o_badge_item')
@@ -43,7 +61,11 @@ odoo.define('auction_module.SelectionBadgeWidget', function (require) {
                 if (value === self.value) {
                     $badge.addClass('o_badge_selected');
                 }
-                if (!editable) {
+                if (isDisabled) {
+                    $badge.addClass('o_badge_disabled')
+                        .attr('disabled', 'disabled')
+                        .attr('aria-disabled', 'true');
+                } else if (!editable) {
                     $badge.addClass('o_badge_readonly').attr('disabled', 'disabled');
                 }
 
@@ -53,6 +75,7 @@ odoo.define('auction_module.SelectionBadgeWidget', function (require) {
 
         _onBadgeClick: function (ev) {
             if (this.mode === 'readonly') { return; }
+            if ($(ev.currentTarget).hasClass('o_badge_disabled')) { return; }
             var value = $(ev.currentTarget).data('value');
             this._setValue(value);
         },

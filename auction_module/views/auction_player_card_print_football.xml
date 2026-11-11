@@ -75,19 +75,19 @@
                                     <div style="padding:10px 74px 7px 22px;">
                                         <div t-attf-style="color:{{ pal['txt'] }}; font-family:'{{ title_font }}','Bebas Neue',sans-serif; font-size:1.85rem; line-height:0.98; letter-spacing:1px; text-transform:uppercase; text-shadow:0 3px 9px rgba(0,0,0,0.5); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" t-esc="doc.name.upper()"/>
                                         <div style="margin-top:4px;">
-                                            <t t-if="doc.tournament_id.tournament_type == 'kabaddi'">
-                                                <t t-if="doc.tier_id">
-                                                    <span t-attf-style="display:inline-block; color:{{ pal['ink'] }}; background-color:{{ pal['accent'] }}; background-image:-webkit-linear-gradient(left,{{ pal['accent'] }},{{ pal['accentD'] }}); font-family:'Oswald',sans-serif; font-size:0.72rem; font-weight:700; letter-spacing:1.4px; text-transform:uppercase; padding:2px 12px; border-radius:4px; white-space:nowrap;"><t t-esc="doc.tier_id.name"/></span>
-                                                </t>
-                                            </t>
-                                            <t t-elif="doc.tournament_id.tournament_type == 'badminton'">
+                                            <t t-set="tier_color" t-value="(doc.tier_id.color or '#3498db') if doc.tier_id else ''"/>
+                                            <t t-set="tier_ink" t-value="'#12243f' if tier_color.lower() in ('#ffffff', '#f39c12', '#2ecc71', '#e67e22', '#1abc9c', '#f1c40f') else '#ffffff'"/>
+                                            <t t-if="doc.tournament_id.tournament_type == 'badminton'">
                                                 <t t-set="bm_badge" t-value="doc.badminton_card_labels().get('category') or doc.role"/>
                                                 <t t-if="bm_badge">
                                                     <span t-attf-style="display:inline-block; color:{{ pal['ink'] }}; background-color:{{ pal['accent'] }}; background-image:-webkit-linear-gradient(left,{{ pal['accent'] }},{{ pal['accentD'] }}); font-family:'Oswald',sans-serif; font-size:0.72rem; font-weight:700; letter-spacing:1.4px; text-transform:uppercase; padding:2px 12px; border-radius:4px; white-space:nowrap;"><t t-esc="bm_badge"/></span>
                                                 </t>
                                             </t>
-                                            <t t-elif="doc.dominant_position_id or doc.role">
+                                            <t t-elif="doc.tournament_id.tournament_type != 'kabaddi' and (doc.dominant_position_id or doc.role)">
                                                 <span t-attf-style="display:inline-block; color:{{ pal['ink'] }}; background-color:{{ pal['accent'] }}; background-image:-webkit-linear-gradient(left,{{ pal['accent'] }},{{ pal['accentD'] }}); font-family:'Oswald',sans-serif; font-size:0.72rem; font-weight:700; letter-spacing:1.4px; text-transform:uppercase; padding:2px 12px; border-radius:4px; white-space:nowrap;"><t t-esc="doc.dominant_position_id.name if doc.dominant_position_id else doc.role"/></span>
+                                            </t>
+                                            <t t-if="doc.tier_id">
+                                                <span t-attf-style="display:inline-block; margin-left:6px; color:{{ tier_ink }}; background-color:{{ tier_color }}; font-family:'Oswald',sans-serif; font-size:0.72rem; font-weight:700; letter-spacing:1.4px; text-transform:uppercase; padding:2px 12px; border-radius:4px; white-space:nowrap;"><t t-esc="doc.tier_id.name"/></span>
                                             </t>
                                         </div>
 

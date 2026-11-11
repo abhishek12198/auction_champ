@@ -2469,6 +2469,25 @@ class AuctionTeamPlayer(models.Model):
                     pass
         return {'success': True, 'opened': len(opened)}
 
+    def action_recall_unsold_to_auction(self):
+        """Bring unsold players back to the live auction. Sold players are left alone."""
+        unsold = self.filtered(lambda player: player.state == 'unsold' and not player.icon_player)
+        for player in unsold:
+            try:
+                player.create_auction_history(
+                    False,
+                    '%s recalled to auction' % (player.name or 'Player'),
+                    tournament_id=player.tournament_id.id if player.tournament_id else False,
+                    player=player,
+                )
+            except Exception:
+                _logger.warning(
+                    'unsold recall history failed for player %s', player.id, exc_info=True
+                )
+        if not unsold:
+            return {'success': True, 'opened': 0}
+        return unsold.action_auction()
+
     def action_revoke_key_player(self):
         for player in self:
             if player.icon_player:

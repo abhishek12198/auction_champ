@@ -1996,6 +1996,26 @@ class AuctionTournament(models.Model):
                 'spend_pct': int(round(100.0 * spent / purse)) if purse else 0,
                 'players': players,
             })
+        unsold_rows = []
+        unsold_players = self.env['auction.team.player'].search([
+            ('tournament_id', '=', self.id),
+            ('state', '=', 'unsold'),
+            ('icon_player', '=', False),
+        ], order='sl_no asc, name asc')
+        for player in unsold_players:
+            role = (player.role or '').strip()
+            unsold_rows.append({
+                'player_id': player.id,
+                'name': (player.name or '').upper(),
+                'role': role.upper(),
+                'photo_url': (
+                    '/web/image/auction.team.player/%s/photo?unique=%s'
+                    % (player.id, player.write_date or player.id)
+                ),
+                'initials': ''.join(
+                    part[:1] for part in (player.name or '').split()[:2]
+                ).upper() or '?',
+            })
         return {
             'tournament_id': self.id,
             'tournament_name': (self.name or '').upper(),
@@ -2006,6 +2026,8 @@ class AuctionTournament(models.Model):
             'team_count': len(teams),
             'sold_count': sold_total,
             'teams': teams,
+            'unsold_count': len(unsold_rows),
+            'unsold_players': unsold_rows,
         }
 
     def action_view_icon_players(self):

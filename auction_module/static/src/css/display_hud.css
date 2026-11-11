@@ -276,8 +276,8 @@ html, body {
     letter-spacing: 3px;
     text-transform: uppercase;
     clip-path: polygon(10px 0%, calc(100% - 10px) 0%, 100% 50%, calc(100% - 10px) 100%, 10px 100%, 0% 50%);
-    background: var(--gold);
-    color: var(--ink-on-accent) !important;
+    background: var(--tier-fill, var(--gold));
+    color: var(--tier-ink, var(--ink-on-accent)) !important;
     box-shadow: 0 6px 20px rgba(0,0,0,.35);
 }
 

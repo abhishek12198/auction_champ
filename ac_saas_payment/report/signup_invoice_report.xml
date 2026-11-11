@@ -73,12 +73,10 @@
                             <td style="width:48%; vertical-align:top;">
                                 <table style="width:100%; border-collapse:collapse;">
                                     <tr>
-                                        <td style="padding:3px 0; color:#718096;">Date of purchase</td>
-                                        <td style="padding:3px 0; text-align:right;"><t t-esc="doc._purchase_date_label()"/></td>
-                                    </tr>
-                                    <tr t-if="doc.invoice_date and doc.purchase_date and doc.invoice_date != doc.purchase_date">
-                                        <td style="padding:3px 0; color:#718096;">Invoice date</td>
-                                        <td style="padding:3px 0; text-align:right;"><t t-esc="doc._invoice_date_label()"/></td>
+                                        <td style="padding:3px 0; color:#718096;">Invoice Date</td>
+                                        <td style="padding:3px 0; text-align:right;">
+                                            <t t-esc="doc._invoice_date_label() if doc.invoice_date else doc._purchase_date_label()"/>
+                                        </td>
                                     </tr>
                                     <tr t-if="doc.supplier_gstin">
                                         <td style="padding:3px 0; color:#718096;">GSTIN</td>

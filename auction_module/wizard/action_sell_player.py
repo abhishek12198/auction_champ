@@ -64,6 +64,8 @@ class SellPlayer(models.TransientModel):
     team_logo_html = fields.Html(string='Team Logo', sanitize=False)
     tier_summary_html = fields.Html(string='Tier Slots', sanitize=False)
     suggestion = fields.Html()
+    # Comma-separated team ids. Empty unless the squad screen asks for greying.
+    ineligible_team_ids = fields.Char(string='Ineligible Teams')
 
     def _get_active_player(self):
         """Player being sold — from wizard field or action context."""
@@ -105,8 +107,52 @@ class SellPlayer(models.TransientModel):
                 continue
             purse = int(auction.remaining_points or 0)
             label = '%s · %s left' % (team.name, '{:,}'.format(purse))
+            if self.env.context.get('grey_ineligible_teams'):
+                reason = self._team_sell_block_reason(auction, player)
+                if reason:
+                    label = '%s · %s' % (team.name, reason)
             choices.append((str(team.id), label))
         return choices
+
+    def _team_sell_block_reason(self, auction, player):
+        """Why this team cannot buy the player. Empty string means it can.
+
+        Used only when the squad screen opens the sell form. The live sell
+        form does not call this, so its team list stays unchanged.
+        """
+        if not auction or not auction.team_id:
+            return _('Not in auction')
+        if (auction.remaining_players_count or 0) <= 0:
+            return _('Squad full')
+        if player and player.tier_id and auction.tier_limit_ids:
+            tier_limit = auction.tier_limit_ids.filtered(
+                lambda line: line.tier_id.id == player.tier_id.id
+            )
+            if tier_limit:
+                already_sold = self.env['auction.auction.player'].search_count([
+                    ('auction_id', '=', auction.id),
+                    ('player_id.tier_id', '=', player.tier_id.id),
+                    ('player_id', '!=', player.id),
+                ])
+                if already_sold >= (tier_limit[0].max_players or 0):
+                    return _('Tier full')
+        effective_base = int(self._get_effective_base_point(auction, player) or 0)
+        purse = int(auction.remaining_points or 0)
+        if purse <= 0 or (effective_base > 0 and purse < effective_base):
+            return _('Purse too low')
+        max_bid = int(auction.get_max_bid_for_team(auction, player) or 0)
+        if effective_base > max_bid:
+            return _('Below base')
+        return ''
+
+    def _ineligible_team_id_list(self, player):
+        if not self.env.context.get('grey_ineligible_teams') or not player:
+            return []
+        blocked = []
+        for auction in self._tournament_auctions(player):
+            if auction.team_id and self._team_sell_block_reason(auction, player):
+                blocked.append(str(auction.team_id.id))
+        return blocked
 
     def _format_points_hint(self, base, max_bid, unit_label=None):
         unit = unit_label or self.point_unit_label or 'PTS'
@@ -372,6 +418,22 @@ class SellPlayer(models.TransientModel):
 
     @api.onchange('team_selection')
     def onchange_team_selection(self):
+        if (
+            self.team_selection
+            and self.env.context.get('grey_ineligible_teams')
+            and str(self.team_selection) in set((self.ineligible_team_ids or '').split(','))
+        ):
+            self.team_selection = False
+            self.team_id = False
+            self._clear_team_stats()
+            return {
+                'warning': {
+                    'title': _('Team not eligible'),
+                    'message': _(
+                        'This team cannot take this player. Choose a team that is not greyed out.'
+                    ),
+                }
+            }
         if self.team_selection:
             self.team_id = int(self.team_selection)
             self.onchange_team_id()
@@ -441,6 +503,10 @@ class SellPlayer(models.TransientModel):
             defaults['final_point'] = initial_base
             defaults['effective_base'] = initial_base
             defaults['points_hint'] = self._format_points_hint(initial_base, 0, unit_label)
+            if self.env.context.get('grey_ineligible_teams'):
+                defaults['ineligible_team_ids'] = ','.join(
+                    self._ineligible_team_id_list(player)
+                )
         return defaults
 
     @api.onchange('final_point', 'team_auction_id', 'team_id')
@@ -563,6 +629,16 @@ class SellPlayer(models.TransientModel):
         if player_id:
             player = self.env['auction.team.player'].browse(player_id)
             auction = self.team_auction_id
+
+            if (
+                self.env.context.get('grey_ineligible_teams')
+                and auction
+                and auction.team_id
+                and str(auction.team_id.id) in set((self.ineligible_team_ids or '').split(','))
+            ):
+                raise UserError(_(
+                    'Cannot sell %s to %s. That team is not eligible for this player.'
+                ) % (player.name, auction.team_id.name))
 
             # Hard check: purse must cover the tier's minimum bid
             if player.tier_id and auction.tier_limit_ids:

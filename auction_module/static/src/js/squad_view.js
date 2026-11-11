@@ -33,6 +33,8 @@ odoo.define('auction_module.SquadView', function (require) {
             'click .ac-sv-choice': '_onChoiceBackdrop',
             'click .ac-sv-print-roster': '_onPrintRoster',
             'click .ac-sv-print-poster': '_onPrintPoster',
+            'click .ac-sv-unsold-recall': '_onUnsoldRecall',
+            'click .ac-sv-unsold-sell': '_onUnsoldSell',
             'click .ac-sv-poster-close': '_onPosterClose',
             'click .ac-sv-poster': '_onPosterBackdrop',
         },
@@ -98,6 +100,7 @@ odoo.define('auction_module.SquadView', function (require) {
             var body = teams.length
                 ? teams.map(this._teamHtml.bind(this)).join('')
                 : '<div class="ac-sv-empty">' + esc(_t('NO TEAMS YET. SET AUCTION RULES FIRST.')) + '</div>';
+            body = body + this._unsoldSectionHtml(d.unsold_players || []);
             var logo = d.logo_url
                 ? '<img src="' + esc(d.logo_url) + '" alt="" draggable="false" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\'"/>' +
                   '<span class="ac-sv-ph" style="display:none">' + esc(d.initials || '') + '</span>'
@@ -117,7 +120,8 @@ odoo.define('auction_module.SquadView', function (require) {
                         '</div>' +
                         '<p class="ac-sv-head-meta">' +
                             esc(d.team_count || 0) + ' ' + esc(_t('Teams')) + ' · ' +
-                            esc(d.sold_count || 0) + ' ' + esc(_t('Sold')) +
+                            esc(d.sold_count || 0) + ' ' + esc(_t('Sold')) + ' · ' +
+                            esc(d.unsold_count || 0) + ' ' + esc(_t('Unsold')) +
                         '</p>' +
                     '</header>' +
                     '<div class="ac-sv-body">' + body + '</div>' +
@@ -157,6 +161,44 @@ odoo.define('auction_module.SquadView', function (require) {
                         esc(_t('Squad Poster')) + '"></iframe>' +
                 '</div>' +
             '</div>';
+        },
+
+        _unsoldSectionHtml: function (players) {
+            var cards = (players || []).map(this._unsoldCardHtml.bind(this)).join('');
+            if (!cards) {
+                cards = '<li class="ac-sv-empty-row">' + esc(_t('NO UNSOLD PLAYERS')) + '</li>';
+            }
+            return '<section class="ac-sv-unsold">' +
+                '<header class="ac-sv-unsold-head">' +
+                    '<h2>' + esc(_t('Unsold players')) + '</h2>' +
+                    '<p>' + esc(players.length) + ' ' + esc(_t('Unsold')) + '</p>' +
+                '</header>' +
+                '<ul class="ac-sv-unsold-list">' + cards + '</ul>' +
+            '</section>';
+        },
+
+        _unsoldCardHtml: function (player) {
+            var photo = player.photo_url
+                ? '<img src="' + esc(player.photo_url) + '" alt="" draggable="false" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\'"/>' +
+                  '<span class="ac-sv-ph" style="display:none">' + esc(player.initials || '') + '</span>'
+                : '<span class="ac-sv-ph">' + esc(player.initials || '') + '</span>';
+            return '<li class="ac-sv-unsold-card" data-player="' + esc(player.player_id || 0) + '">' +
+                '<div class="ac-sv-photo">' + photo + '</div>' +
+                '<div class="ac-sv-who">' +
+                    '<p class="ac-sv-name">' + esc(player.name || '') + '</p>' +
+                    (player.role ? '<p class="ac-sv-sold">' + esc(player.role) + '</p>' : '') +
+                '</div>' +
+                '<div class="ac-sv-acts">' +
+                    '<button type="button" class="ac-sv-btn ac-sv-btn-recall ac-sv-unsold-recall" data-player="' +
+                        esc(player.player_id || 0) + '" title="' + esc(_t('Recall to auction')) +
+                        '" aria-label="' + esc(_t('Recall to auction')) + '">' +
+                        '<i class="fa fa-undo"></i></button>' +
+                    '<button type="button" class="ac-sv-btn ac-sv-btn-sell ac-sv-unsold-sell" data-player="' +
+                        esc(player.player_id || 0) + '" title="' + esc(_t('Recall and sell')) +
+                        '" aria-label="' + esc(_t('Recall and sell')) + '">' +
+                        '<i class="fa fa-gavel"></i></button>' +
+                '</div>' +
+            '</li>';
         },
 
         _teamHtml: function (team) {
@@ -793,6 +835,49 @@ odoo.define('auction_module.SquadView', function (require) {
                     active_ids: [lineId],
                     active_model: 'auction.auction.player',
                 }, extraCtx || {}),
+                on_close: function () {
+                    self._load();
+                },
+            });
+        },
+
+        _onUnsoldRecall: function (ev) {
+            ev.preventDefault();
+            ev.stopPropagation();
+            var playerId = parseInt($(ev.currentTarget).data('player'), 10);
+            if (!playerId) {
+                return;
+            }
+            var self = this;
+            Dialog.confirm(this, _t('Bring this unsold player back into the live auction?'), {
+                confirm_callback: function () {
+                    return self._rpc({
+                        model: 'auction.team.player',
+                        method: 'action_recall_unsold_to_auction',
+                        args: [[playerId]],
+                    }).then(function () {
+                        return self._load();
+                    });
+                },
+            });
+        },
+
+        _onUnsoldSell: function (ev) {
+            ev.preventDefault();
+            ev.stopPropagation();
+            var playerId = parseInt($(ev.currentTarget).data('player'), 10);
+            if (!playerId) {
+                return;
+            }
+            var self = this;
+            this.do_action('auction_module.action_auction_sell_player', {
+                additional_context: {
+                    active_id: playerId,
+                    active_ids: [playerId],
+                    active_model: 'auction.team.player',
+                    default_player_id: playerId,
+                    grey_ineligible_teams: true,
+                },
                 on_close: function () {
                     self._load();
                 },
