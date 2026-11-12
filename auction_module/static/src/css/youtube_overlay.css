@@ -249,7 +249,15 @@ html[data-page="watch"]:-webkit-full-screen .ytov-watch-fs {
     background: #b45309;
 }
 
-.bc-tournament { padding-right: 12px; max-width: 640px; }
+.bc-tournament { padding: 8px 12px 8px 14px; max-width: 720px; height: auto; min-height: 58px; }
+
+.bc-t-copy {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 2px;
+    min-width: 0;
+}
 
 .bc-trophy { width: 36px; height: 26px; flex: 0 0 auto; }
 
@@ -270,6 +278,18 @@ html[data-page="watch"]:-webkit-full-screen .ytov-watch-fs {
     overflow: hidden;
     text-overflow: ellipsis;
     text-transform: uppercase;
+}
+
+.bc-t-desc {
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: .12em;
+    line-height: 1.2;
+    color: #f5c451;
+    text-transform: uppercase;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .bc-notices {
@@ -332,6 +352,33 @@ html[data-page="watch"]:-webkit-full-screen .ytov-watch-fs {
     bottom: 108px;
     height: 196px;
 }
+
+.bc-status-card {
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 22px;
+    overflow: hidden;
+    background: linear-gradient(90deg, rgba(7, 20, 52, .92) 0%, rgba(12, 42, 110, .88) 52%, rgba(8, 24, 64, .92) 100%);
+    border: 1px solid rgba(245, 196, 81, .85);
+    box-shadow:
+        0 0 0 1px rgba(59, 130, 246, .45),
+        0 0 28px rgba(37, 99, 235, .35);
+}
+.bc-status-title {
+    max-width: 1600px;
+    padding: 0 48px;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 72px;
+    line-height: .92;
+    letter-spacing: .06em;
+    text-align: center;
+    text-transform: uppercase;
+    color: #f5c451;
+}
+.bc-status-title.is-compact { font-size: 48px; letter-spacing: .04em; }
+.bc-status-card.is-break .bc-status-title { color: #fff; }
 
 .ipl-player-card {
     height: 100%;
@@ -419,22 +466,62 @@ html[data-page="watch"]:-webkit-full-screen .ytov-watch-fs {
     text-overflow: ellipsis;
 }
 
-.ipl-chips {
+.ipl-identity {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+    min-height: 28px;
+}
+.ipl-identity-main {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+    flex: 1 1 auto;
+}
+.ipl-order {
     font-size: 16px;
-    font-weight: 700;
-    color: rgba(255, 255, 255, .92);
+    font-weight: 800;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: #f5c451;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
 }
-.ipl-chip { color: #dbe7ff; }
-.ipl-chip + .ipl-chip::before { content: '  ·  '; color: rgba(245, 196, 81, .8); }
+.ipl-role {
+    min-width: 0;
+    font-size: 16px;
+    font-weight: 800;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: #fff;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.ipl-tier {
+    flex: 0 0 auto;
+    max-width: 46%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    border-radius: 999px;
+    padding: 4px 12px;
+    font-size: 13px;
+    font-weight: 800;
+    letter-spacing: .08em;
+    line-height: 1.15;
+    text-transform: uppercase;
+}
 
 .bc-meta {
     display: flex;
-    flex-wrap: nowrap;
-    gap: 14px;
+    flex-wrap: wrap;
+    gap: 6px 14px;
     margin-top: 4px;
+    max-height: 42px;
     font-size: 13px;
     color: rgba(255, 255, 255, .78);
     overflow: hidden;

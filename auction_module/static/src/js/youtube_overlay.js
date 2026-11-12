@@ -22,6 +22,7 @@
     var kickerEl = document.getElementById('ytovKicker');
     var iconEl = document.getElementById('ytovIcon');
     var lotEl = document.getElementById('ytovLot');
+    var orderEl = document.getElementById('ytovOrder');
     var baseWrapEl = document.getElementById('ytovBase');
     var baseValEl = document.getElementById('ytovBaseVal');
     var liveBoxEl = document.getElementById('ytovLiveBox');
@@ -63,6 +64,13 @@
     var lastState = '';
     var lastKnown = null;
     var introTimer = null;
+    var holdTimer = null;
+    var holdPlayerId = null;
+    var holdKind = '';
+    var holdUntil = 0;
+    var statusEl = document.getElementById('ytovStatus');
+    var statusCardEl = document.getElementById('ytovStatusCard');
+    var statusTitleEl = document.getElementById('ytovStatusTitle');
     var tickTimer = null;
     var clockTimer = null;
     var timerPoll = null;
@@ -137,11 +145,16 @@
         }
     }
 
-    function chip(text) {
-        if (!text) {
-            return '';
-        }
-        return '<span class="ipl-chip">' + esc(text) + '</span>';
+    function tierInk(color) {
+        var light = {
+            '#ffffff': 1,
+            '#f39c12': 1,
+            '#2ecc71': 1,
+            '#e67e22': 1,
+            '#1abc9c': 1,
+            '#f1c40f': 1
+        };
+        return light[String(color || '').trim().toLowerCase()] ? '#12243f' : '#ffffff';
     }
 
     function styleLabel(value) {
@@ -156,31 +169,32 @@
         return s;
     }
 
-    function roleLine(p) {
-        var bits = [];
+    function roleText(p) {
         var sport = p.tournament_type || '';
         if (sport === 'football') {
-            if (p.dominant_position) {
-                bits.push(p.dominant_position);
-            }
-        } else if (sport === 'kabaddi') {
-            if (p.kabaddi_role || p.role) {
-                bits.push(p.kabaddi_role || p.role);
-            }
-        } else if (sport === 'badminton') {
-            if (p.badminton_category) {
-                bits.push(p.badminton_category);
-            }
-            if (p.badminton_style) {
-                bits.push(p.badminton_style);
-            }
-        } else if (p.role) {
-            bits.push(p.role);
+            return p.dominant_position || '';
         }
-        if (p.tier_name && bits.indexOf(p.tier_name) === -1) {
-            bits.push(p.tier_name);
+        if (sport === 'kabaddi') {
+            return p.kabaddi_role || p.role || '';
         }
-        return bits.map(chip).join('');
+        if (sport === 'badminton') {
+            return [p.badminton_category, p.badminton_style].filter(Boolean).join(' · ');
+        }
+        return p.role || '';
+    }
+
+    function identityLine(p) {
+        var html = '';
+        if (p.tier_name) {
+            var bg = p.tier_color || '#3498db';
+            html += '<span class="ipl-tier" style="background:' + esc(bg) +
+                ';color:' + tierInk(bg) + '">' + esc(p.tier_name) + '</span>';
+        }
+        var role = roleText(p);
+        if (role) {
+            html += '<span class="ipl-role">' + esc(role) + '</span>';
+        }
+        return html;
     }
 
     function metaLine(p) {
@@ -190,11 +204,6 @@
             if (v) {
                 bits.push('<span>' + esc(k) + '<b>' + esc(v) + '</b></span>');
             }
-        }
-        if (p.jersey) {
-            add('No', p.jersey);
-        } else if (p.sl_no && p.sl_no !== '?') {
-            add('No', p.sl_no);
         }
         add('Age', p.age);
         var sport = p.tournament_type || '';
@@ -209,7 +218,13 @@
             add('Bowl', p.bowling_style);
         }
         add('Location', p.location || p.current_team);
-        return bits.slice(0, 4).join('');
+        (p.other_attributes || p.extra_attributes || []).forEach(function (row) {
+            if (!row) {
+                return;
+            }
+            add(row.label, row.value);
+        });
+        return bits.slice(0, 6).join('');
     }
 
     function preload(url) {
@@ -414,6 +429,28 @@
         }
     }
 
+    function paintOrder(result, state) {
+        if (!orderEl) {
+            return;
+        }
+        var prog = (result && result.progress) || {};
+        var current = Number(prog.current || 0);
+        var total = Number(prog.total || 0);
+        if (!current || !total) {
+            orderEl.textContent = '';
+            show(orderEl, false);
+            return;
+        }
+        var word = 'NOW AUCTIONING';
+        if (state === 'sold') {
+            word = 'SOLD';
+        } else if (state === 'unsold') {
+            word = 'UNSOLD';
+        }
+        orderEl.textContent = word + ' ' + current + '/' + total;
+        show(orderEl, true);
+    }
+
     function rotateSponsors(list) {
         var ads = list || [];
         if (!sponsorEl || !sponsorTrackEl) {
@@ -585,6 +622,104 @@
         return '';
     }
 
+    function soldHoldMs(result) {
+        var meta = (result && result.auction_meta) || {};
+        var n = meta.sold_display_seconds;
+        if (n == null || n === '') {
+            n = window.YTOV_SOLD_SECONDS;
+        }
+        n = Number(n);
+        if (isNaN(n) || n < 0) {
+            n = 5;
+        }
+        return n * 1000;
+    }
+
+    function clearHoldTimer() {
+        if (holdTimer) {
+            clearTimeout(holdTimer);
+            holdTimer = null;
+        }
+    }
+
+    function parseServerTime(raw) {
+        if (!raw) {
+            return 0;
+        }
+        var text = String(raw).replace(' ', 'T');
+        var exp = Date.parse(text + 'Z');
+        if (isNaN(exp)) {
+            exp = Date.parse(text + '+00:00');
+        }
+        return isNaN(exp) ? 0 : exp;
+    }
+
+    function celebrationDeadline(p, result) {
+        var fromSnapshot = parseServerTime(result && result.celebration_until);
+        if (fromSnapshot) {
+            return fromSnapshot;
+        }
+        if (holdPlayerId === p.id && holdKind === p.state && holdUntil) {
+            return holdUntil;
+        }
+        return Date.now() + soldHoldMs(result);
+    }
+
+    function syncCelebration(p, result, resultHold) {
+        if (!resultHold || !p) {
+            if (!p || p.id !== holdPlayerId) {
+                holdPlayerId = null;
+                holdKind = '';
+                holdUntil = 0;
+                clearHoldTimer();
+            }
+            return;
+        }
+        var deadline = celebrationDeadline(p, result);
+        if (holdPlayerId === p.id && holdKind === p.state && holdUntil === deadline) {
+            return;
+        }
+        holdPlayerId = p.id;
+        holdKind = p.state;
+        holdUntil = deadline;
+        clearHoldTimer();
+        var delay = holdUntil - Date.now();
+        if (delay <= 0) {
+            return;
+        }
+        holdTimer = setTimeout(function () {
+            holdTimer = null;
+            if (lastKnown) {
+                apply(lastKnown);
+            }
+        }, delay + 40);
+    }
+
+    function bridgeTitle(result) {
+        var phase = ((result && result.wait_phase) || {}).phase || '';
+        if (phase === 'loading_unsold') {
+            return 'LOADING FROM UNSOLD';
+        }
+        if (phase === 'draft_soon') {
+            return 'PLAYERS WILL ENTER THE AUCTION SOON';
+        }
+        if (phase === 'about_to_begin') {
+            return 'COMING UP NEXT';
+        }
+        return 'NEXT PLAYER COMING UP';
+    }
+
+    function showStatus(title, kind) {
+        if (statusTitleEl) {
+            statusTitleEl.textContent = title;
+            statusTitleEl.classList.toggle('is-compact', String(title || '').length > 22);
+        }
+        if (statusCardEl) {
+            statusCardEl.classList.toggle('is-break', kind === 'break');
+        }
+        show(statusEl, true);
+    }
+
     function idleCopy(result) {
         var wait = (result && result.wait_phase) || {};
         if (overlayStatus === 'missing') {
@@ -617,18 +752,21 @@
         var soldAmt = p ? Number(p.sold_points || 0) : 0;
         var baseAmt = p ? Number(p.base_price || 0) : 0;
         var pState = p ? (p.state || 'auction') : '';
+        var resultHold = pState === 'sold' || pState === 'unsold';
+        syncCelebration(p, result, resultHold);
+        var celebrating = resultHold && p && holdPlayerId === p.id && Date.now() < holdUntil;
         var uiState = 'IDLE';
 
-        if (completed) {
-            uiState = 'COMPLETED';
-        } else if (paused && !p) {
+        if (paused && !completed) {
             uiState = 'PAUSED';
+        } else if (celebrating) {
+            uiState = pState === 'unsold' ? 'UNSOLD' : 'SOLD';
+        } else if (completed) {
+            uiState = 'COMPLETED';
+        } else if (resultHold) {
+            uiState = 'BRIDGE';
         } else if (!p) {
             uiState = 'IDLE';
-        } else if (pState === 'sold') {
-            uiState = 'SOLD';
-        } else if (pState === 'unsold') {
-            uiState = 'UNSOLD';
         } else if (p && p.id && p.id !== lastPlayerId) {
             uiState = 'PLAYER_INTRO';
         } else if (bidAmt && bidAmt !== lastBid) {
@@ -645,19 +783,38 @@
         setUiState(uiState);
         paintTicker(result);
         rotateSponsors(result.advertisers || []);
-        show(completeEl, completed);
-        show(pausedEl, paused && !completed);
+        show(completeEl, uiState === 'COMPLETED');
+        show(pausedEl, false);
 
-        if (completed || !p) {
+        if (uiState === 'PAUSED' || uiState === 'BRIDGE') {
+            show(playerEl, false);
+            hidePunch();
+            setTimerActive(false);
+            show(waitEl, false);
+            showStatus(
+                uiState === 'PAUSED' ? 'BREAK' : bridgeTitle(result),
+                uiState === 'PAUSED' ? 'break' : 'bridge'
+            );
+            show(orderEl, false);
+            lastPlayerId = p ? p.id : null;
+            lastBid = bidAmt || null;
+            lastState = uiState;
+            return;
+        }
+
+        show(statusEl, false);
+
+        if (uiState === 'COMPLETED' || !p) {
             show(playerEl, false);
             hidePunch();
             setTimerActive(false);
             if (waitEl) {
-                waitEl.textContent = completed
+                waitEl.textContent = uiState === 'COMPLETED'
                     ? (wait.message || 'AUCTION COMPLETED')
-                    : (paused ? 'AUCTION PAUSED' : idleCopy(result));
+                    : idleCopy(result);
             }
-            show(waitEl, !completed && !paused);
+            show(waitEl, uiState !== 'COMPLETED');
+            show(orderEl, false);
             lastPlayerId = p ? p.id : null;
             lastBid = bidAmt || null;
             lastState = uiState;
@@ -674,14 +831,15 @@
             nameEl.textContent = p.name || '';
         }
         if (lotEl) {
-            var lot = p.jersey || (p.sl_no && p.sl_no !== '?' ? p.sl_no : '');
-            lotEl.textContent = lot ? ('#' + lot) : '';
-            show(lotEl, !!lot);
+            var serial = (p.sl_no && p.sl_no !== '?' && p.sl_no !== '0') ? String(p.sl_no) : '';
+            lotEl.textContent = serial ? ('#' + serial) : '';
+            show(lotEl, !!serial);
         }
+        paintOrder(result, pState);
         show(iconEl, !!p.icon_player);
         setPhoto(p.photo_url, p.name);
         if (chipsEl) {
-            chipsEl.innerHTML = roleLine(p);
+            chipsEl.innerHTML = identityLine(p);
         }
         if (metaEl) {
             metaEl.innerHTML = metaLine(p);

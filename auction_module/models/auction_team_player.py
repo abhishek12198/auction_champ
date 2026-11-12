@@ -946,10 +946,15 @@ class AuctionTeamPlayer(models.Model):
         if player.tournament_id:
             from datetime import timedelta
             stamp_secs = player.tournament_id.result_stamp_hold_seconds(is_mystery=is_mystery)
+            now_dt = fields.Datetime.now()
+            sold_secs = int(player.tournament_id.sold_display_seconds or 5)
+            if sold_secs < 0:
+                sold_secs = 0
             player.tournament_id.sudo().write({
                 'stamp_player_id': player.id,
                 'stamp_state': 'sold',
-                'stamp_expires_at': fields.Datetime.now() + timedelta(seconds=stamp_secs),
+                'stamp_expires_at': now_dt + timedelta(seconds=stamp_secs),
+                'celebration_until': now_dt + timedelta(seconds=sold_secs),
             })
 
         # Notify operators with real name; live board uses the ??? history message
@@ -2317,10 +2322,15 @@ class AuctionTeamPlayer(models.Model):
                 if player.tournament_id:
                     from datetime import timedelta
                     stamp_secs = player.tournament_id.result_stamp_hold_seconds()
+                    now_dt = fields.Datetime.now()
+                    sold_secs = int(player.tournament_id.sold_display_seconds or 5)
+                    if sold_secs < 0:
+                        sold_secs = 0
                     player.tournament_id.sudo().write({
                         'stamp_player_id': player.id,
                         'stamp_state': 'unsold',
-                        'stamp_expires_at': fields.Datetime.now() + timedelta(seconds=stamp_secs),
+                        'stamp_expires_at': now_dt + timedelta(seconds=stamp_secs),
+                        'celebration_until': now_dt + timedelta(seconds=sold_secs),
                     })
         display_seconds = self[0].tournament_id.sold_display_seconds if self and self[0].tournament_id else 5
         return {

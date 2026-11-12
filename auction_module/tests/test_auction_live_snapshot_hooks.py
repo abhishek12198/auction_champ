@@ -137,7 +137,7 @@ class TestKindsForVals(unittest.TestCase):
         tourney = WATCHED_FIELDS['auction.tournament']
         for f in (
             'dice_state', 'dice_result', 'break_time_active',
-            'stamp_player_id', 'stamp_state', 'stamp_expires_at',
+            'stamp_player_id', 'stamp_state', 'stamp_expires_at', 'celebration_until',
             'projector_board_mode', 'pool_draw_json', 'fixture_schedule_json',
             'live_board_active', 'live_board_code_protected',
             'auction_declared_complete', 'name', 'logo',

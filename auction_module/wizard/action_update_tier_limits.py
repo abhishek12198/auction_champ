@@ -77,6 +77,26 @@ class UpdateTierLimits(models.TransientModel):
     _description = 'Bulk Update Tier Limits & Bid Slabs across Auctions'
 
     auction_ids = fields.Many2many('auction.auction', string='Selected Auctions', readonly=True)
+    apply_total_point = fields.Boolean(
+        string='Update total purse',
+        default=False,
+        help='When ticked, write Total points on every selected auction.',
+    )
+    new_total_point = fields.Integer(
+        string='Total purse',
+        default=0,
+        help='New purse for every selected auction. Cannot be lower than points already spent.',
+    )
+    apply_squad_size = fields.Boolean(
+        string='Update squad size',
+        default=False,
+        help='When ticked, write Max no of players on every selected auction.',
+    )
+    new_squad_size = fields.Integer(
+        string='Squad size',
+        default=0,
+        help='New squad size for every selected auction. Cannot be lower than players already bought.',
+    )
     apply_global_base = fields.Boolean(
         string='Update global base point',
         default=False,
@@ -158,11 +178,16 @@ class UpdateTierLimits(models.TransientModel):
                 'Please set them up on the auction first (Set Auction Rules).'
             )
 
+        first = auctions[:1]
         defaults['line_ids'] = lines
         defaults['slab_ids'] = slab_lines
         defaults['update_slabs'] = False
         defaults['apply_global_base'] = False
-        defaults['new_global_base'] = auctions[:1].base_point if auctions else 0
+        defaults['new_global_base'] = first.base_point if first else 0
+        defaults['apply_total_point'] = False
+        defaults['new_total_point'] = first.total_point if first else 0
+        defaults['apply_squad_size'] = False
+        defaults['new_squad_size'] = first.max_players if first else 0
         defaults['auction_ids'] = [(6, 0, auction_ids)]
         return defaults
 
@@ -189,6 +214,26 @@ class UpdateTierLimits(models.TransientModel):
                 )
             prev_to = s.to_amount
 
+    def _spent_and_bought(self, auction):
+        lines = auction.player_ids
+        spent = sum(lines.mapped('points')) if lines else 0
+        return spent, len(lines)
+
+    def _validate_purse_and_squad(self, auctions):
+        for auction in auctions:
+            team = auction.team_id.name or 'A selected team'
+            spent, bought = self._spent_and_bought(auction)
+            if self.apply_total_point and self.new_total_point < spent:
+                raise UserError(
+                    '%s has already spent %s. Total purse cannot be lower than that.'
+                    % (team, spent)
+                )
+            if self.apply_squad_size and self.new_squad_size < bought:
+                raise UserError(
+                    '%s already has %s player(s). Squad size cannot be lower than that.'
+                    % (team, bought)
+                )
+
     def button_apply(self):
         self.ensure_one()
 
@@ -202,13 +247,25 @@ class UpdateTierLimits(models.TransientModel):
             l.apply_max_players or l.apply_base_point or l.apply_max_call
             for l in self.line_ids
         )
-        if not tier_changes and not self.update_slabs and not self.apply_global_base:
+        if (
+            not tier_changes
+            and not self.update_slabs
+            and not self.apply_global_base
+            and not self.apply_total_point
+            and not self.apply_squad_size
+        ):
             raise UserError(
-                'No changes selected. Tick a toggle for global base, a tier field, '
-                'and/or "Update Bid Slabs" to apply.'
+                'No changes selected. Tick a toggle for total purse, squad size, '
+                'global base, a tier field, and/or "Update Bid Slabs" to apply.'
             )
         if self.apply_global_base and self.new_global_base < 0:
             raise UserError('Global base point cannot be negative.')
+        if self.apply_total_point and self.new_total_point < 0:
+            raise UserError('Total purse cannot be negative.')
+        if self.apply_squad_size and self.new_squad_size < 1:
+            raise UserError('Squad size must be at least 1.')
+        if self.apply_total_point or self.apply_squad_size:
+            self._validate_purse_and_squad(auctions)
 
         if self.update_slabs:
             self._validate_slabs()
@@ -249,8 +306,15 @@ class UpdateTierLimits(models.TransientModel):
                     tl.write(vals)
                     updated_tiers += 1
 
+            auction_vals = {}
+            if self.apply_total_point:
+                auction_vals['total_point'] = self.new_total_point
+            if self.apply_squad_size:
+                auction_vals['max_players'] = self.new_squad_size
             if self.apply_global_base:
-                auction.write({'base_point': self.new_global_base})
+                auction_vals['base_point'] = self.new_global_base
+            if auction_vals:
+                auction.write(auction_vals)
 
             if self.update_slabs:
                 auction.auction_bid_slab_ids.unlink()
@@ -267,6 +331,10 @@ class UpdateTierLimits(models.TransientModel):
                 updated_slab_auctions += 1
 
         parts = []
+        if self.apply_total_point:
+            parts.append('total purse')
+        if self.apply_squad_size:
+            parts.append('squad size')
         if self.apply_global_base:
             parts.append('global base point')
         if updated_tiers:

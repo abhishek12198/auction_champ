@@ -26,12 +26,20 @@ _logger = logging.getLogger(__name__)
 
 
 def _stamp_iso(tournament):
-    if not tournament or not tournament.stamp_expires_at:
+    return _dt_iso(tournament.stamp_expires_at if tournament else None)
+
+
+def _celebration_iso(tournament):
+    return _dt_iso(tournament.celebration_until if tournament else None)
+
+
+def _dt_iso(value):
+    if not value:
         return None
     try:
-        return fields.Datetime.to_string(tournament.stamp_expires_at)
+        return fields.Datetime.to_string(value)
     except Exception:
-        return str(tournament.stamp_expires_at)
+        return str(value)
 
 
 def _helpers():
@@ -453,6 +461,7 @@ def build_projector_payload(env, tournament, db_name):
             'advertisers': ctrl._pj_advertisers(tournament, db_name),
             'boards': boards,
             'stamp_expires_at': _stamp_iso(tournament),
+            'celebration_until': _celebration_iso(tournament),
             'stamp_state': (tournament.stamp_state if tournament else None) or None,
             'next_photo_urls': ctrl._pj_next_photo_urls(
                 tournament, db_name, on_stage, env=env,
@@ -587,6 +596,7 @@ def build_projector_payload(env, tournament, db_name):
         'advertisers': ctrl._pj_advertisers(tournament, db_name),
         'boards': boards,
         'stamp_expires_at': _stamp_iso(tournament),
+        'celebration_until': _celebration_iso(tournament),
         'stamp_state': (
             (state_override or player.state)
             if (state_override or player.state) in ('sold', 'unsold')

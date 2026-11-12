@@ -64,3 +64,4 @@ from . import action_deactivate_tournament
 from . import action_reactivate_tournament
 from . import auction_tournament_rename_wizard
 from . import auction_player_card_wizard
+from . import auction_top_bid_poster_wizard

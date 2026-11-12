@@ -148,3 +148,7 @@ access_auction_user_template_user,auction.user.template (user),auction_module.mo
 access_auction_location_user,auction.location (user),auction_module.model_auction_location,auction_module.group_auction_group,1,1,1,0
 access_auction_location_admin,auction.location (admin),auction_module.model_auction_location,auction_module.group_auction_group_admin,1,1,1,1
 access_auction_location_public,auction.location (public),auction_module.model_auction_location,base.group_public,1,0,0,0
+access_auction_top_bid_poster_wizard_user,auction.top.bid.poster.wizard (user),auction_module.model_auction_top_bid_poster_wizard,auction_module.group_auction_group,1,1,1,1
+access_auction_top_bid_poster_wizard_admin,auction.top.bid.poster.wizard (admin),auction_module.model_auction_top_bid_poster_wizard,auction_module.group_auction_group_admin,1,1,1,1
+access_auction_top_bid_poster_wizard_line_user,auction.top.bid.poster.wizard.line (user),auction_module.model_auction_top_bid_poster_wizard_line,auction_module.group_auction_group,1,1,1,1
+access_auction_top_bid_poster_wizard_line_admin,auction.top.bid.poster.wizard.line (admin),auction_module.model_auction_top_bid_poster_wizard_line,auction_module.group_auction_group_admin,1,1,1,1

@@ -22,7 +22,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="1"/>
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&amp;family=Exo+2:wght@500;600;700;800;900&amp;family=Barlow+Condensed:wght@600;700&amp;display=swap" rel="stylesheet"/>
-  <link rel="stylesheet" t-att-href="'/auction_module/static/src/css/youtube_overlay.css?v=1.5.983'"/>
+  <link rel="stylesheet" t-att-href="'/auction_module/static/src/css/youtube_overlay.css?v=1.5.991obs'"/>
 </head>
 <body>
   <t t-if="page == 'watch'">
@@ -60,7 +60,12 @@
         <t t-if="tournament_logo_url">
           <img class="bc-t-logo" t-att-src="tournament_logo_url" alt=""/>
         </t>
-        <span class="bc-t-name"><t t-esc="tournament.name if tournament else 'AuctionChamp'"/></span>
+        <span class="bc-t-copy">
+          <span class="bc-t-name"><t t-esc="tournament.name if tournament else 'AuctionChamp'"/></span>
+          <t t-if="tournament and tournament.description">
+            <span class="bc-t-desc"><t t-esc="tournament.description"/></span>
+          </t>
+        </span>
         <svg class="bc-trophy" viewBox="0 0 48 32" aria-hidden="true">
           <path d="M40 14c0-6-4-10-10-10h-2c-1 4-4 6-8 6H12c2 6 8 10 16 10 4 0 8-2 10-5l2-1z" fill="#f5c451"/>
           <path d="M24 20v6M18 28h12" stroke="#f5c451" stroke-width="2" fill="none" stroke-linecap="round"/>
@@ -84,6 +89,12 @@
       </div>
     </div>
 
+    <section class="bc-lower" id="ytovStatus" hidden="hidden">
+      <div class="bc-status-card" id="ytovStatusCard">
+        <div class="bc-status-title" id="ytovStatusTitle">NEXT PLAYER COMING UP</div>
+      </div>
+    </section>
+
     <section class="bc-lower" id="ytovPlayer" hidden="hidden">
       <div class="ipl-player-card">
         <div class="bc-photo-col">
@@ -94,7 +105,10 @@
         </div>
         <div class="bc-player">
           <div class="ipl-name" id="ytovName"></div>
-          <div class="ipl-chips" id="ytovChips"></div>
+          <div class="ipl-order" id="ytovOrder" hidden="hidden"></div>
+          <div class="ipl-identity">
+            <div class="ipl-identity-main" id="ytovChips"></div>
+          </div>
           <div class="bc-meta" id="ytovMeta"></div>
           <div class="ipl-stamp" id="ytovStamp" hidden="hidden"></div>
         </div>
@@ -146,12 +160,13 @@
     window.YTOV_DATA_URL = '/' + window.YTOV_DB + '/auction/yt-overlay/' + window.YTOV_SLUG + '/data';
     window.YTOV_EVENTS_URL = '/' + window.YTOV_DB + '/auction/yt-overlay/' + window.YTOV_SLUG + '/events';
     window.YTOV_SSE_ENABLED = document.documentElement.getAttribute('data-sse-enabled') || '0';
+    window.YTOV_SOLD_SECONDS = <t t-esc="int(tournament.sold_display_seconds or 5) if tournament else 5"/>;
   </script>
   <t t-call="auction_module.point_unit_bootstrap">
     <t t-set="pu_tournament" t-value="tournament"/>
   </t>
   <script src="/auction_module/static/src/js/auction_sse_client.js"/>
-  <script src="/auction_module/static/src/js/youtube_overlay.js?v=1.5.983"/>
+  <script src="/auction_module/static/src/js/youtube_overlay.js?v=1.5.990obs"/>
 </body>
 </html>
 </template>

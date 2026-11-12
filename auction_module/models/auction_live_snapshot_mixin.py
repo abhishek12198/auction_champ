@@ -72,6 +72,7 @@ WATCHED_FIELDS = {
         'stamp_player_id': frozenset(('lb', 'pj')),
         'stamp_state': frozenset(('lb', 'pj')),
         'stamp_expires_at': frozenset(('lb', 'pj')),
+        'celebration_until': frozenset(('pj',)),
         'projector_board_mode': frozenset(('pj',)),
         'projector_board_reveal_until': frozenset(('pj',)),
         'pool_draw_json': frozenset(('pj',)),

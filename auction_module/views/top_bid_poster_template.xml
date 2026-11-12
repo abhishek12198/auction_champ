@@ -52,6 +52,14 @@
   }
   .banner-top { color: #ffffff; text-shadow: 0 3px 0 rgba(0,0,0,.35); padding-left: 8px; }
   .banner-bids { color: #f6d36a; text-shadow: 0 3px 0 #8a6410; padding-left: 14px; }
+  .scope-chip {
+    position: absolute; top: 214px; left: 48px; z-index: 7;
+    height: 26px; line-height: 26px; padding: 0 14px; max-width: 640px;
+    border-radius: 8px; border: 1.5px solid #e8c25a; overflow: hidden;
+    font-family: 'TBLabel', 'Oswald', sans-serif;
+    font-size: 14px; letter-spacing: 1.6px;
+    text-transform: uppercase; white-space: nowrap;
+  }
   .gavel { position: absolute; top: 68px; left: 842px; width: 220px; height: 156px; z-index: 8; }
 
   .hero {
@@ -269,6 +277,7 @@
   <t t-if="gavel_uri">
     <img class="gavel" t-att-src="gavel_uri" width="220" height="156" alt=""/>
   </t>
+  <div class="scope-chip" t-att-style="scope_style"><t t-esc="scope_label"/></div>
 
   <t t-foreach="cards" t-as="card">
     <t t-if="card['is_hero']">

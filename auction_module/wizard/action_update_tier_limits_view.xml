@@ -18,6 +18,26 @@
                     <notebook>
                         <!-- Tab 1: auctions -->
                         <page string="Auctions" name="auctions">
+                            <group col="4">
+                                <field name="apply_total_point"
+                                       string="Total purse"
+                                       widget="boolean_toggle"/>
+                                <field name="new_total_point"
+                                       string="Value"
+                                       widget="ac_points"
+                                       attrs="{'readonly': [('apply_total_point', '=', False)]}"/>
+                                <field name="apply_squad_size"
+                                       string="Squad size"
+                                       widget="boolean_toggle"/>
+                                <field name="new_squad_size"
+                                       string="Value"
+                                       attrs="{'readonly': [('apply_squad_size', '=', False)]}"/>
+                            </group>
+                            <p class="text-muted" style="margin:0 0 10px;">
+                                Turn on a toggle to write that value onto every selected auction.
+                                Total purse cannot go below points already spent, and squad size
+                                cannot go below players already bought. Untoggled fields stay as they are.
+                            </p>
                             <field name="auction_ids" nolabel="1" readonly="1"
                                    options="{'no_open': True}">
                                 <tree create="0" delete="0" edit="0">
@@ -107,7 +127,7 @@
                     <footer>
                         <button string="Apply Changes" type="object" name="button_apply"
                                 class="btn-primary"
-                                confirm="This will update the selected auctions (tier limits and/or bid slabs). Continue?"/>
+                                confirm="This will update the selected auctions. Continue?"/>
                         <button string="Cancel" class="btn-secondary" special="cancel"/>
                     </footer>
 

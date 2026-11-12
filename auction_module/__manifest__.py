@@ -161,6 +161,7 @@
         'wizard/action_reactivate_tournament_view.xml',
         'wizard/auction_tournament_rename_wizard_view.xml',
         'wizard/auction_player_card_wizard_view.xml',
+        'wizard/auction_top_bid_poster_wizard_view.xml',
         'views/auction_status_template.xml',
         'views/page_not_found.xml',
         'views/social_preview_head.xml',

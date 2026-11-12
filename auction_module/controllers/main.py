@@ -8835,6 +8835,7 @@ def _pj_auction_meta(tournament):
     return {
         'auction_date': date_label,
         'auction_venue': (tournament.auction_venue or '').strip(),
+        'sold_display_seconds': int(tournament.sold_display_seconds or 5),
     }
 
 

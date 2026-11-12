@@ -316,6 +316,12 @@ class AuctionTournament(models.Model):
     stamp_player_id   = fields.Many2one('auction.team.player', string='Stamp Player', copy=False)
     stamp_state       = fields.Char(string='Stamp State', copy=False)   # 'sold' | 'unsold'
     stamp_expires_at  = fields.Datetime(string='Stamp Expires At', copy=False)
+    celebration_until = fields.Datetime(
+        string='Celebration Until',
+        copy=False,
+        help='When the overlay should leave the sold card and show that the next player is coming. '
+             'Published on the projector snapshot for the Redis live socket.',
+    )
     next_player_countdown = fields.Integer(
         string='Next Player Countdown (seconds)',
         default=5,
@@ -1765,7 +1771,7 @@ class AuctionTournament(models.Model):
                 'expose_player_contact_agreed_date',
                 'expose_player_contact_policy_version',
                 # live-board stamp — written during SOLD / UNSOLD / NEXT-PLAYER
-                'stamp_player_id', 'stamp_state', 'stamp_expires_at',
+                'stamp_player_id', 'stamp_state', 'stamp_expires_at', 'celebration_until',
                 # live-board controls
                 'live_board_active', 'break_time_active', 'live_board_code_protected',
                 'live_bid_sound', 'sold_coin_sound',
@@ -2163,8 +2169,11 @@ class AuctionTournament(models.Model):
             'context': {'default_tournament_id': self.id},
         }
 
-    def _top_bid_lines(self):
-        """Highest five completed sales. One row per player."""
+    def _top_bid_pool(self, tier=None):
+        """Sold sales for a top-bid sheet, highest first.
+
+        Overall leaves out the icon tier. A tier sheet is only that tier.
+        """
         self.ensure_one()
         lines = self.env['auction.auction.player'].search([
             ('auction_id.tournament_id', '=', self.id),
@@ -2177,11 +2186,27 @@ class AuctionTournament(models.Model):
             player = line.player_id
             if not player or player.id in seen:
                 continue
+            player_tier = player.tier_id
+            if tier:
+                if player_tier != tier:
+                    continue
+            elif player_tier and player_tier.is_an_icon_tier:
+                continue
             seen.add(player.id)
             picked |= line
-            if len(picked) >= 5:
-                break
         return picked
+
+    def _top_bid_lines(self, tier=None):
+        """Highest five sales in this scope. One row per player."""
+        return self._top_bid_pool(tier)[:5]
+
+    @staticmethod
+    def _top_bid_chip_ink(hex_color):
+        """Dark type on the light tier colours, white on the rest."""
+        light = {
+            '#ffffff', '#f39c12', '#2ecc71', '#e67e22', '#1abc9c', '#f1c40f',
+        }
+        return '#12243f' if (hex_color or '').lower() in light else '#ffffff'
 
     def _top_bid_face_crop(self, binary_val, box_w, box_h):
         """Face-centred JPEG that is exactly box_w × box_h.
@@ -2427,19 +2452,30 @@ class AuctionTournament(models.Model):
             return paint['paper']
         return cls._top_bid_mix(ink, '#000000', 0.62)
 
-    def _top_bid_theme_css(self, paint):
-        """Concrete colours for wkhtml. CSS variables are not reliable there."""
+    def _top_bid_theme_css(self, paint, night_color=None):
+        """Concrete colours for wkhtml. CSS variables are not reliable there.
+
+        A tier sheet passes night_color and the night wash is that tier's
+        colour. Overall leaves night_color empty and keeps the theme.
+        """
         def rgba(hex_color, alpha):
             r, g, b = self._top_bid_rgb(hex_color)
             return 'rgba(%d,%d,%d,%.2f)' % (r, g, b, alpha)
 
-        base = self._top_bid_base(paint)
-        panel = self._top_bid_mix(base, paint['ink'], 0.34)
+        if night_color:
+            ink = night_color
+            bright = self._top_bid_mix(ink, '#ffffff', 0.35)
+            base = self._top_bid_mix(ink, '#000000', 0.62)
+        else:
+            ink = paint['ink']
+            bright = paint['bright']
+            base = self._top_bid_base(paint)
+        panel = self._top_bid_mix(base, ink, 0.34)
         deep = self._top_bid_mix(base, '#000000', 0.28)
         veil = '-webkit-linear-gradient(top, %s 0%%, %s 34%%, %s 100%%)' % (
             rgba(base, 0.72), rgba(base, 0.84), rgba(deep, 0.94))
-        flood = '-webkit-linear-gradient(top, %s 0%%, rgba(0,0,0,0) 26%%)' % rgba(paint['bright'], 0.55)
-        glow = '-webkit-radial-gradient(circle, %s 0%%, rgba(0,0,0,0) 68%%)' % rgba(paint['ink'], 0.55)
+        flood = '-webkit-linear-gradient(top, %s 0%%, rgba(0,0,0,0) 26%%)' % rgba(bright, 0.55)
+        glow = '-webkit-radial-gradient(circle, %s 0%%, rgba(0,0,0,0) 68%%)' % rgba(ink, 0.55)
         return (
             "html,body,.sheet{background:%(base)s;color:#ffffff;}"
             ".veil{background-image:%(veil)s;}"
@@ -2728,17 +2764,32 @@ class AuctionTournament(models.Model):
         return out.getvalue()
 
     def action_download_top_bid_posters(self):
-        """Download one Instagram sheet (1080×1350) of the five highest sold bids."""
+        """Open the chooser for an overall sheet, tier sheets, or both."""
+        self.ensure_one()
+        return {
+            'type': 'ir.actions.act_window',
+            'name': _('Top 5 Bid Posters'),
+            'res_model': 'auction.top.bid.poster.wizard',
+            'view_mode': 'form',
+            'views': [(False, 'form')],
+            'target': 'new',
+            'context': {'default_tournament_id': self.id},
+        }
+
+    def _top_bid_file_part(self, label):
+        part = re.sub(r'[^A-Za-z0-9]+', '_', label or 'Overall').strip('_')
+        return part or 'Overall'
+
+    def _top_bid_poster_jpg(self, lines, scope_label, scope_style, night_color=None):
+        """One 1080×1350 sheet for these sales.
+
+        night_color paints the sheet from a tier colour. Empty keeps the theme.
+        """
         import shutil
-        from datetime import datetime
 
         self.ensure_one()
-        lines = self._top_bid_lines()
         if not lines:
-            raise UserError(_(
-                'No sold players yet. Top bid posters are available after players are sold.'
-            ))
-
+            return None
         Player = self.env['auction.team.player']
         binary = Player._card_render_binary()
         if not binary:
@@ -2749,8 +2800,9 @@ class AuctionTournament(models.Model):
 
         paint = self._top_bid_palette()
         medal_for = {1: 'gold', 2: 'silver', 3: 'bronze'}
+        badge_ink = night_color or paint['ink']
         plain_badge = 'background:%s;color:#ffffff;border:2px solid #e8c25a;' % (
-            self._top_bid_mix(paint['ink'], '#000000', 0.18))
+            self._top_bid_mix(badge_ink, '#000000', 0.45 if night_color else 0.18))
         cards = []
         for index, line in enumerate(lines, start=1):
             player = line.player_id
@@ -2799,7 +2851,7 @@ class AuctionTournament(models.Model):
         try:
             html = self.env['ir.qweb']._render('auction_module.top_bid_poster', {
                 'font_css': self._top_bid_font_css(),
-                'theme_css': self._top_bid_theme_css(paint),
+                'theme_css': self._top_bid_theme_css(paint, night_color),
                 'stadium_uri': self._top_bid_stadium_uri(),
                 'brand_logo_svg': self._top_bid_brand_svg('#FFFFFF'),
                 'tournament_name': tournament_name,
@@ -2811,6 +2863,8 @@ class AuctionTournament(models.Model):
                 'tournament_logo_uri': self._top_bid_logo_box(self.logo, 400),
                 'tournament_initials': self._top_bid_initials(tournament_name),
                 'edition_label': Player._CARD_EDITIONS.get(paint.get('key') or '', 'Auction Edition'),
+                'scope_label': scope_label,
+                'scope_style': scope_style,
                 'cards': cards,
             })
             if isinstance(html, bytes):
@@ -2820,24 +2874,7 @@ class AuctionTournament(models.Model):
             shutil.rmtree(workdir, ignore_errors=True)
         if not jpg:
             raise UserError(_('Could not render the top bid poster.'))
-
-        tname = re.sub(r'[^A-Za-z0-9]+', '_', self.name or 'Tournament').strip('_') or 'Tournament'
-        filename = 'Top_5_Bids_%s_%s.jpg' % (
-            tname, datetime.now().strftime('%Y%m%d_%H%M%S'))
-        attachment = self.env['ir.attachment'].sudo().create({
-            'name': filename,
-            'type': 'binary',
-            'datas': base64.b64encode(jpg),
-            'mimetype': 'image/jpeg',
-            'res_model': 'auction.tournament',
-            'res_id': self.id,
-        })
-        return {
-            'type': 'ir.actions.act_url',
-            'url': '/web/content/%s?download=true&unique=%s' % (
-                attachment.id, attachment.id),
-            'target': 'new',
-        }
+        return jpg
 
     def _rules_poster_auction(self):
         """The shared rule sheet. Every team is given the same rules."""
