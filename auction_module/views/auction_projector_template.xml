@@ -210,13 +210,24 @@ body{min-height:100%;min-height:100dvh;font-family:'Exo 2','Barlow Condensed',sa
   --ray:rgba(107,191,78,.16);
 }
 
-#pj-root{position:fixed;inset:0;display:flex;flex-direction:column;
+#pj-root{position:fixed;inset:0;z-index:0;display:flex;flex-direction:column;
   width:100%;height:100%;height:100dvh;color:var(--tx);background:var(--bg);
   background-image:
     radial-gradient(90% 70% at 18% 45%, var(--ray) 0%, transparent 55%),
     radial-gradient(70% 55% at 88% 20%, var(--ray) 0%, transparent 50%),
     linear-gradient(160deg, var(--bg2), var(--bg));
 }
+.pj-sport-wash{position:absolute;inset:0;z-index:-1;pointer-events:none;
+  background-position:center center;background-size:contain;background-repeat:no-repeat;
+  opacity:.16}
+html[data-sport="cricket"] .pj-sport-wash{
+  background-image:url("/auction_module/static/src/img/hud_sport/cricket.jpg")}
+html[data-sport="football"] .pj-sport-wash{
+  background-image:url("/auction_module/static/src/img/hud_sport/football.jpg")}
+html[data-sport="badminton"] .pj-sport-wash{
+  background-image:url("/auction_module/static/src/img/hud_sport/badminton.jpg")}
+html[data-sport="kabaddi"] .pj-sport-wash{
+  background-image:url("/auction_module/static/src/img/hud_sport/kabaddi.jpg")}
 
 /* Glossy broadcast wash — every edition except Standard */
 html:not([data-theme="standard"]) #pj-root::before,
@@ -2183,6 +2194,7 @@ html:not([data-theme="standard"]) .pj-recent-band{
 </t>
 
 <div id="pj-root">
+  <div class="pj-sport-wash" aria-hidden="true"></div>
 
   <div id="pj-bar">
     <div class="pj-bar-left"></div>

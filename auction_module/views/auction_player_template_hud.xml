@@ -23,7 +23,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&amp;family=Barlow+Semi+Condensed:wght@500;600;700&amp;family=Bebas+Neue&amp;family=Exo+2:wght@500;600;700;800;900&amp;family=Oswald:wght@500;600;700&amp;display=swap" rel="stylesheet"/>
     <link rel="stylesheet" href="/auction_module/static/src/css/display_hud_themes.css?v=889pj"/>
     <link rel="stylesheet" href="/auction_module/static/src/css/display_hud.css?v=897board"/>
-    <link rel="stylesheet" href="/auction_module/static/src/css/display_hud_board.css?v=935board"/>
+    <link rel="stylesheet" href="/auction_module/static/src/css/display_hud_board.css?v=936board"/>
     <link rel="stylesheet" href="/auction_module/static/src/css/bid_clock.css?v=6"/>
     <style id="hud-pj-fonts">
       html, body { font-family: 'Exo 2', 'Barlow Condensed', sans-serif !important; }

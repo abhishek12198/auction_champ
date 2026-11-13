@@ -41,6 +41,14 @@ html, body {
     color: #fff !important;
     box-shadow: none;
 }
+a.hud-dash-btn.hud-hdr-drawer-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    align-self: center;
+    text-decoration: none;
+    line-height: 1;
+}
 .hud-left-count {
     display: inline-flex;
     align-items: center;
