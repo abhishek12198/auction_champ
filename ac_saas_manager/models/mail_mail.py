@@ -13,8 +13,12 @@ class MailMail(models.Model):
     @api.model_create_multi
     def create(self, vals_list):
         """Website/public mail should not be authored by the Public User."""
-        if self.env.user._is_public():
-            author = self.env.company.sudo().partner_id
+        # auth="none" (Forgot password) has no user record. sudo() only
+        # sets the superuser flag, so env.user is still empty.
+        user = self.env.user
+        if not user or user._is_public():
+            company = self.env['res.company'].sudo().search([], limit=1)
+            author = company.partner_id
             email_from = self.env['ac.saas.account']._saas_email_from()
             for vals in vals_list:
                 vals.setdefault('author_id', author.id if author else False)

@@ -83,6 +83,11 @@ class AcSaasAccount(models.Model):
     date_start = fields.Date(string='Start Date', default=fields.Date.context_today)
     date_end = fields.Date(string='End Date')
     notes = fields.Text()
+    password_reset_sent_at = fields.Datetime(
+        string='Password reset sent',
+        copy=False,
+        help='When a new temporary password was last emailed from the login page.',
+    )
 
     tournament_ids = fields.One2many(
         'auction.tournament',
@@ -1084,6 +1089,213 @@ class AcSaasAccount(models.Model):
                 'sticky': False,
             },
         }
+
+    @api.model
+    def _saas_account_for_reset_email(self, email):
+        """SaaS login whose username or email matches, if it can still sign in."""
+        email = (email or '').strip()
+        if not email or '@' not in email or len(email) > 254:
+            return self.browse()
+        domain_tail = email.rsplit('@', 1)[-1]
+        if '.' not in domain_tail or ' ' in email:
+            return self.browse()
+        Users = self.env['res.users'].sudo().with_context(active_test=False)
+        user = Users.search([('login', '=ilike', email)], limit=1)
+        if not user:
+            user = Users.search([('email', '=ilike', email)], limit=1)
+        if not user or not user.active:
+            return self.browse()
+        return self.sudo().search([
+            ('user_id', '=', user.id),
+            ('state', 'in', ('active', 'expired')),
+        ], limit=1)
+
+    @api.model
+    def request_password_reset(self, email):
+        """Email a new password when the address belongs to a SaaS login.
+
+        A recent send is treated as done so the same address is not rotated
+        again within a few minutes. Unknown addresses do nothing.
+        """
+        account = self._saas_account_for_reset_email(email)
+        if not account:
+            return False
+        sent_at = account.password_reset_sent_at
+        if sent_at and fields.Datetime.now() - sent_at < timedelta(minutes=3):
+            return True
+        return bool(account.action_send_password_reset_email())
+
+    def _saas_password_reset_email_html(self, name, account, login, password, login_url):
+        """Password letter. Same header, type, and support block as the welcome mail."""
+        e = html_escape
+        login_href = e(login_url or '', quote=True)
+        mailto = 'mailto:%s' % SAAS_SUPPORT_EMAIL
+        wa_href = 'https://wa.me/%s' % SAAS_SUPPORT_WHATSAPP
+        tel_href = 'tel:%s' % SAAS_SUPPORT_PHONE_TEL
+        rows = (
+            ('Account', e(account or '—')),
+            ('Username (Email)', '<strong>%s</strong>' % e(login or '—')),
+            (
+                'Temporary Password',
+                '<strong style="font-family:Consolas,Menlo,monospace;'
+                'letter-spacing:.04em;">%s</strong>' % e(password or ''),
+            ),
+            (
+                'Sign in',
+                '<a href="%s" style="color:#1565c0;text-decoration:none;">'
+                'Auction Management Panel</a>' % login_href,
+            ),
+        )
+        row_html = []
+        for label, value in rows:
+            row_html.append(
+                '<tr>'
+                '<td style="padding:7px 10px 7px 0;color:#4a5568;vertical-align:top;'
+                'width:168px;">&bull;&nbsp;%s</td>'
+                '<td style="padding:7px 0;color:#1a202c;vertical-align:top;">%s</td>'
+                '</tr>' % (e(label), value)
+            )
+        return (
+            '<div style="margin:0;padding:24px 12px;background:#f4f7fb;">'
+            '<table role="presentation" cellpadding="0" cellspacing="0" border="0" '
+            'align="center" style="width:100%%;max-width:640px;background:#ffffff;'
+            'border:1px solid #e2e8f0;border-radius:12px;">'
+            '<tr><td style="padding:0;background:#1565c0;border-radius:12px 12px 0 0;'
+            'line-height:0;font-size:0;">'
+            '<img src="cid:ac-logo" width="640" height="74" alt="Auction Champ" '
+            'style="display:block;border:0;width:100%%;max-width:640px;height:auto;"/>'
+            '</td></tr>'
+            '<tr><td style="height:4px;background:#f5a623;font-size:0;line-height:0;">&nbsp;</td></tr>'
+            '<tr><td style="padding:28px 28px 8px;font-family:Arial,Helvetica,sans-serif;'
+            'font-size:15px;line-height:1.55;color:#1a202c;">'
+            '<h1 style="margin:0 0 18px;font-family:Georgia,Times New Roman,serif;'
+            'font-size:22px;line-height:1.35;color:#0d1b2a;font-weight:normal;">'
+            'Auction Champ&trade; | Your new password</h1>'
+            '<p style="margin:0 0 14px;">Hi %s,</p>'
+            '<p style="margin:0 0 14px;">We received a request to reset the password '
+            'for your Auction Champ account. A new temporary password is ready below.</p>'
+            '<h2 style="margin:0 0 8px;font-family:Georgia,Times New Roman,serif;'
+            'font-size:18px;color:#0d1b2a;font-weight:normal;border-bottom:2px solid #f5a623;'
+            'padding-bottom:6px;">Your sign-in details</h2>'
+            '<table role="presentation" cellpadding="0" cellspacing="0" border="0" '
+            'style="width:100%%;margin:0 0 16px;font-size:15px;">%s</table>'
+            '<p style="margin:0 0 18px;padding:12px 14px;background:#fff8e8;'
+            'border-left:3px solid #f5a623;">For security, sign in with this password '
+            'and change it immediately. If you did not ask for a reset, contact us '
+            'and we will secure the account.</p>'
+            '<p style="margin:0 0 8px;">Need assistance? Our support team is happy to help.</p>'
+            '<p style="margin:0 0 8px;">'
+            '<a href="%s" style="color:#1565c0;text-decoration:none;">'
+            '&#9993; %s</a></p>'
+            '<p style="margin:0 0 18px;">'
+            '<a href="%s" style="text-decoration:none;">'
+            '<img src="cid:ac-whatsapp" width="22" height="22" alt="WhatsApp" '
+            'style="border:0;vertical-align:middle;width:22px;height:22px;"/>'
+            '</a>'
+            '&nbsp;<a href="%s" style="color:#128C7E;text-decoration:none;'
+            'font-weight:bold;">WhatsApp</a>'
+            '&nbsp;&nbsp;'
+            '<a href="%s" style="text-decoration:none;">'
+            '<img src="cid:ac-phone" width="22" height="22" alt="Phone" '
+            'style="border:0;vertical-align:middle;width:22px;height:22px;"/>'
+            '</a>'
+            '&nbsp;<a href="%s" style="color:#1a202c;text-decoration:none;'
+            'font-weight:bold;">%s</a>'
+            '</p>'
+            '<p style="margin:0;">Warm regards,<br/>'
+            '<strong>Team Auction Champ</strong><br/>'
+            '<a href="%s" style="color:#1565c0;text-decoration:none;">www.auctionchamp.live</a>'
+            '</p>'
+            '</td></tr>'
+            '<tr><td style="padding:16px 28px 22px;font-family:Arial,Helvetica,sans-serif;'
+            'font-size:12px;color:#718096;">This message includes your temporary password. '
+            'Please keep it private.</td></tr>'
+            '</table></div>'
+        ) % (
+            e(name or 'there'),
+            ''.join(row_html),
+            e(mailto, quote=True),
+            e(SAAS_SUPPORT_EMAIL),
+            e(wa_href, quote=True),
+            e(wa_href, quote=True),
+            e(tel_href, quote=True),
+            e(tel_href, quote=True),
+            e(SAAS_SUPPORT_PHONE_DISPLAY),
+            e(SAAS_PUBLIC_SITE, quote=True),
+        )
+
+    def action_send_password_reset_email(self):
+        """Generate a temporary password and email it. The password is saved
+        only after the message is accepted for delivery.
+        """
+        self.ensure_one()
+        if 'mail.mail' not in self.env:
+            _logger.warning(
+                'mail module missing; cannot email a password reset for account %s',
+                self.id,
+            )
+            return False
+        user = self.user_id.sudo().with_context(active_test=False)
+        email = (user.email or user.login or '').strip()
+        if not email or not user.active or self.state not in ('active', 'expired'):
+            return False
+        plain = self._generate_temp_password()
+        public_base = self._saas_public_base_url()
+        body = self._saas_password_reset_email_html(
+            name=user.name or self.name,
+            account=self.name or '',
+            login=user.login or email,
+            password=plain,
+            login_url='%s/web/login' % public_base,
+        )
+        try:
+            mail_server = self._saas_mail_server()
+            self._saas_ensure_mail_default_from()
+            sender = self._saas_sender_address()
+            try:
+                email_from = formataddr(('Auction Champ', sender))
+            except Exception:
+                email_from = sender
+            attachment_cmds = []
+            Attachment = self.env['ir.attachment'].sudo()
+            for filename, payload, mimetype in self._saas_welcome_inline_images():
+                att = Attachment.create({
+                    'name': filename,
+                    'datas': base64.b64encode(payload),
+                    'type': 'binary',
+                    'mimetype': mimetype,
+                    'res_model': 'ac.saas.account',
+                    'res_id': self.id,
+                })
+                attachment_cmds.append((4, att.id))
+            mail = self.env['mail.mail'].sudo().create({
+                'subject': 'Auction Champ™ | Your new password',
+                'body_html': body,
+                'email_from': email_from,
+                'reply_to': sender,
+                'email_to': email,
+                'message_id': self._saas_message_id(),
+                'mail_server_id': mail_server.id if mail_server else False,
+                'auto_delete': False,
+                'attachment_ids': attachment_cmds,
+            })
+            mail.sudo().send()
+            if mail.exists() and mail.state == 'exception':
+                _logger.error(
+                    'Password reset mail exception for account %s to %s: %s',
+                    self.id, email, mail.failure_reason or mail.state,
+                )
+                return False
+        except Exception:
+            _logger.exception(
+                'Failed to email a password reset for account %s to %s',
+                self.id, email,
+            )
+            return False
+        user.with_context(no_reset_password=True).write({'password': plain})
+        self.sudo().write({'password_reset_sent_at': fields.Datetime.now()})
+        _logger.info('Password reset mailed account=%s to=%s', self.id, email)
+        return True
 
     @api.model_create_multi
     def create(self, vals_list):

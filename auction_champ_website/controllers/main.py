@@ -849,3 +849,31 @@ class AuctionChampWebsiteLogin(AuctionLoginController):
         if request.httprequest.method == 'GET' and _session_user_is_logged_in():
             return request.redirect(_safe_post_login_redirect(redirect))
         return super().web_login(redirect=redirect, **kw)
+
+    @http.route(
+        '/web/login/forgot', type='http', auth='none', sitemap=False,
+        methods=['GET', 'POST'],
+    )
+    def web_login_forgot(self, **kw):
+        """Ask for the SaaS signup email and mail a new temporary password."""
+        ensure_db()
+        if request.httprequest.method == 'GET' and _session_user_is_logged_in():
+            return request.redirect('/web')
+        email = (kw.get('email') or '').strip()
+        error = ''
+        sent = False
+        if request.httprequest.method == 'POST':
+            domain = email.rsplit('@', 1)[-1] if '@' in email else ''
+            if not email or '@' not in email or '.' not in domain or ' ' in email:
+                error = 'Enter the email address registered with Auction Champ.'
+            else:
+                try:
+                    request.env['ac.saas.account'].sudo().request_password_reset(email)
+                except Exception:
+                    _logger.exception('SaaS password reset could not be completed')
+                sent = True
+        return request.render('auction_champ_website.login_forgot', {
+            'email': '' if sent else email,
+            'error': error,
+            'sent': sent,
+        })

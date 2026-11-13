@@ -17,7 +17,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous"/>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"/>
-  <link rel="stylesheet" href="/auction_champ_website/static/src/css/auction_login.css?v=7"/>
+  <link rel="stylesheet" href="/auction_champ_website/static/src/css/auction_login.css?v=8"/>
 </head>
 <body class="ac-login-body">
 
@@ -130,8 +130,7 @@
         </form>
 
         <div class="ac-login-card-foot">
-          Need a demo?
-          <a href="/#contact">Contact AuctionChamp</a>
+          <a class="ac-login-forgot" href="/web/login/forgot">Forgot password?</a>
           <div class="ac-login-copy">© AuctionChamp. All rights reserved.</div>
         </div>
       </div>
@@ -222,5 +221,97 @@
 </body>
 </html>
   </xpath>
+</template>
+
+<template id="login_forgot" name="AuctionChamp Forgot Password">
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="theme-color" content="#0d1b2a"/>
+  <title>Forgot password — AuctionChamp</title>
+  <t t-call="auction_module.page_head_favicon"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous"/>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"/>
+  <link rel="stylesheet" href="/auction_champ_website/static/src/css/auction_login.css?v=8"/>
+</head>
+<body class="ac-login-body">
+  <div class="ac-login-shell">
+    <aside class="ac-login-brand" aria-label="AuctionChamp">
+      <div class="ac-login-pitch" aria-hidden="true"/>
+      <div class="ac-login-brand-top">
+        <div class="ac-login-mark">
+          <a class="ac-login-home" href="/" title="Back to AuctionChamp website">
+            <img class="ac-login-wordmark"
+                 src="/auction_champ_website/static/img/logo.svg"
+                 alt="AuctionChamp"/>
+          </a>
+        </div>
+        <div class="ac-login-kicker">Sports Auction Platform</div>
+        <h1>Run auctions with <span>champion</span> control</h1>
+        <p class="ac-login-brand-copy">
+          Sign in to manage player registrations, live bidding, teams, fixtures,
+          and tournament operations from one professional workspace.
+        </p>
+      </div>
+      <div class="ac-login-brand-foot">
+        <span>© AuctionChamp. All rights reserved.</span>
+        <a href="/">Back to website</a>
+      </div>
+    </aside>
+    <main class="ac-login-panel">
+      <div class="ac-login-card">
+        <div class="ac-login-card-brand">
+          <div class="ac-login-icon" aria-hidden="true">
+            <svg viewBox="0 0 37 37" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path fill-rule="evenodd" clip-rule="evenodd" d="M0 2.229C0 0.998 0.998 0 2.229 0H34.771C36.002 0 37 0.998 37 2.229V16.643C36.549 16.638 36.067 16.633 35.553 16.627C34.861 16.620 34.110 16.612 33.295 16.603L23.274 16.489L23.298 13.887L23.318 11.291L23.718 11.201C24.721 10.980 25.327 9.897 25.007 8.913C24.863 8.458 24.419 7.966 24.007 7.784C23.649 7.638 12.479 7.506 12.069 7.645C11.629 7.803 11.156 8.286 10.994 8.767C10.761 9.435 10.907 10.092 11.405 10.599C11.693 10.893 12.164 11.135 12.484 11.153C12.612 11.164 12.628 12.016 12.623 18.260C12.617 25.060 12.609 25.350 12.437 25.344C12.146 25.326 11.661 25.577 11.308 25.933C10.223 27.006 10.729 28.775 12.190 29.022C12.352 29.048 14.969 29.071 17.994 29.063C21.764 29.058 23.602 29.023 23.834 28.951C24.284 28.803 24.816 28.282 24.954 27.854C25.294 26.779 24.645 25.649 23.572 25.480L23.287 25.437L23.311 22.836L23.336 20.234L33.383 20.334C34.770 20.347 35.967 20.359 37 20.368V37H29.868V35.663C29.868 34.924 29.269 34.325 28.530 34.325H8.470C7.731 34.325 7.133 34.924 7.133 35.663V37H0V2.229Z" fill="white"/>
+            </svg>
+          </div>
+        </div>
+        <div class="ac-login-card-head">
+          <h2>Forgot password?</h2>
+          <p>Enter the email address registered with Auction Champ. We will send a new password to that inbox.</p>
+        </div>
+        <t t-if="sent">
+          <div class="ac-login-alert is-ok" role="status">
+            <i class="fas fa-circle-check" aria-hidden="true"></i>
+            <span>If this email is registered, a new password is on its way. Check your inbox, then sign in.</span>
+          </div>
+          <a class="ac-login-submit ac-login-back" href="/web/login">Back to sign in</a>
+        </t>
+        <t t-else="">
+          <t t-if="error">
+            <div class="ac-login-alert" role="alert">
+              <i class="fas fa-circle-exclamation" aria-hidden="true"></i>
+              <span t-esc="error"/>
+            </div>
+          </t>
+          <form method="post" action="/web/login/forgot">
+            <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+            <div class="ac-login-field">
+              <label for="ac_reset_email">Registered email</label>
+              <input id="ac_reset_email"
+                     class="ac-login-input"
+                     type="email"
+                     name="email"
+                     t-att-value="email or ''"
+                     placeholder="you@auctionchamp.live"
+                     autocomplete="email"
+                     autofocus="autofocus"
+                     required="required"/>
+            </div>
+            <button type="submit" class="ac-login-submit">Send new password</button>
+          </form>
+          <div class="ac-login-card-foot">
+            <a href="/web/login">Back to sign in</a>
+          </div>
+        </t>
+      </div>
+    </main>
+  </div>
+</body>
+</html>
 </template>
 </odoo>

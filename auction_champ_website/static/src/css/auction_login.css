@@ -402,6 +402,27 @@ body.ac-login-body {
     text-decoration: underline;
 }
 
+.ac-login-forgot {
+    font-size: .92rem;
+}
+
+.ac-login-alert.is-ok {
+    border-color: #bbf7d0;
+    background: #f0fdf4;
+    color: #166534;
+}
+
+.ac-login-alert.is-ok i {
+    color: #16a34a;
+}
+
+a.ac-login-back {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+}
+
 .ac-login-copy {
     display: none;
     margin-top: 12px;
