@@ -450,7 +450,56 @@
         }
     }
 
+    function paintHudBid(lead, amount) {
+        var bar = document.getElementById('hudBidBar');
+        if (!bar) return;
+        var lbl = document.getElementById('hudBidLabel');
+        var val = document.getElementById('hudBidVal');
+        var wait = document.getElementById('hudBidWait');
+        var state = playerCache && playerCache.state;
+        var stageId = stagePlayerId();
+        if (stageId && playerCache && Number(playerCache.id) !== stageId
+                && (state === 'sold' || state === 'unsold')) {
+            state = '';
+        }
+        var sold = state === 'sold';
+        var unsold = state === 'unsold';
+        var on = !unsold && !!(sold || (amount > 0 && lead));
+        var base = playerCache ? Number(playerCache.base_price || 0) : 0;
+        if (!base) base = Number(bar.getAttribute('data-base') || 0);
+        bar.classList.toggle('is-on', on);
+        bar.classList.toggle('is-sold', sold);
+        bar.classList.toggle('is-unsold', unsold);
+        if (lbl) lbl.textContent = unsold ? 'Unsold' : (sold ? 'Sold' : 'Current Bid');
+        if (val) {
+            if (unsold) val.textContent = 'Unsold';
+            else if (amount) val.textContent = fmt(amount);
+            else val.textContent = base ? fmt(base) : '—';
+        }
+        if (wait) {
+            var nameEl = document.getElementById('hudBidTeam') || wait;
+            var logo = document.getElementById('hudBidLogo');
+            var teamText = 'Waiting for opening bid';
+            var logoSrc = '';
+            if (unsold) teamText = 'No bids were placed';
+            else if (on && lead && lead.name) {
+                teamText = lead.name;
+                logoSrc = (lead.logo_url || '');
+            }
+            if (nameEl) nameEl.textContent = teamText;
+            if (logo) {
+                if (logoSrc) {
+                    logo.src = logoSrc;
+                    logo.hidden = false;
+                } else {
+                    logo.removeAttribute('src');
+                    logo.hidden = true;
+                }
+            }
+        }
+    }
     function paintBidHero(lead, logoSrc, amount) {
+        paintHudBid(lead, amount);
         var hero = document.getElementById('acBidHero');
         var logo = document.getElementById('acBidHeroLogo');
         var teamEl = document.getElementById('acBidHeroTeam');

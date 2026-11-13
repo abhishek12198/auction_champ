@@ -527,7 +527,7 @@
     var btns = acFindActionBtns();
     if (!btns.unsold && !btns.sell && !btns.next) return;
     var bar = acEnsureCtrlBar();
-    [['unsold', btns.unsold], ['sell', btns.sell], ['next', btns.next]].forEach(function (pair) {
+    [['sell', btns.sell], ['unsold', btns.unsold], ['next', btns.next]].forEach(function (pair) {
       var key = pair[0];
       var el = pair[1];
       if (!el) return;

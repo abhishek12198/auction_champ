@@ -2162,6 +2162,7 @@ html:not([data-theme="standard"]) .pj-recent-band{
   </style>
 </head>
 <body>
+<link t-if="stage_photo_url" rel="preload" as="image" t-att-href="stage_photo_url"/>
 <script>
   window.PJ_DB   = '<t t-esc="db_name or ''"/>';
   window.PJ_SLUG = '<t t-esc="tournament_slug or (tournament.slug if tournament else '')"/>';
@@ -3817,7 +3818,7 @@ html:not([data-theme="standard"]) .pj-recent-band{
   }
 
   var _pjPollInFlight = false;
-  var _pjPollIdle = 800;
+  var _pjPollIdle = 400;
   var _pjPollBurst = 400;
   var _pjBurstUntil = 0;
   var _pjLastFp = '';
@@ -4018,7 +4019,7 @@ html:not([data-theme="standard"]) .pj-recent-band{
     _pjWarmTimer = setTimeout(function () {
       _pjWarmTimer = null;
       preloadStagePhotos(urls);
-    }, 800);
+    }, 200);
   }
 
   window.pjSponScroll = function(){};

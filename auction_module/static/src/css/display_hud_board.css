@@ -1,0 +1,1064 @@
+/* Player Showcase board — one layout, colours from the theme tokens. */
+
+html {
+    --hud-shell: var(--navy);
+    --hud-action: var(--gold);
+    --hud-action-ink: var(--ink-on-accent);
+}
+html[data-theme="standard"] {
+    --hud-shell: #0b4ea8;
+    --hud-action: #F5A623;
+    --hud-action-ink: #1a1404;
+}
+html[data-theme="lemon"] { --hud-shell: #8a6d00; }
+html[data-theme="strawberry"] { --hud-shell: #9b1248; }
+
+html, body {
+    background: var(--hud-shell) !important;
+}
+
+.hud-header {
+    height: 74px;
+    padding: 0 22px;
+    background: transparent;
+    border-bottom: 0;
+    color: #fff;
+}
+.hud-header::before { display: none; }
+.hud-brand-sub,
+.hud-tourn-name,
+.hud-tourn-desc { color: #fff !important; }
+.hud-tourn-desc { opacity: .82; }
+.hud-tourn-name { max-width: min(46vw, 520px); font-size: 1.45rem; }
+.hud-header-controls { top: 16px; right: 18px; }
+.hud-hdr-drawer-btn,
+.hud-header-controls .ac-break-btn,
+.bs-ctrl-btn {
+    height: 36px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, .16) !important;
+    border: 1px solid rgba(255, 255, 255, .28) !important;
+    color: #fff !important;
+    box-shadow: none;
+}
+.hud-left-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 28px;
+    margin-left: 8px;
+    padding: 2px 7px;
+    border-radius: 8px;
+    background: #fff;
+    color: var(--hud-shell);
+    font-size: 13px;
+}
+
+.hud-arena {
+    grid-template-columns: minmax(280px, 34%) 1fr;
+    height: calc(100vh - 74px - 36px);
+    gap: 14px;
+    padding: 0 16px 8px;
+    background: transparent;
+}
+.hud-photo-col {
+    border-radius: 22px;
+    background:
+        linear-gradient(160deg, rgba(255,255,255,.16), transparent 42%),
+        var(--hud-shell);
+    box-shadow: 0 16px 40px rgba(0, 0, 0, .22);
+}
+.hud-photo-col::before,
+.hud-photo-col::after { display: none; }
+.hud-photo-col .hud-photo-img {
+    object-fit: cover;
+    object-position: center 18%;
+}
+.hud-photo-frame {
+    position: absolute;
+    inset: 0;
+}
+.hud-serial-watermark { display: none; }
+.hud-serial-badge {
+    top: 16px;
+    left: 16px;
+    right: auto;
+    bottom: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0;
+    padding: 8px 12px 6px;
+    border-radius: 14px;
+    background: rgba(255, 255, 255, .94);
+    color: var(--hud-shell);
+}
+.hud-serial-label {
+    color: var(--hud-shell) !important;
+    font-size: 10px;
+    letter-spacing: .14em;
+}
+.hud-serial-number {
+    color: var(--hud-shell) !important;
+    font-size: 2rem;
+    line-height: .9;
+}
+.hud-photo-overlay {
+    left: 16px;
+    right: 16px;
+    bottom: 16px;
+    padding: 0;
+    background: none;
+}
+.hud-sport-wash { display: none; }
+.hud-player-name {
+    color: #fff !important;
+    font-size: clamp(1.8rem, 3vw, 2.6rem);
+    text-shadow: 0 2px 12px rgba(0, 0, 0, .45);
+}
+.hud-role-tag {
+    background: var(--hud-action) !important;
+    color: var(--hud-action-ink) !important;
+    border-radius: 8px;
+    clip-path: none;
+}
+.hud-base-badge {
+    background: #fff;
+    color: var(--hud-shell);
+    border-radius: 8px;
+}
+.hud-base-badge-lbl,
+.hud-base-badge-val { color: var(--hud-shell) !important; }
+
+.hud-info-col {
+    border: 0;
+    border-radius: 22px;
+    background: var(--navy-card);
+    box-shadow: 0 16px 40px rgba(0, 0, 0, .16);
+    overflow: hidden;
+}
+.hud-profile-head {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 18px 8px;
+}
+.hud-stats-heading {
+    display: inline-flex;
+    align-items: center;
+    margin: 0;
+    padding: 8px 14px;
+    border-radius: 12px;
+    background: var(--gold);
+    color: var(--ink-on-accent);
+    font-size: .95rem;
+    letter-spacing: .08em;
+}
+html[data-theme="standard"] .hud-stats-heading {
+    background: #1058B0;
+    color: #fff;
+}
+.hud-tier-hex {
+    min-height: 0;
+    padding: 8px 14px;
+    border-radius: 12px;
+    clip-path: none;
+    font-size: .95rem;
+    letter-spacing: .08em;
+    box-shadow: none;
+}
+.hud-tier-on-photo { display: none; }
+.hud-stats {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: auto;
+    padding: 6px 18px 8px;
+}
+.hud-stats .ac-fb-grid,
+.hud-stats > .hud-attr-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+.hud-stat-row {
+    display: grid !important;
+    grid-template-columns: 32px minmax(0, 1fr);
+    grid-template-rows: auto auto;
+    column-gap: 10px;
+    align-items: center;
+    min-height: 52px;
+    padding: 8px 10px !important;
+    border: 1px solid rgba(var(--accent-rgb), .16);
+    border-radius: 12px;
+    background: rgba(var(--accent-rgb), .04);
+}
+.hud-stat-row::before { content: none !important; }
+.hud-stat-ico {
+    grid-row: 1 / span 2;
+    width: 28px;
+    height: 28px;
+    padding: 5px;
+    box-sizing: border-box;
+    border-radius: 8px;
+    background: rgba(var(--accent-rgb), .16);
+    fill: var(--gold);
+}
+body:has(#acLiveBidPad) .hud-stats .hud-stat-row {
+    display: grid !important;
+    grid-template-columns: 28px minmax(0, 1fr) !important;
+    align-items: center !important;
+    min-height: 52px !important;
+    padding: 6px 8px !important;
+    gap: 0 8px !important;
+}
+.hud-stat-key { grid-column: 2; font-size: .62rem !important; }
+.hud-stat-val { grid-column: 2; font-size: .92rem !important; }
+
+.hud-bidbar {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    gap: 4px;
+    margin: 8px 18px;
+    padding: 12px 16px;
+    border-radius: 14px;
+    background: linear-gradient(90deg, var(--gold), rgba(var(--accent-rgb), .72));
+    color: var(--ink-on-accent);
+}
+html[data-theme="standard"] .hud-bidbar {
+    background: linear-gradient(90deg, #1058B0, #3b82f6);
+    color: #fff;
+}
+.hud-bidbar-amt {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+}
+.hud-bidbar-k {
+    display: block;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+}
+.hud-bidbar-val {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 2rem;
+    font-weight: 800;
+    line-height: .9;
+    text-align: center;
+}
+.hud-bidbar-team {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 28px;
+}
+.hud-bidbar-logo {
+    width: 28px;
+    height: 28px;
+    object-fit: contain;
+    border-radius: 7px;
+    background: #fff;
+    flex: 0 0 auto;
+}
+.hud-bidbar-logo[hidden] { display: none !important; }
+.hud-bidbar-teamname {
+    font-size: 13px;
+    font-weight: 800;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+}
+
+/* The live-bid card repeats Current Bid under this bar. This bar is the one that fits. */
+.hud-info-col .ac-bid-hero { display: none !important; }
+
+.hud-actions {
+    display: flex;
+    align-items: stretch;
+    gap: 10px;
+    padding: 12px 18px 16px;
+    border-top: 0;
+    background: transparent;
+}
+.hud-btn,
+.hud-next-btn,
+#ac-mobile-ctrl-bar > .hud-btn,
+#ac-mobile-ctrl-bar > .hud-next-btn {
+    box-sizing: border-box !important;
+    height: 58px !important;
+    min-height: 58px !important;
+    max-height: 58px !important;
+    flex: 1 1 0;
+    margin: 0;
+    padding: 8px 10px;
+    border: 0;
+    border-radius: 14px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-size: .92rem;
+    font-weight: 800;
+    letter-spacing: .06em;
+    line-height: 1.1;
+    text-transform: uppercase;
+    clip-path: none;
+    box-shadow: 0 6px 0 rgba(0, 0, 0, .14), 0 12px 22px rgba(0, 0, 0, .16);
+    transition: transform .16s ease, box-shadow .16s ease;
+}
+.hud-btn svg,
+.hud-actions .hud-next-btn svg { flex: 0 0 auto; }
+.hud-btn:hover,
+.hud-actions .hud-next-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 0 rgba(0, 0, 0, .14), 0 16px 26px rgba(0, 0, 0, .2);
+}
+.hud-btn-sell {
+    background: var(--hud-action);
+    color: var(--hud-action-ink);
+}
+.hud-btn-unsold,
+html.hud-light .hud-btn-unsold,
+html.hud-light .hud-btn-unsold:hover {
+    background: #fff;
+    color: #9f1d1d;
+    border: 2px solid #f0b4b4;
+}
+html:not(.hud-light) .hud-btn-unsold,
+html:not(.hud-light) .hud-btn-unsold:hover {
+    background: rgba(255, 255, 255, .06);
+    color: #ffd0d0;
+    border: 2px solid rgba(255, 176, 176, .55);
+}
+.hud-next-btn,
+.hud-actions .hud-next-btn,
+html.hud-light .hud-next-btn,
+html.hud-light .hud-next-btn:hover {
+    width: auto;
+    background: var(--hud-shell);
+    color: #fff;
+    border: 0;
+    border-radius: 14px;
+}
+html:not(.hud-light) .hud-next-btn,
+html:not(.hud-light) .hud-next-btn:hover {
+    background: #f4f1ea;
+    color: #1a1404;
+    border: 0;
+}
+
+html.hud-light[data-theme="standard"] .hud-next-btn,
+html.hud-light[data-theme="standard"] .hud-next-btn:hover,
+html.hud-light[data-theme="standard"] #ac-mobile-ctrl-bar > .hud-next-btn {
+    background: #0b4ea8 !important;
+    color: #fff !important;
+    border: 0 !important;
+}
+
+/* Team tiles: keep the whole name, and put the status under it. */
+.hud-info-col #acLiveBidPad .ac-livebid-grid {
+    grid-template-columns: repeat(auto-fill, minmax(168px, 1fr)) !important;
+}
+.hud-info-col .ac-livebid-head {
+    grid-template-columns: 28px minmax(0, 1fr) !important;
+    align-items: center;
+}
+.hud-info-col .ac-livebid-name {
+    white-space: normal !important;
+    overflow: visible !important;
+    text-overflow: unset !important;
+    font-size: 13px !important;
+    line-height: 1.15 !important;
+    letter-spacing: 0 !important;
+}
+.hud-info-col .ac-livebid-head > .ac-livebid-off,
+.hud-info-col .ac-livebid-head > .ac-livebid-chip,
+.hud-info-col .ac-livebid-head > .ac-livebid-leadamt {
+    grid-column: 1 / -1;
+}
+
+.hud-footer {
+    height: 36px;
+    background: var(--hud-shell);
+    color: #fff;
+}
+.hud-powered { display: none; }
+
+@media (max-width: 1100px) {
+    .hud-stats .ac-fb-grid,
+    .hud-stats > .hud-attr-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 900px) {
+    .hud-tourn-name {
+        white-space: normal !important;
+        overflow: visible !important;
+        text-overflow: unset !important;
+        max-width: 100%;
+        font-size: .78rem !important;
+        line-height: 1.05;
+        letter-spacing: .02em;
+    }
+    .hud-logo-center { flex-wrap: nowrap; min-width: 0; }
+    .hud-tourn-info { min-width: 0; max-width: 100%; }
+    html body .hud-brand { display: none !important; }
+    html body .hud-header {
+        display: flex !important;
+        flex-direction: row !important;
+        align-items: flex-start !important;
+        justify-content: space-between !important;
+        height: auto !important;
+        gap: 8px;
+        padding: 8px 10px 10px !important;
+    }
+    html body .hud-logo-center {
+        order: 1;
+        flex: 1 1 auto;
+        width: auto;
+        min-width: 0;
+        justify-content: flex-start !important;
+        align-items: center;
+        flex-wrap: nowrap;
+        gap: 8px;
+    }
+    html body .hud-logo-center .tourn-logo {
+        max-height: 36px;
+        max-width: 42px;
+        flex: 0 0 auto;
+    }
+    html body .hud-tourn-info {
+        align-items: flex-start !important;
+        min-width: 0;
+        max-width: 100%;
+    }
+    html body .hud-tourn-name,
+    html body .hud-tourn-desc {
+        text-align: left !important;
+        max-width: 100% !important;
+    }
+    html body .hud-tourn-name {
+        font-size: .78rem !important;
+        line-height: 1.05 !important;
+        letter-spacing: .02em !important;
+        white-space: normal !important;
+        overflow: visible !important;
+        text-overflow: unset !important;
+    }
+    html body .hud-tourn-logo {
+        order: 2;
+        width: auto;
+        flex: 0 0 auto;
+        position: static !important;
+    }
+    html body .hud-header-controls {
+        position: static !important;
+        top: auto !important;
+        right: auto !important;
+        justify-content: flex-end;
+        flex-wrap: nowrap;
+        width: auto;
+        gap: 6px;
+    }
+    html body:has(#acLiveBidPad) .hud-header-controls #ac-break-btn,
+    html body .hud-header-controls #ac-break-btn,
+    html body .hud-header-controls #ac-break-btn.ac-break-btn-fixed,
+    html body:has(#acLiveBidPad) .hud-header-controls a.hud-dash-btn,
+    html body .hud-header-controls a.hud-dash-btn.hud-hdr-drawer-btn {
+        box-sizing: border-box !important;
+        display: inline-flex !important;
+        height: 32px !important;
+        min-height: 32px !important;
+        max-height: 32px !important;
+        padding: 0 10px !important;
+        line-height: 1 !important;
+        align-items: center;
+    }
+    html body:has(#acLiveBidPad) #ac-break-btn,
+    html body #ac-break-btn,
+    html body #ac-break-btn.ac-break-btn-fixed {
+        position: static !important;
+        top: auto !important;
+        right: auto !important;
+        left: auto !important;
+        bottom: auto !important;
+        margin: 0 !important;
+        z-index: 2;
+        flex: 0 0 auto;
+    }
+    html body:has(#acLiveBidPad) a.hud-dash-btn,
+    html body a.hud-dash-btn.hud-hdr-drawer-btn {
+        display: inline-flex !important;
+        position: static !important;
+        top: auto !important;
+        left: auto !important;
+        right: auto !important;
+        z-index: 2;
+        height: 32px !important;
+        min-height: 32px !important;
+        max-height: 32px !important;
+        padding: 0 10px !important;
+        align-items: center;
+        flex: 0 0 auto;
+        text-decoration: none;
+        color: #fff !important;
+        background: rgba(255, 255, 255, .16) !important;
+        border: 1px solid rgba(255, 255, 255, .28) !important;
+        font-size: 9px !important;
+        letter-spacing: .04em;
+    }
+    html body .hud-profile-head .hud-tier-hex { display: none !important; }
+    html body .hud-tier-on-photo {
+        display: inline-flex !important;
+        align-self: flex-end;
+        min-height: 0 !important;
+        height: auto !important;
+        padding: 8px 14px !important;
+        border-radius: 8px !important;
+        clip-path: none !important;
+        font-size: 1.08rem !important;
+        letter-spacing: .03em !important;
+        line-height: 1.1 !important;
+        box-shadow: none !important;
+    }
+    html body footer.hud-footer,
+    html body.ac-has-mobile-ctrl footer.hud-footer {
+        display: none !important;
+    }
+    html body.ac-has-mobile-ctrl {
+        padding-bottom: 0 !important;
+    }
+    html body footer.hud-footer .hud-footer-lbl { color: #fff !important; }
+    html body footer.hud-footer .hud-footer-logo,
+    html body.ac-has-mobile-ctrl footer.hud-footer .hud-footer-logo {
+        height: 16px;
+        filter: none !important;
+    }
+    html body .hud-photo-col {
+        display: grid !important;
+        grid-template-columns: minmax(158px, 1.2fr) minmax(0, 1fr);
+        grid-template-rows: auto;
+        height: auto !important;
+        min-height: 0 !important;
+        max-height: none !important;
+        padding: 0;
+        column-gap: 0;
+        align-items: stretch;
+        overflow: hidden !important;
+    }
+    .hud-photo-col-accent { display: none; }
+    html body .hud-photo-frame {
+        position: relative !important;
+        inset: auto !important;
+        grid-area: 1 / 1;
+        align-self: start;
+        min-height: 0 !important;
+        height: auto !important;
+        width: 100%;
+        overflow: hidden !important;
+        border-radius: 22px 0 0 22px;
+    }
+    html body .hud-photo-col .hud-photo-frame > img.hud-photo-img {
+        position: relative !important;
+        inset: auto !important;
+        display: block !important;
+        width: 100% !important;
+        height: auto !important;
+        max-width: 100% !important;
+        max-height: none !important;
+        min-height: 0 !important;
+        object-fit: contain !important;
+        object-position: center center !important;
+        border-radius: 0;
+        z-index: 1;
+    }
+    html body .hud-photo-frame .hud-serial-badge {
+        position: absolute !important;
+        z-index: 6;
+        top: auto !important;
+        left: auto !important;
+        right: 4px !important;
+        bottom: 4px !important;
+        margin: 0 !important;
+        transform: none !important;
+        transform-origin: bottom right !important;
+        display: flex !important;
+        flex-direction: column;
+        align-items: flex-end;
+        width: max-content;
+        max-width: calc(100% - 8px);
+        box-sizing: border-box;
+        padding: 6px 10px 5px !important;
+        border-radius: 10px;
+        line-height: 1;
+        overflow: visible;
+    }
+    html body .hud-photo-frame .hud-serial-label {
+        font-size: 11px !important;
+        letter-spacing: .05em;
+        line-height: 1 !important;
+        white-space: nowrap;
+    }
+    html body .hud-photo-frame .hud-serial-number {
+        font-size: 1.7rem !important;
+        line-height: 1 !important;
+        text-shadow: none;
+        white-space: nowrap;
+    }
+    html body .hud-photo-overlay {
+        grid-area: 1 / 2;
+        position: relative;
+        inset: auto;
+        z-index: 4;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: flex-end !important;
+        text-align: right !important;
+        gap: 6px;
+        height: 100%;
+        min-width: 0;
+        padding: 10px 8px;
+        overflow: hidden;
+        isolation: isolate;
+        background: rgba(0, 0, 0, .05);
+    }
+    html body .hud-photo-overlay .hud-sport-wash {
+        display: block !important;
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        object-position: center 28%;
+        opacity: .22;
+        pointer-events: none;
+        z-index: 0;
+    }
+    html body .hud-photo-overlay::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        z-index: 1;
+        pointer-events: none;
+        background: linear-gradient(180deg, rgba(0, 0, 0, .04), rgba(0, 0, 0, .14));
+    }
+    html body .hud-photo-overlay > :not(.hud-sport-wash) {
+        position: relative;
+        z-index: 2;
+    }
+    html body .hud-photo-overlay .hud-player-name {
+        width: 100%;
+        max-width: 100%;
+        display: block;
+        flex: 0 0 auto;
+        white-space: nowrap !important;
+        overflow: hidden;
+        text-align: right !important;
+        font-size: 1.7rem !important;
+        letter-spacing: 0 !important;
+        line-height: 1.1;
+        text-shadow: 0 1px 8px rgba(0, 0, 0, .55);
+    }
+    html body .hud-photo-overlay .hud-overlay-badges {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: flex-end !important;
+        justify-content: flex-start !important;
+        gap: 6px !important;
+        margin: 0 !important;
+        width: 100%;
+        flex: 0 0 auto;
+    }
+    html body .hud-photo-overlay .hud-role-tag,
+    html body .hud-photo-overlay .hud-base-badge,
+    html body .hud-photo-overlay .hud-tier-on-photo {
+        position: relative;
+        z-index: 2;
+        max-width: 100%;
+        margin: 0 !important;
+    }
+    html body .hud-photo-overlay .hud-role-tag {
+        min-height: 0;
+        padding: 8px 12px !important;
+        font-size: 1.12rem !important;
+        letter-spacing: .02em !important;
+        line-height: 1.1 !important;
+    }
+    html body .hud-photo-overlay .hud-base-badge {
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
+        align-items: baseline !important;
+        justify-content: flex-end !important;
+        gap: 6px !important;
+        min-height: 0;
+        width: auto;
+        max-width: 100%;
+        text-align: right;
+        padding: 5px 8px !important;
+        white-space: nowrap;
+    }
+    html body .hud-photo-overlay .hud-base-badge-lbl {
+        font-size: .7rem !important;
+        letter-spacing: .02em !important;
+        white-space: nowrap;
+    }
+    html body .hud-photo-overlay .hud-base-badge-val {
+        font-size: 1rem !important;
+        letter-spacing: 0 !important;
+        white-space: nowrap;
+    }
+    .hud-photo-status {
+        width: calc(100% * 1.2 / 2.2);
+        height: 100%;
+        top: 0;
+        left: 0;
+        right: auto;
+        bottom: auto;
+        border-radius: 22px 0 0 22px;
+    }
+}
+@media (max-width: 800px) {
+    .hud-header {
+        height: auto;
+        padding: 10px 12px 12px;
+    }
+    .hud-arena {
+        display: flex;
+        flex-direction: column;
+        height: auto;
+        padding: 0 10px 16px;
+        overflow: auto;
+    }
+    .hud-info-col { overflow: visible; flex: 0 0 auto; }
+    .hud-actions,
+    .hud-next-bar {
+        position: fixed;
+        left: 10px;
+        right: 10px;
+        z-index: 30;
+        margin: 0;
+        padding: 0;
+        background: var(--navy-card);
+    }
+    .hud-actions {
+        bottom: 8px;
+        display: flex;
+    }
+}
+
+@media (min-width: 1400px) {
+    html body:has(#acLiveBidPad) .hud-actions > .hud-next-btn {
+        grid-column: 1 / -1;
+        width: 100% !important;
+        max-width: none !important;
+        justify-self: stretch;
+    }
+}
+
+/* Phone and tablet: Unsold, Sell to Team, Next — Sell sits in the middle. */
+@media (max-width: 1399px) {
+    html body:has(#acLiveBidPad) .hud-actions,
+    html body .hud-actions {
+        display: grid !important;
+        grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+        grid-template-rows: auto;
+    }
+    html body .hud-actions > .hud-btn-unsold,
+    html body #ac-mobile-ctrl-bar > .hud-btn-unsold { order: 1 !important; }
+    html body .hud-actions > .hud-btn-sell,
+    html body #ac-mobile-ctrl-bar > .hud-btn-sell { order: 2 !important; }
+    html body .hud-actions > .hud-next-btn,
+    html body #ac-mobile-ctrl-bar > .hud-next-btn {
+        order: 3 !important;
+        grid-column: auto !important;
+        width: auto !important;
+        max-width: none !important;
+    }
+    /* The buttons live in the bottom dock, so the old row must not stay as a white strip. */
+    html body.ac-has-mobile-ctrl:has(#acLiveBidPad) .hud-actions,
+    html body.ac-has-mobile-ctrl .hud-actions {
+        display: none !important;
+    }
+}
+
+/* Tablet, including landscape: show the whole player. The frame follows
+   the photo instead of cropping it into a square or a tall cover. */
+@media (min-width: 768px) and (max-width: 1399px) {
+    html body .hud-photo-col {
+        display: flex !important;
+        flex-direction: column !important;
+        height: 100% !important;
+        min-height: 0 !important;
+        max-height: none !important;
+        overflow: hidden !important;
+        align-items: stretch;
+        justify-content: flex-start;
+    }
+    html body .hud-photo-frame {
+        position: relative !important;
+        inset: auto !important;
+        flex: 1 1 auto;
+        display: flex !important;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        height: 100% !important;
+        min-height: 0 !important;
+        max-height: 100%;
+        aspect-ratio: auto !important;
+        overflow: hidden !important;
+        border-radius: 22px;
+    }
+    html body .hud-photo-col .hud-photo-frame > img.hud-photo-img {
+        position: relative !important;
+        inset: auto !important;
+        display: block !important;
+        width: auto !important;
+        height: auto !important;
+        max-width: 100% !important;
+        max-height: 100% !important;
+        object-fit: contain !important;
+        object-position: center center !important;
+    }
+    html body .hud-photo-frame .hud-serial-badge {
+        position: absolute !important;
+        top: auto !important;
+        left: auto !important;
+        right: 8px !important;
+        bottom: 8px !important;
+        transform: none !important;
+        padding: 7px 12px 6px !important;
+        border-radius: 12px;
+    }
+    html body .hud-photo-frame .hud-serial-label { font-size: 12px !important; }
+    html body .hud-photo-frame .hud-serial-number { font-size: 2rem !important; }
+    html body .hud-photo-overlay {
+        position: absolute !important;
+        inset: auto 10px 10px 10px !important;
+        display: flex !important;
+        flex-direction: column;
+        align-items: flex-start !important;
+        justify-content: flex-end;
+        text-align: left !important;
+        gap: 6px !important;
+        width: auto;
+        height: auto !important;
+        margin: 0;
+        padding: 0;
+        background: none;
+        overflow: visible;
+    }
+    html body .hud-photo-overlay .hud-sport-wash,
+    html body .hud-photo-overlay::after {
+        display: none !important;
+        content: none;
+    }
+    html body .hud-photo-overlay .hud-player-name {
+        text-align: left !important;
+        width: 100%;
+        max-width: 100%;
+        display: block;
+        white-space: nowrap !important;
+        overflow: hidden;
+        font-size: 2rem !important;
+        letter-spacing: 0 !important;
+        line-height: 1.1;
+        text-shadow: 0 2px 10px rgba(0, 0, 0, .65);
+    }
+    html body .hud-photo-overlay .hud-role-tag {
+        font-size: 1.25rem !important;
+        padding: 8px 14px !important;
+    }
+    html body .hud-photo-overlay .hud-base-badge {
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
+        align-items: baseline !important;
+        justify-content: flex-start !important;
+        gap: 8px !important;
+        width: auto;
+        white-space: nowrap;
+        padding: 8px 12px !important;
+    }
+    html body .hud-photo-overlay .hud-base-badge-lbl { font-size: .78rem !important; letter-spacing: .02em !important; }
+    html body .hud-photo-overlay .hud-base-badge-val { font-size: 1.1rem !important; letter-spacing: 0 !important; }
+    html body .hud-photo-overlay .hud-tier-on-photo { font-size: 1.2rem !important; padding: 8px 16px !important; }
+    html body .hud-photo-overlay .hud-overlay-badges {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        flex: 0 0 auto;
+        justify-content: flex-start !important;
+        gap: 6px !important;
+        margin: 0 !important;
+    }
+}
+
+/* Phone and tablet: Powered by sits in the header, between the
+   tournament name and the buttons. The footer copy stays off. */
+@media (max-width: 1399px) {
+    html body .hud-header {
+        display: flex !important;
+        flex-direction: row !important;
+        align-items: center !important;
+        justify-content: flex-start !important;
+        height: auto !important;
+        gap: 6px;
+    }
+    html body .hud-brand { display: none !important; }
+    html body .hud-logo-center {
+        order: 1;
+        flex: 1 1 auto;
+        width: auto;
+        min-width: 0;
+        justify-content: flex-start !important;
+    }
+    html body .hud-powered {
+        order: 2;
+        display: inline-flex !important;
+        flex: 0 0 auto;
+        align-items: center;
+        justify-content: center;
+        gap: 3px;
+        max-width: 28%;
+        line-height: 1;
+        pointer-events: none;
+    }
+    html body .hud-powered span {
+        font-size: 6px;
+        font-weight: 700;
+        letter-spacing: .04em;
+        text-transform: uppercase;
+        color: rgba(255, 255, 255, .9);
+        white-space: nowrap;
+    }
+    html body .hud-powered img {
+        height: 9px;
+        width: auto;
+        max-width: 46px;
+        display: block;
+        object-fit: contain;
+        filter: brightness(0) invert(1);
+    }
+    html body .hud-tourn-logo {
+        order: 3;
+        flex: 1 1 auto;
+        min-width: min-content;
+        width: auto;
+        display: flex !important;
+        justify-content: flex-end;
+        position: static !important;
+    }
+    html body .hud-header-controls {
+        position: static !important;
+        top: auto !important;
+        right: auto !important;
+        flex-wrap: nowrap;
+    }
+    html body footer.hud-footer,
+    html body.ac-has-mobile-ctrl footer.hud-footer {
+        display: none !important;
+    }
+}
+@media (max-width: 767px) {
+    html body .hud-powered { display: none !important; }
+}
+@media (max-width: 1399px) {
+    html body .hud-info-col:has(#acLiveBidPad),
+    html body.ac-has-mobile-ctrl .hud-info-col {
+        position: relative;
+        padding-bottom: 104px !important;
+    }
+    html body .hud-info-col[data-sport]::after {
+        content: "";
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        height: 104px;
+        pointer-events: none;
+        background-position: center 35%;
+        background-size: cover;
+        background-repeat: no-repeat;
+        opacity: .16;
+    }
+    html body .hud-info-col[data-sport="cricket"]::after {
+        background-image: url("/auction_module/static/src/img/hud_sport/cricket.jpg");
+    }
+    html body .hud-info-col[data-sport="football"]::after {
+        background-image: url("/auction_module/static/src/img/hud_sport/football.jpg");
+    }
+    html body .hud-info-col[data-sport="badminton"]::after {
+        background-image: url("/auction_module/static/src/img/hud_sport/badminton.jpg");
+    }
+    html body .hud-info-col[data-sport="kabaddi"]::after {
+        background-image: url("/auction_module/static/src/img/hud_sport/kabaddi.jpg");
+    }
+}
+
+/* Cherry, Pistah, Blackberry: the action row was neon fill, pink ghost,
+   and a cream Next button. Keep the theme colour, drop the glare. */
+html[data-theme="cherry"] .hud-btn-sell,
+html[data-theme="cherry"] .hud-btn-sell:hover,
+html[data-theme="pistah"] .hud-btn-sell,
+html[data-theme="pistah"] .hud-btn-sell:hover,
+html[data-theme="blackberry"] .hud-btn-sell,
+html[data-theme="blackberry"] .hud-btn-sell:hover,
+html[data-theme="cherry"] .hud-btn-unsold,
+html[data-theme="cherry"] .hud-btn-unsold:hover,
+html[data-theme="pistah"] .hud-btn-unsold,
+html[data-theme="pistah"] .hud-btn-unsold:hover,
+html[data-theme="blackberry"] .hud-btn-unsold,
+html[data-theme="blackberry"] .hud-btn-unsold:hover,
+html[data-theme="cherry"] .hud-next-btn,
+html[data-theme="cherry"] .hud-next-btn:hover,
+html[data-theme="pistah"] .hud-next-btn,
+html[data-theme="pistah"] .hud-next-btn:hover,
+html[data-theme="blackberry"] .hud-next-btn,
+html[data-theme="blackberry"] .hud-next-btn:hover {
+    box-shadow: 0 8px 18px rgba(0, 0, 0, .18);
+}
+html[data-theme="cherry"] .hud-btn-sell,
+html[data-theme="cherry"] .hud-btn-sell:hover {
+    background: #9f3048;
+    color: #ffe8ec;
+}
+html[data-theme="pistah"] .hud-btn-sell,
+html[data-theme="pistah"] .hud-btn-sell:hover {
+    background: #3d7a42;
+    color: #f4fbea;
+}
+html[data-theme="blackberry"] .hud-btn-sell,
+html[data-theme="blackberry"] .hud-btn-sell:hover {
+    background: #5c3d96;
+    color: #f4eefe;
+}
+html[data-theme="cherry"] .hud-btn-unsold,
+html[data-theme="cherry"] .hud-btn-unsold:hover,
+html[data-theme="pistah"] .hud-btn-unsold,
+html[data-theme="pistah"] .hud-btn-unsold:hover,
+html[data-theme="blackberry"] .hud-btn-unsold,
+html[data-theme="blackberry"] .hud-btn-unsold:hover {
+    background: rgba(255, 255, 255, .07);
+    color: rgba(255, 255, 255, .82);
+    border: 1px solid rgba(255, 255, 255, .22);
+}
+html[data-theme="cherry"] .hud-next-btn,
+html[data-theme="cherry"] .hud-next-btn:hover {
+    background: #2c1418;
+    color: #f0c9d0;
+    border: 1px solid rgba(225, 29, 72, .32);
+}
+html[data-theme="pistah"] .hud-next-btn,
+html[data-theme="pistah"] .hud-next-btn:hover {
+    background: #142418;
+    color: #d7efc8;
+    border: 1px solid rgba(107, 191, 78, .30);
+}
+html[data-theme="blackberry"] .hud-next-btn,
+html[data-theme="blackberry"] .hud-next-btn:hover {
+    background: #241c32;
+    color: #e4d8f8;
+    border: 1px solid rgba(167, 123, 255, .30);
+}

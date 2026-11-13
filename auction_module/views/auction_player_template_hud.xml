@@ -22,7 +22,8 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="1"/>
     <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&amp;family=Barlow+Semi+Condensed:wght@500;600;700&amp;family=Bebas+Neue&amp;family=Exo+2:wght@500;600;700;800;900&amp;family=Oswald:wght@500;600;700&amp;display=swap" rel="stylesheet"/>
     <link rel="stylesheet" href="/auction_module/static/src/css/display_hud_themes.css?v=889pj"/>
-    <link rel="stylesheet" href="/auction_module/static/src/css/display_hud.css?v=896tier"/>
+    <link rel="stylesheet" href="/auction_module/static/src/css/display_hud.css?v=897board"/>
+    <link rel="stylesheet" href="/auction_module/static/src/css/display_hud_board.css?v=935board"/>
     <link rel="stylesheet" href="/auction_module/static/src/css/bid_clock.css?v=6"/>
     <style id="hud-pj-fonts">
       html, body { font-family: 'Exo 2', 'Barlow Condensed', sans-serif !important; }
@@ -57,6 +58,13 @@
         t-att-data-break-time="'1' if tournament and tournament.break_time_active else '0'"
         t-att-data-player-drawer="'manual' if tournament and tournament.player_appearance_algorithm == 'random' and tournament.player_drawer_mode == 'manual' else 'automatic'">
 
+    <t t-set="players_left" t-value="player.env['auction.team.player'].sudo().search_count([('tournament_id', '=', player.tournament_id.id), ('state', 'in', ('draft', 'unsold', 'auction')), ('icon_player', '=', False)]) if player.tournament_id else 0"/>
+    <t t-set="hud_bid_amt" t-value="int(player.current_bid or 0)"/>
+    <t t-set="hud_show_amt" t-value="hud_bid_amt or int(player.effective_base_price or 0)"/>
+    <t t-set="hud_unit" t-value="tournament or player.tournament_id"/>
+    <t t-set="hud_bid_txt" t-value="hud_unit.format_points(hud_show_amt) if hud_unit else hud_show_amt"/>
+    <t t-set="hud_lead" t-value="player.current_bid_team_id"/>
+
     <header class="hud-header">
       <a href="/web" class="hud-brand">
         <img class="ac-logo" src="/auction_module/static/src/assets/images/logo.svg" alt="Auction Champ"/>
@@ -81,11 +89,19 @@
           <span class="ac-bid-clock-tip" data-bid-clock-tip="">Click to hold</span>
         </div>
       </div>
+      <div class="hud-powered">
+        <span>Powered by</span>
+        <img src="/auction_module/static/src/assets/images/logo.svg" alt="Auction Champ"/>
+      </div>
       <div class="hud-tourn-logo">
         <div class="hud-header-controls">
-          <button type="button" class="hud-hdr-drawer-btn" onclick="toggleRemainingPlayers()">Players Left</button>
+          <button type="button" class="hud-hdr-drawer-btn" onclick="toggleRemainingPlayers()">
+            <span>Players Left</span>
+            <b class="hud-left-count" data-players-left=""><t t-esc="players_left"/></b>
+          </button>
           <button type="button" class="hud-hdr-drawer-btn" onclick="toggleBidSummary()">Bid Summary</button>
           <button type="button" id="ac-break-btn" class="ac-break-btn" onclick="acToggleBreakTime()" title="Break Time"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg> Pause</button>
+          <a class="hud-hdr-drawer-btn hud-dash-btn" href="/web">Goto Dashboard</a>
           <button id="fs-btn" onclick="toggleFullscreen()" title="Fullscreen" class="bs-ctrl-btn">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
           </button>
@@ -97,13 +113,15 @@
       <div class="hud-photo-col">
         <div class="hud-photo-col-accent"></div>
         <div class="hud-serial-watermark"><t t-esc="player.sl_no"/></div>
-        <img class="hud-photo-img"
-             t-att-src="image_data_uri(player.photo)"
-             alt="Player Photo"
-             id="loadImage"/>
-        <div class="hud-serial-badge">
-          <span class="hud-serial-label">No.</span>
-          <span class="hud-serial-number"><t t-esc="player.sl_no"/></span>
+        <div class="hud-photo-frame">
+          <img class="hud-photo-img"
+               t-att-src="image_data_uri(player.photo)"
+               alt="Player Photo"
+               id="loadImage"/>
+          <div class="hud-serial-badge">
+            <span class="hud-serial-label">Player No.</span>
+            <span class="hud-serial-number"><t t-esc="'%02d' % (player.sl_no or 0)"/></span>
+          </div>
         </div>
         <div class="hud-photo-status" id="hudPhotoStatus" data-kind="sold" aria-live="polite">
           <div class="hud-status-glow" aria-hidden="true"></div>
@@ -128,15 +146,16 @@
             </div>
           </div>
         </div>
-        <div class="hud-photo-overlay">
+        <div class="hud-photo-overlay" t-att-data-sport="player.tournament_type or 'cricket'">
+          <img class="hud-sport-wash" alt="" aria-hidden="true"
+               t-attf-src="/auction_module/static/src/img/hud_sport/#{player.tournament_type or 'cricket'}.jpg"/>
           <div class="hud-player-name" data-sm-name=""><t t-esc="player.name.upper()"/></div>
           <div class="hud-overlay-badges">
             <t t-set="tier_color" t-value="(player.tier_id.color or '') if player.tier_id else ''"/>
             <t t-set="tier_ink" t-value="'#12243f' if (tier_color or '').lower() in ('#ffffff', '#f39c12', '#2ecc71', '#e67e22', '#1abc9c', '#f1c40f') else '#ffffff'"/>
             <t t-set="hud_role_label" t-value="(player.kabaddi_role_label() if player.tournament_type == 'kabaddi' else (player.dominant_position_id.name if player.tournament_type == 'football' and player.dominant_position_id else (player.badminton_card_labels()['category'] if player.tournament_type == 'badminton' else (player.role or ''))))"/>
             <t t-if="hud_role_label">
-              <div class="hud-role-tag" data-sm-role=""
-                   t-attf-style="{{ ('background:%s !important;color:%s !important;' % (tier_color, tier_ink)) if tier_color else '' }}">
+              <div class="hud-role-tag" data-sm-role="">
                 <t t-esc="hud_role_label"/>
               </div>
             </t>
@@ -146,25 +165,28 @@
                 <span class="hud-base-badge-val"><t t-esc="(tournament or player.tournament_id).format_points(player.effective_base_price or 0) if (tournament or (player and player.tournament_id)) else '{:,}'.format(int(player.effective_base_price or 0))"/></span>
               </div>
             </t>
+            <t t-if="player.tier_id">
+              <span class="hud-tier-hex hud-tier-on-photo"
+                    t-attf-style="--tier-fill: #{tier_color or '#3498db'}; --tier-ink: #{tier_ink}; background: #{tier_color or '#3498db'} !important; color: #{tier_ink} !important;">
+                <t t-esc="player.tier_id.name"/>
+              </span>
+            </t>
           </div>
         </div>
       </div>
 
-      <div class="hud-info-col">
-        <div class="hud-tier-strip">
+      <div class="hud-info-col" t-att-data-sport="player.tournament_type or 'cricket'">
+        <div class="hud-profile-head">
+          <div class="hud-stats-heading">Player Profile</div>
           <t t-if="player.tier_id">
             <span class="hud-tier-hex"
                   t-attf-style="--tier-fill: #{tier_color or '#3498db'}; --tier-ink: #{tier_ink}; background: #{tier_color or '#3498db'} !important; color: #{tier_ink} !important;">
               <t t-esc="player.tier_id.name"/>
             </span>
           </t>
-          <t t-else="">
-            <span class="hud-tier-label-dim">Auction Tier</span>
-          </t>
         </div>
 
         <div class="hud-stats">
-          <div class="hud-stats-heading">Player Profile</div>
           <t t-call="auction_module.football_attr_layout_css"/>
           <t t-if="player.tournament_type == 'football'">
             <div class="ac-fb-grid">
@@ -294,15 +316,34 @@
           </t>
         </div>
 
-        <div class="hud-actions">
-          <button class="hud-btn hud-btn-unsold" onclick="setPlayerUnsold()">Set Unsold</button>
-          <button class="hud-btn hud-btn-sell" onclick="openSellModal()">Sell to Team</button>
+        <div class="hud-bidbar" id="hudBidBar" t-att-data-base="int(player.effective_base_price or 0)">
+          <div class="hud-bidbar-amt">
+            <span class="hud-bidbar-k" id="hudBidLabel">Current Bid</span>
+            <span class="hud-bidbar-val" id="hudBidVal"><t t-esc="hud_bid_txt"/></span>
+          </div>
+          <div class="hud-bidbar-team" id="hudBidWait">
+            <img class="hud-bidbar-logo" id="hudBidLogo" alt=""
+                 t-att-src="image_data_uri(hud_lead.logo) if (hud_lead and hud_lead.logo) else ''"
+                 t-att-hidden="None if (hud_lead and hud_lead.logo) else 'hidden'"/>
+            <span class="hud-bidbar-teamname" id="hudBidTeam">
+              <t t-if="not hud_bid_amt">Waiting for opening bid</t>
+              <t t-if="hud_bid_amt and hud_lead"><t t-esc="hud_lead.name"/></t>
+            </span>
+          </div>
         </div>
 
-        <div class="hud-next-bar">
+        <div class="hud-actions">
+          <button class="hud-btn hud-btn-sell" onclick="openSellModal()">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20.6 13.4 11 3.8 3.8 11l9.6 9.6a2 2 0 0 0 2.8 0l4.4-4.4a2 2 0 0 0 0-2.8zM7.5 8.5a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3z"/></svg>
+            Sell to Team
+          </button>
+          <button class="hud-btn hud-btn-unsold" onclick="setPlayerUnsold()">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm4.2 13.4-1.4 1.4L12 13.4l-2.8 2.8-1.4-1.4 2.8-2.8-2.8-2.8 1.4-1.4L12 10.6l2.8-2.8 1.4 1.4-2.8 2.8 2.8 2.8z"/></svg>
+            Set Unsold
+          </button>
           <button class="hud-next-btn" onclick="changeImage()">
             Next Player
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
               <path d="M6 18L14.5 12 6 6V18ZM16 6V18H18V6H16Z"/>
             </svg>
           </button>
@@ -319,6 +360,11 @@
       function hudToken(name, fallback) {
         var v = getComputedStyle(document.documentElement).getPropertyValue(name);
         return (v &amp;&amp; v.trim()) ? v.trim() : fallback;
+      }
+      function hudSyncChrome(doc) {
+        var next = doc &amp;&amp; doc.querySelector &amp;&amp; doc.querySelector('[data-players-left]');
+        var cur = document.querySelector('[data-players-left]');
+        if (next &amp;&amp; cur) cur.textContent = next.textContent;
       }
       function acInstallPlayerZone(zone, newZone) {
         if (!zone || !newZone) return;
@@ -391,6 +437,8 @@
           document.body.removeAttribute('data-mystery-revealed');
           await acWarmNextPhoto(newDoc);
           acInstallPlayerZone(zone, newZone);
+          hudSyncChrome(newDoc);
+          hudStampIcons(zone);
           if (typeof window.acMysteryApplyFromBody === 'function') { window.acMysteryApplyFromBody(); }
           if (typeof window.acCommitPlayerOnStage === 'function') {
             await window.acCommitPlayerOnStage(newPlayerId);
@@ -422,6 +470,8 @@
         document.body.setAttribute('data-is-mystery', _mf2);
         document.body.removeAttribute('data-mystery-revealed');
         acInstallPlayerZone(zone, newZone);
+        hudSyncChrome(newDoc);
+        hudStampIcons(zone);
         if (typeof window.acMysteryApplyFromBody === 'function') { window.acMysteryApplyFromBody(); }
         if (typeof window.acCommitPlayerOnStage === 'function') {
           await window.acCommitPlayerOnStage(newPlayerId);
@@ -574,6 +624,81 @@
           document.exitFullscreen();
         }
       }
+      function hudStampIcons(root) {
+        var paths = {
+          bat: 'M3 20l9-9 2 2-9 9H3v-2zm10-16l8 8-2.5 2.5L10.5 6.5 13 4z',
+          bowl: 'M12 3.5a8.5 8.5 0 1 0 0.01 0z M12 8.2a3.8 3.8 0 1 1-0.01 0z',
+          user: 'M12 12.2a3.7 3.7 0 1 0 0-7.4 3.7 3.7 0 0 0 0 7.4zM5.2 19.5c1.2-3 3.6-4.4 6.8-4.4s5.6 1.4 6.8 4.4H5.2z',
+          pin: 'M12 22s7-6.4 7-11a7 7 0 1 0-14 0c0 4.6 7 11 7 11zm0-8.2a2.8 2.8 0 1 1 0-5.6 2.8 2.8 0 0 1 0 5.6z',
+          drop: 'M12 2.5s6.2 7 6.2 11.2a6.2 6.2 0 1 1-12.4 0C5.8 9.5 12 2.5 12 2.5z',
+          foot: 'M3.5 14.2c2.2-1.3 4-1.3 6.2 0s4 1.3 6.2 0 4-1.3 6.1 0v4.3H3.5v-4.3z',
+          phone: 'M8 3h3.2l1 3.6-2.1 1.2a10 10 0 0 0 5.1 5.1l1.2-2.1 3.6 1V15a2 2 0 0 1-2 2A14 14 0 0 1 6 5a2 2 0 0 1 2-2z',
+          tag: 'M21 11.6L12.4 20a2 2 0 0 1-2.8 0L3 13.4V4h9.4l8.6 7.6zM7.2 8.2a1.4 1.4 0 1 1 0-2.8 1.4 1.4 0 0 1 0 2.8z'
+        };
+        var rules = [
+          [/bowl/, 'bowl'],
+          [/bat/, 'bat'],
+          [/foot/, 'foot'],
+          [/blood/, 'drop'],
+          [/location|address|place|city/, 'pin'],
+          [/mobile|phone|contact/, 'phone'],
+          [/role|position|category|hand|age|height|weight/, 'user']
+        ];
+        var scope = root &amp;&amp; root.querySelectorAll ? root : document;
+        var rows = scope.querySelectorAll('.hud-stat-row');
+        for (var i = 0; i &lt; rows.length; i++) {
+          var row = rows[i];
+          if (row.querySelector('svg.hud-stat-ico')) continue;
+          var keyEl = row.querySelector('.hud-stat-key');
+          var key = ((keyEl &amp;&amp; keyEl.textContent) || '').toLowerCase();
+          var kind = 'tag';
+          for (var r = 0; r &lt; rules.length; r++) {
+            if (rules[r][0].test(key)) { kind = rules[r][1]; break; }
+          }
+          var svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+          svg.setAttribute('viewBox', '0 0 24 24');
+          svg.setAttribute('class', 'hud-stat-ico');
+          svg.setAttribute('aria-hidden', 'true');
+          var path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+          path.setAttribute('fill-rule', 'evenodd');
+          path.setAttribute('d', paths[kind] || paths.tag);
+          svg.appendChild(path);
+          row.insertBefore(svg, row.firstChild);
+        }
+        hudFitPlayerName(scope);
+      }
+      function hudFitPlayerName(root) {
+        if (!window.matchMedia || !window.matchMedia('(max-width: 1399px)').matches) return;
+        var scope = (root &amp;&amp; root.querySelectorAll) ? root : document;
+        var names = scope.querySelectorAll('.hud-player-name');
+        for (var i = 0; i &lt; names.length; i++) {
+          var el = names[i];
+          el.style.removeProperty('font-size');
+          if (el.clientWidth &lt; 8) continue;
+          var max = parseFloat(window.getComputedStyle(el).fontSize) || 24;
+          var min = 12;
+          function fits(size) {
+            el.style.setProperty('font-size', size + 'px', 'important');
+            return el.scrollWidth &lt;= el.clientWidth + 1;
+          }
+          if (fits(max)) continue;
+          var lo = min;
+          var hi = max;
+          while (hi - lo &gt; 0.5) {
+            var mid = (lo + hi) / 2;
+            if (fits(mid)) lo = mid;
+            else hi = mid;
+          }
+          fits(lo);
+        }
+      }
+      var hudFitTimer;
+      window.addEventListener('resize', function() {
+        clearTimeout(hudFitTimer);
+        hudFitTimer = setTimeout(function() { hudFitPlayerName(document); }, 80);
+      });
+      hudStampIcons(document);
+      requestAnimationFrame(function() { hudFitPlayerName(document); });
       document.addEventListener('fullscreenchange', function() {
         var btn = document.getElementById('fs-btn');
         if (!btn) return;

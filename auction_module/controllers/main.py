@@ -3765,6 +3765,15 @@ class Auction(http.Controller):
             sport = (tournament.tournament_type or 'cricket') if tournament else 'cricket'
             mode = 'light' if theme in ('lemon', 'strawberry', 'standard') else 'dark'
             company = request.env['res.company'].sudo().search([], limit=1)
+            stage_photo_url = ''
+            if tournament:
+                on_stage = request.env['auction.team.player'].sudo().search([
+                    ('tournament_id', '=', tournament.id),
+                    ('is_on_stage', '=', True),
+                    ('icon_player', '=', False),
+                ], limit=1)
+                if on_stage:
+                    stage_photo_url = _pj_player_photo_url(db_name, on_stage)
             html = request.render('auction_module.projector_template', {
                 'tournament': tournament,
                 'theme': theme,
@@ -3773,6 +3782,7 @@ class Auction(http.Controller):
                 'db_name': db_name,
                 'tournament_slug': tournament_slug or (tournament.slug if tournament else ''),
                 'res_company': company,
+                'stage_photo_url': stage_photo_url,
                 'sse_enabled': request.env['ir.config_parameter'].sudo().get_param(
                     'auction.sse.enabled', 'False'
                 ) in ('True', 'true', '1'),
@@ -4152,11 +4162,16 @@ class Auction(http.Controller):
                     ) or binary
                 except Exception:
                     _logger.debug('public image sz=%s resize fallback failed', sz, exc_info=True)
-        elif model == 'auction.team.player' and field == 'photo' and binary and sz in ('pj', 'bs'):
-            # pj: keep stage cards light — heavy 720×1000 resize blocked the worker
-            # and made the next player look 3–4s late on a single Odoo process.
-            size = (96, 96) if sz == 'bs' else (480, 640)
-            quality = 70 if sz == 'bs' else 78
+        elif model == 'auction.team.player' and field == 'photo' and binary and sz in ('pj', 'bs', 'hero'):
+            # hero: projector stage. Smaller than the stored 1600×2200 original
+            # so the first paint is not a multi-megabyte download, sharper than
+            # the 264×300 print card. Cached after the first encode.
+            if sz == 'bs':
+                size, quality = (96, 96), 70
+            elif sz == 'hero':
+                size, quality = (1200, 1650), 82
+            else:
+                size, quality = (480, 640), 78
             try:
                 binary = image_process(
                     binary, size=size, quality=quality, output_format='JPEG',
@@ -4194,7 +4209,7 @@ class Auction(http.Controller):
         except (TypeError, ValueError):
             return request.not_found()
         sz = (kw.get('sz') or '').lower()
-        if sz not in ('pj', 'bs', 'reg', 'rt', 'sq'):
+        if sz not in ('pj', 'bs', 'reg', 'rt', 'sq', 'hero'):
             sz = ''
 
         Model = request.env[model].sudo().with_context(active_test=False)
@@ -4223,7 +4238,7 @@ class Auction(http.Controller):
             return resp
 
         cache_key = None
-        if sz in ('pj', 'bs', 'reg', 'rt', 'sq'):
+        if sz in ('pj', 'bs', 'reg', 'rt', 'sq', 'hero'):
             cache_key = (request.env.cr.dbname, model, record_id, field, sz, etag)
             hit = _public_img_cache_get(cache_key)
             if not hit and sz == 'sq':
@@ -8496,11 +8511,11 @@ def _pj_has_binary(record, field_name):
 def _pj_player_photo_url(db_name, player, projector_size=False):
     """Public photo URL with write_date cache-buster.
 
-    Stage / hero photos omit ``sz=pj``. That flag served the 264×300 print-card
-    JPEG, which looks muddy when blown up on a projector. Stored player photos
-    are already capped at 1600×2200.
+    Stage photos use ``sz=hero``: a cached JPEG capped at 1200×1650. The raw
+    1600×2200 original is what made the first projector photo slow, and
+    ``sz=pj`` is the small print card, which looks soft on a projector.
 
-    ``projector_size=True`` is only for remaining-player thumbs.
+    ``projector_size=True`` is only for remaining-player thumbs (``sz=pj``).
     """
     if not player or not _pj_has_binary(player, 'photo'):
         return ''
@@ -8515,9 +8530,7 @@ def _pj_player_photo_url(db_name, player, projector_size=False):
     url = '/%s/auction/public/image/auction.team.player/%d/photo?v=%s' % (
         db_name, player.id, ver,
     )
-    # sz=pj → stored 264×300 card JPEG for small remaining thumbs only
-    if projector_size:
-        url += '&sz=pj'
+    url += '&sz=pj' if projector_size else '&sz=hero'
     return url
 
 
