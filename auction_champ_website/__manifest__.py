@@ -68,6 +68,7 @@ The website configurator is accessible under Auction Settings > Configuration.
         'data/website_default_data.xml',
         'views/website_nav_auth.xml',
         'views/website_homepage_template.xml',
+        'views/games_template.xml',
         'views/calendar_template.xml',
         'views/auction_tournament_views.xml',
         'views/website_login_template.xml',

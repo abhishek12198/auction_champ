@@ -1,0 +1,198 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+<template id="games_page" name="AuctionChamp Games">
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <t t-call="auction_module.social_preview_head">
+        <t t-set="og_page_key" t-value="page_key"/>
+        <t t-set="og_record" t-value="None"/>
+    </t>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" crossorigin="anonymous"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" crossorigin="anonymous"/>
+    <link rel="preconnect" href="https://fonts.googleapis.com"/>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="1"/>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&amp;family=Poppins:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+    <link rel="stylesheet" href="/auction_champ_website/static/src/css/auction_website.css?v=1.0.68"/>
+    <script type="application/ld+json"><t t-raw="games_json_ld"/></script>
+</head>
+<body>
+<nav class="ac-nav scrolled" id="acNav">
+    <div class="ac-nav-inner">
+        <a href="/" class="ac-nav-logo" aria-label="AuctionChamp">
+            <picture>
+                <source srcset="/auction_module/static/description/icon.svg" type="image/svg+xml"/>
+                <img src="/auction_module/static/description/icon.png" alt="AuctionChamp" class="ac-nav-logo-img"/>
+            </picture>
+        </a>
+        <div class="ac-nav-desktop">
+            <ul class="ac-nav-links">
+                <li><a href="/">Home</a></li>
+                <li><a href="/calendar">Calendar</a></li>
+                <li><a href="/games" t-att-style="'color:#f5a623;' if not game else None">Games</a></li>
+                <li><a href="/#pricing">Pricing</a></li>
+            </ul>
+            <div class="ac-nav-actions">
+                <a href="/#pricing" class="ac-nav-plan">Choose your plan</a>
+                <t t-call="auction_champ_website.website_nav_auth"/>
+            </div>
+        </div>
+        <button class="ac-nav-toggle" id="acMenuToggle" aria-label="Toggle navigation">
+            <i class="fas fa-bars"></i>
+        </button>
+    </div>
+    <div class="ac-nav-mobile" id="acMobileNav">
+        <ul class="ac-nav-mobile-links">
+            <li><a href="/">Home</a></li>
+            <li><a href="/calendar">Calendar</a></li>
+            <li><a href="/games">Games</a></li>
+            <li><a href="/#pricing">Pricing</a></li>
+        </ul>
+        <div class="ac-nav-mobile-actions">
+            <a href="/#pricing" class="ac-nav-plan">Choose your plan</a>
+            <t t-call="auction_champ_website.website_nav_auth"/>
+        </div>
+    </div>
+</nav>
+
+<t t-if="not game">
+    <section class="ac-games-hero">
+        <div class="ac-container">
+            <span class="ac-label">Games</span>
+            <h1>Player auction software for cricket, football, kabaddi and badminton</h1>
+            <p class="ac-games-lead">
+                Auction Champ is the live auction floor for the sports that sell
+                players into teams. Choose the game when you open a tournament.
+                Registration, the purse and the squad rules stay the same. The
+                player card changes to match the sport.
+            </p>
+        </div>
+    </section>
+    <section class="ac-section">
+        <div class="ac-container">
+            <div class="ac-games-grid">
+                <t t-foreach="games" t-as="item">
+                    <a t-att-href="item['href']" class="ac-game-card">
+                        <img t-att-src="item['image']" t-att-alt="item['image_alt']" width="1280" height="720"/>
+                        <div class="ac-game-card-body">
+                            <h2 t-esc="item['name']"/>
+                            <p t-esc="item['card']"/>
+                            <span>See the <t t-esc="item['name']"/> auction <i class="fas fa-arrow-right"></i></span>
+                        </div>
+                    </a>
+                </t>
+            </div>
+        </div>
+    </section>
+    <section class="ac-section ac-section-alt">
+        <div class="ac-container ac-games-copy">
+            <h2>One auction floor. A player card for the sport.</h2>
+            <p>
+                Create the tournament and pick cricket, football, kabaddi or
+                badminton. Players register with a photo and a base price. On
+                the night, one player is on stage. Teams bid from a purse, you
+                sell or mark the player unsold, and the hall follows it on the
+                projector.
+            </p>
+            <p>
+                Cricket keeps batting and bowling style. Football keeps the
+                position and the preferred foot. Kabaddi keeps rider, defender
+                and all-rounder. Badminton keeps the event, the style and the
+                level. You are not fitting every sport into a cricket form.
+            </p>
+            <p>
+                <a href="/games/cricket">Cricket auctions</a>,
+                <a href="/games/football">football auctions</a>,
+                <a href="/games/kabaddi">kabaddi auctions</a> and
+                <a href="/games/badminton">badminton auctions</a>
+                each have their own page if you want the detail.
+            </p>
+        </div>
+    </section>
+</t>
+
+<t t-if="game">
+    <section class="ac-games-hero ac-games-hero-sport">
+        <div class="ac-container ac-games-sport-hero">
+            <div>
+                <span class="ac-label" t-esc="game['name']"/>
+                <h1 t-esc="game['h1']"/>
+                <p class="ac-games-lead" t-esc="game['lead']"/>
+                <div class="ac-hero-btns">
+                    <a href="/#pricing" class="ac-btn ac-btn-primary">Choose your plan</a>
+                    <a href="/games" class="ac-btn ac-btn-outline">All games</a>
+                </div>
+            </div>
+            <img t-att-src="game['image']" t-att-alt="game['image_alt']" width="1280" height="720"/>
+        </div>
+    </section>
+    <section class="ac-section">
+        <div class="ac-container ac-games-copy">
+            <t t-foreach="game['sections']" t-as="section">
+                <h2 t-esc="section['title']"/>
+                <t t-foreach="section['paragraphs']" t-as="paragraph">
+                    <p t-esc="paragraph"/>
+                </t>
+            </t>
+            <h2 t-esc="game['details_title']"/>
+            <ul class="ac-games-details">
+                <t t-foreach="game['details']" t-as="detail">
+                    <li t-esc="detail"/>
+                </t>
+            </ul>
+        </div>
+    </section>
+    <section class="ac-section ac-section-alt">
+        <div class="ac-container ac-games-copy">
+            <h2>Questions organisers ask</h2>
+            <div class="ac-games-faq">
+                <t t-foreach="game['faqs']" t-as="faq">
+                    <details>
+                        <summary t-esc="faq['q']"/>
+                        <p t-esc="faq['a']"/>
+                    </details>
+                </t>
+            </div>
+        </div>
+    </section>
+    <section class="ac-section">
+        <div class="ac-container">
+            <h2 class="ac-section-title">Other games on Auction Champ</h2>
+            <div class="ac-games-grid ac-games-grid-compact">
+                <t t-foreach="other_games" t-as="item">
+                    <a t-att-href="item['href']" class="ac-game-card">
+                        <img t-att-src="item['image']" t-att-alt="item['image_alt']" width="1280" height="720"/>
+                        <div class="ac-game-card-body">
+                            <h3 t-esc="item['name']"/>
+                            <p t-esc="item['card']"/>
+                        </div>
+                    </a>
+                </t>
+            </div>
+        </div>
+    </section>
+</t>
+
+<section class="ac-cta-section">
+    <div class="ac-container">
+        <h2>Ready to run the auction?</h2>
+        <p>Open a tournament, pick the game, and take players to the stage.</p>
+        <div class="ac-cta-btns">
+            <a href="/#pricing" class="ac-btn ac-btn-white">Choose your plan</a>
+        </div>
+    </div>
+</section>
+
+<footer class="ac-footer" style="padding-top:36px;">
+    <div class="ac-footer-bottom" style="border-top:none; padding-top:0;">
+        <span class="ac-footer-tagline">"Powering the Future of Premier Sports Auctions &amp; Tournament Management"</span>
+        <span class="ac-footer-copyright">© <t t-esc="current_year"/> AuctionChamp. All rights reserved.</span>
+    </div>
+</footer>
+
+<script src="/auction_champ_website/static/src/js/auction_website.js?v=1.0.60"></script>
+</body>
+</html>
+</template>
+</odoo>

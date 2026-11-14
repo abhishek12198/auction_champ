@@ -2892,6 +2892,21 @@ class AuctionTournament(models.Model):
             num = 0
         return '{:,}'.format(num)
 
+    @staticmethod
+    def _rules_poster_ink(color):
+        """Dark ink on a light tier colour, white ink on a dark one."""
+        hex_color = (color or '').lstrip('#')
+        if len(hex_color) == 3:
+            hex_color = ''.join(ch * 2 for ch in hex_color)
+        try:
+            red = int(hex_color[0:2], 16)
+            green = int(hex_color[2:4], 16)
+            blue = int(hex_color[4:6], 16)
+        except (TypeError, ValueError):
+            return '#ffffff'
+        luminance = (0.299 * red + 0.587 * green + 0.114 * blue) / 255
+        return '#12243f' if luminance > 0.62 else '#ffffff'
+
     def _rules_poster_theme(self, theme=None):
         """Colours for the rules poster, matching the showcase theme pair."""
         theme = (theme or self.player_display_template or 'standard').strip().lower()
@@ -3032,6 +3047,7 @@ class AuctionTournament(models.Model):
         purse_display = self._rules_poster_num(purse)
 
         tiers = []
+        capped_tiers = []
         for line in auction.tier_limit_ids.sorted(
             key=lambda tl: ((tl.tier_id.sequence or 0), tl.tier_id.id or 0)
         ):
@@ -3039,17 +3055,26 @@ class AuctionTournament(models.Model):
             color = (tier.color or '#3498db') if tier else '#3498db'
             if not re.match(r'^#[0-9A-Fa-f]{3,8}$', color or ''):
                 color = '#3498db'
-            raw_name = (tier.name if tier else 'Tier').strip()
+            raw_name = (tier.name if tier else 'Tier').strip() or 'Tier'
             label = raw_name.upper()
             if 'TIER' not in label:
                 label = '%s TIER' % label
             base = line.base_point if line.base_point and line.base_point > 0 else global_base
+            cap = line.max_call or 0
             tiers.append({
                 'name': label,
                 'color': color,
                 'max_players': self._rules_poster_num(line.max_players or 0),
                 'base': self.format_points(base) if base else '—',
+                'max_call': self.format_points(cap) if cap > 0 else '—',
             })
+            if cap > 0:
+                capped_tiers.append({
+                    'name': label,
+                    'color': color,
+                    'ink': self._rules_poster_ink(color),
+                    'max_call': self.format_points(cap),
+                })
 
         slabs = []
         for slab in auction.auction_bid_slab_ids.sorted('from_amount'):
@@ -3063,15 +3088,16 @@ class AuctionTournament(models.Model):
 
         points_word = unit_name.lower()
         key_points = [
-            'Each team has a total budget of %s %s.' % (purse_display, points_word),
-            'Each team can build a squad of %s players.' % self._rules_poster_num(squad),
-            'Base value for each player is %s.' % base_display,
-            'Bidding will follow the defined bid slab and tier limits.',
+            {'text': 'Each team has a total budget of %s %s.' % (purse_display, points_word)},
+            {'text': 'Each team can build a squad of %s players.' % self._rules_poster_num(squad)},
+            {'text': 'Base value for each player is %s.' % base_display},
+            {'text': 'Bidding will follow the defined bid slab and tier limits.'},
         ]
         if auction.max_limited == 'yes' and (auction.max_points or 0) > 0:
-            key_points.append(
-                'A single player cannot be sold above %s.' % self.format_points(auction.max_points)
-            )
+            key_points.append({
+                'text': 'A single player cannot be sold above %s.' % self.format_points(auction.max_points),
+            })
+        key_points.extend(capped_tiers)
 
         panel_top = 492
         footer_limit = 1258
@@ -3119,6 +3145,7 @@ class AuctionTournament(models.Model):
                 'squad_display': self._rules_poster_num(squad),
                 'base_display': base_display,
                 'tiers': tiers,
+                'show_max_call': bool(capped_tiers),
                 'slabs': slabs,
                 'key_points': key_points,
                 'tier_style': 'height:%dpx;' % tier_h,

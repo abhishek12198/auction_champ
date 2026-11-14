@@ -24,7 +24,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&amp;family=Poppins:wght@400;500;600;700;800&amp;display=swap"
           rel="stylesheet"/>
     <!-- AuctionChamp custom styles -->
-    <link rel="stylesheet" href="/auction_champ_website/static/src/css/auction_website.css?v=1.0.67"/>
+    <link rel="stylesheet" href="/auction_champ_website/static/src/css/auction_website.css?v=1.0.68"/>
 </head>
 <body>
 
@@ -48,6 +48,7 @@
                     <li><a href="#live-auctions" class="ac-nav-live-link"><span class="ac-nav-live-dot"></span>Live Auctions</a></li>
                 </t>
                 <li><a href="/calendar">Calendar</a></li>
+                <li><a href="/games">Games</a></li>
                 <li><a href="#features">Features</a></li>
                 <li><a href="#how-it-works">How It Works</a></li>
                 <li><a href="#faq">FAQ</a></li>
@@ -70,6 +71,7 @@
                 <li><a href="#live-auctions"><span class="ac-nav-live-dot" style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#ff4757;margin-right:6px;animation:ac-pulse 1.5s ease-in-out infinite;"></span>Live Auctions</a></li>
             </t>
             <li><a href="/calendar">Calendar</a></li>
+            <li><a href="/games">Games</a></li>
             <li><a href="#features">Features</a></li>
             <li><a href="#how-it-works">How It Works</a></li>
             <li><a href="#faq">FAQ</a></li>
@@ -200,6 +202,35 @@
                 <p>Your data is securely hosted in the cloud. Access your tournament dashboard from anywhere, anytime, on any device.</p>
             </div>
         </div>
+    </div>
+</section>
+
+<section class="ac-section" id="games">
+    <div class="ac-container">
+        <div class="ac-text-center">
+            <span class="ac-label">Games</span>
+            <h2 class="ac-section-title">Auctions for <span class="hl">cricket, football, kabaddi and badminton</span></h2>
+            <div class="ac-divider"></div>
+            <p class="ac-section-sub">
+                Pick the sport when you open a tournament. The player card matches the game.
+                The live auction, the purse and the squad stay the same.
+            </p>
+        </div>
+        <div class="ac-games-grid" t-if="games">
+            <t t-foreach="games" t-as="item">
+                <a t-att-href="item['href']" class="ac-game-card">
+                    <img t-att-src="item['image']" t-att-alt="item['image_alt']" width="1280" height="720"/>
+                    <div class="ac-game-card-body">
+                        <h3 t-esc="item['name']"/>
+                        <p t-esc="item['card']"/>
+                        <span>See the <t t-esc="item['name']"/> page <i class="fas fa-arrow-right"></i></span>
+                    </div>
+                </a>
+            </t>
+        </div>
+        <p class="ac-games-more">
+            <a href="/games" class="ac-btn ac-btn-navy">All games</a>
+        </p>
     </div>
 </section>
 
@@ -964,6 +995,7 @@
             <h4>Platform</h4>
             <ul>
                 <li><a href="/calendar">Calendar</a></li>
+                <li><a href="/games">Games</a></li>
                 <li><a href="#features">Features</a></li>
                 <li><a href="#pricing">Pricing</a></li>
                 <li><a href="#how-it-works">How It Works</a></li>

@@ -882,6 +882,10 @@ body.ac-actions-locked .ac-livebid-tile,
     font-size: 22px;
     cursor: pointer;
 }
+.ac-livebid-adj:disabled {
+    opacity: .35;
+    cursor: default;
+}
 .ac-livebid-modal-row input {
     flex: 1;
     height: 40px;
@@ -891,6 +895,13 @@ body.ac-actions-locked .ac-livebid-tile,
     color: var(--lb-text);
     font: 800 18px/1 inherit;
     text-align: center;
+    -moz-appearance: textfield;
+    appearance: textfield;
+}
+.ac-livebid-modal-row input::-webkit-outer-spin-button,
+.ac-livebid-modal-row input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
 }
 .ac-livebid-hint {
     min-height: 18px;

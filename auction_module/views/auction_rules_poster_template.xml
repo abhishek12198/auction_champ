@@ -130,6 +130,12 @@
     display: inline-block; width: 10px; height: 10px; border-radius: 5px;
     background: #1d4ed8; margin-right: 10px;
   }
+  .tier-tag {
+    display: inline-block; margin: 0 6px; padding: 1px 8px;
+    border-radius: 4px; vertical-align: 1px; white-space: nowrap;
+    font-family: 'TBTeam', 'Montserrat', sans-serif;
+    font-size: 14px; line-height: 18px; letter-spacing: 0.4px;
+  }
   .gavel { position: absolute; left: 748px; top: 760px; width: 280px; height: auto; z-index: 3; }
   <t t-raw="theme_css"/>
   .foot {
@@ -202,6 +208,7 @@
           <th>TIER</th>
           <th class="num">MAX PLAYERS</th>
           <th class="num">BASE <t t-esc="unit_label"/></th>
+          <th class="num" t-if="show_max_call">MAX CALL</th>
         </tr>
         <t t-foreach="tiers" t-as="tier">
           <tr>
@@ -211,6 +218,7 @@
             </td>
             <td class="num"><t t-esc="tier['max_players']"/></td>
             <td class="num"><t t-esc="tier['base']"/></td>
+            <td class="num" t-if="show_max_call"><t t-esc="tier['max_call']"/></td>
           </tr>
         </t>
       </table>
@@ -246,7 +254,17 @@
   <div class="panel keys" t-att-style="keys_style">
     <div class="hd">KEY POINTS</div>
     <t t-foreach="key_points" t-as="point">
-      <div class="keyline"><span class="bullet"></span><t t-esc="point"/></div>
+      <div class="keyline">
+        <span class="bullet"></span>
+        <t t-if="point.get('name')">
+          A
+          <span class="tier-tag" t-attf-style="background:#{point['color']};color:#{point['ink']};"><t t-esc="point['name']"/></span>
+          player has a max call of <t t-esc="point['max_call']"/>.
+        </t>
+        <t t-else="">
+          <t t-esc="point['text']"/>
+        </t>
+      </div>
     </t>
   </div>
 

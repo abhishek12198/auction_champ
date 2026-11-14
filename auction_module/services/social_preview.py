@@ -92,6 +92,26 @@ PAGE_COPY = {
         'User Manual',
         'User manual for Auction Champ tournament and auction tools.',
     ),
+    'website_games': (
+        'Games',
+        'Auction Champ runs live player auctions for cricket, football, kabaddi and badminton, from registration and player cards to the auction floor.',
+    ),
+    'website_game_cricket': (
+        'Cricket',
+        'Run a cricket player auction with batting style, bowling style, base price and a live stage. Teams bid from a purse until the squad is full.',
+    ),
+    'website_game_football': (
+        'Football',
+        'Run a football player auction by position, preferred foot and squad limits. Live bidding, team purses and a hall display for auction night.',
+    ),
+    'website_game_kabaddi': (
+        'Kabaddi',
+        'Run a kabaddi player auction for riders, defenders and all-rounders. Live bidding, team purses and squad rules for club and league auctions.',
+    ),
+    'website_game_badminton': (
+        'Badminton',
+        'Run a badminton player auction for singles, doubles and mixed doubles. Record style and level, then sell players live to franchise teams.',
+    ),
     'home': (
         '',
         BRAND_DESCRIPTION,
@@ -211,9 +231,27 @@ def tournament_season(tournament):
 
 TITLE_SEP = ' - '
 
+GAME_PAGE_TITLES = {
+    'website_games': 'Cricket, Football, Kabaddi and Badminton Auctions | Auction Champ',
+    'website_game_cricket': 'Cricket Player Auction Software | Auction Champ',
+    'website_game_football': 'Football Player Auction Software | Auction Champ',
+    'website_game_kabaddi': 'Kabaddi Player Auction Software | Auction Champ',
+    'website_game_badminton': 'Badminton Player Auction Software | Auction Champ',
+}
+
+GAME_OG_IMAGES = {
+    'website_games': '/auction_champ_website/static/src/img/games/cricket.jpg',
+    'website_game_cricket': '/auction_champ_website/static/src/img/games/cricket.jpg',
+    'website_game_football': '/auction_champ_website/static/src/img/games/football.jpg',
+    'website_game_kabaddi': '/auction_champ_website/static/src/img/games/kabaddi.jpg',
+    'website_game_badminton': '/auction_champ_website/static/src/img/games/badminton.jpg',
+}
+
 
 def _page_copy(page_key, name, season):
     suffix, description = PAGE_COPY.get(page_key) or PAGE_COPY['home']
+    if page_key in GAME_PAGE_TITLES:
+        return GAME_PAGE_TITLES[page_key], description
     name = name or SITE_NAME
     if page_key in ('website_home', 'home', 'tournament_register') and not tournament_bound(page_key):
         title = ('%s%s%s' % (SITE_NAME, TITLE_SEP, suffix)) if suffix else SITE_NAME
@@ -231,6 +269,8 @@ def tournament_bound(page_key):
     return page_key not in (
         'website_home', 'website_privacy', 'website_terms',
         'website_manual', 'tournament_register', 'home',
+        'website_games', 'website_game_cricket', 'website_game_football',
+        'website_game_kabaddi', 'website_game_badminton',
     )
 
 
@@ -354,7 +394,8 @@ def build_preview(tournament, page_key='home', db_name=None):
         description = _enrich_page_description(description, rec, page_key)
 
     url = canonical_url()
-    image = og_image_url(rec, db_name=db_name)
+    game_image = GAME_OG_IMAGES.get(page_key)
+    image = (public_base_url() + game_image) if game_image else og_image_url(rec, db_name=db_name)
     return {
         'title': title,
         'description': _clip(description, 320),

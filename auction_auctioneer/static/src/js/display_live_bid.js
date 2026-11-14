@@ -730,6 +730,8 @@
             hint.textContent = '';
             btn.disabled = false;
         }
+        var incBtn = document.getElementById('acLbInc');
+        if (incBtn) incBtn.disabled = !!(max && value >= max);
     }
 
     function openCustom(teamId) {
@@ -761,7 +763,12 @@
         var initial = isLead && player.current_bid
             ? Number(player.current_bid)
             : Number(team.next_bid || 0);
-        if (input) input.value = initial || '';
+        if (input) {
+            input.value = initial || '';
+            var capAttr = Number(maxCall(team) || 0);
+            if (capAttr > 0) input.max = String(capAttr);
+            else input.removeAttribute('max');
+        }
         validateCustom(team, initial || 0);
         var presets = document.getElementById('acLbPresets');
         if (presets) {
@@ -1009,12 +1016,19 @@
             if (!selectedTeam) return;
             var incInput = document.getElementById('acLbBidInput');
             if (!incInput) return;
-            var next = parseInt(incInput.value, 10) || 0;
+            var curBid = parseInt(incInput.value, 10) || 0;
+            var cap = Number(maxCall(selectedTeam) || 0);
+            if (cap > 0 && curBid >= cap) {
+                validateCustom(selectedTeam, curBid);
+                return;
+            }
             var live = playerCache ? (playerCache.current_bid || 0) : 0;
-            if (next <= live) next = selectedTeam.next_bid;
-            else next = next + slabInc(next, slabsOf(selectedTeam));
-            incInput.value = next;
-            validateCustom(selectedTeam, next);
+            var nextBid;
+            if (curBid <= live) nextBid = Number(selectedTeam.next_bid || 0);
+            else nextBid = curBid + slabInc(curBid, slabsOf(selectedTeam));
+            if (cap > 0 && nextBid > cap) nextBid = cap;
+            incInput.value = nextBid;
+            validateCustom(selectedTeam, nextBid);
             return;
         }
         if (ev.target.closest('#acLbPlace')) {

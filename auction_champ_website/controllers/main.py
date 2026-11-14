@@ -50,6 +50,10 @@ from odoo.http import request
 from odoo.addons.website.controllers.main import Website
 from odoo.addons.web.controllers.main import ensure_db
 from odoo.addons.auction_module.controllers.main import Auction
+from odoo.addons.auction_champ_website.controllers.games_content import (
+    game_by_slug,
+    public_game_cards,
+)
 from odoo.addons.auction_login_theme.controllers.main import (
     AuctionLoginController,
     _safe_post_login_redirect,
@@ -57,6 +61,14 @@ from odoo.addons.auction_login_theme.controllers.main import (
 )
 
 _logger = logging.getLogger(__name__)
+
+
+def sitemap_game_pages(env, rule, query_string):
+    """One sitemap URL for each sport page."""
+    for game in public_game_cards():
+        loc = game['href']
+        if not query_string or query_string.lower() in loc:
+            yield {'loc': loc}
 
 
 class AuctionChampHomepage(Website):
@@ -683,10 +695,109 @@ class AuctionChampHomepage(Website):
                 'pricing_plans': pricing_plans,
                 'current_year': date.today().year,
                 'live_tournaments': live_tournaments,
+                'games': public_game_cards(),
             })
         except Exception:
             _logger.exception("AuctionChamp homepage render error — falling back to default")
             return super().index(**kw)
+
+    def _games_json_ld(self, game=None):
+        """Breadcrumb, and a FAQ block on each sport page. Rendered in the HTML."""
+        from odoo.addons.auction_module.services.social_preview import public_base_url
+        base = public_base_url().rstrip('/')
+        if game:
+            crumbs = [
+                ('Home', base + '/'),
+                ('Games', base + '/games'),
+                (game['name'], base + '/games/' + game['slug']),
+            ]
+            graph = [
+                self._games_breadcrumb(crumbs),
+                {
+                    '@type': 'FAQPage',
+                    'mainEntity': [
+                        {
+                            '@type': 'Question',
+                            'name': faq['q'],
+                            'acceptedAnswer': {
+                                '@type': 'Answer',
+                                'text': faq['a'],
+                            },
+                        }
+                        for faq in game['faqs']
+                    ],
+                },
+            ]
+        else:
+            cards = public_game_cards()
+            graph = [
+                self._games_breadcrumb([
+                    ('Home', base + '/'),
+                    ('Games', base + '/games'),
+                ]),
+                {
+                    '@type': 'ItemList',
+                    'name': 'Sports on Auction Champ',
+                    'itemListElement': [
+                        {
+                            '@type': 'ListItem',
+                            'position': index,
+                            'name': item['name'],
+                            'url': base + item['href'],
+                        }
+                        for index, item in enumerate(cards, 1)
+                    ],
+                },
+            ]
+        return json.dumps({'@context': 'https://schema.org', '@graph': graph})
+
+    @staticmethod
+    def _games_breadcrumb(crumbs):
+        return {
+            '@type': 'BreadcrumbList',
+            'itemListElement': [
+                {
+                    '@type': 'ListItem',
+                    'position': index,
+                    'name': name,
+                    'item': url,
+                }
+                for index, (name, url) in enumerate(crumbs, 1)
+            ],
+        }
+
+    def _games_page_values(self, game=None):
+        cards = public_game_cards()
+        return {
+            'current_year': date.today().year,
+            'games': cards,
+            'game': game,
+            'page_key': game['page_key'] if game else 'website_games',
+            'other_games': [item for item in cards if not game or item['slug'] != game['slug']],
+            'games_json_ld': self._games_json_ld(game),
+        }
+
+    @http.route('/games', type='http', auth='public', website=True, sitemap=True)
+    def games(self, **kw):
+        """Hub page for the sports Auction Champ auctions."""
+        return request.render(
+            'auction_champ_website.games_page',
+            self._games_page_values(),
+        )
+
+    @http.route(
+        '/games/<string:sport>',
+        type='http', auth='public', website=True, sitemap=sitemap_game_pages,
+    )
+    def games_sport(self, sport, **kw):
+        """One indexable page per supported sport."""
+        game = game_by_slug(sport)
+        if not game:
+            return request.not_found()
+        return request.render(
+            'auction_champ_website.games_page',
+            self._games_page_values(game),
+        )
 
     @http.route('/privacy-policy', type='http', auth='public', website=True, sitemap=True)
     def privacy_policy(self, **kw):
