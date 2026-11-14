@@ -141,7 +141,9 @@ async def sse_stream(dbname, slug, kind, last_event_id=None):
             try:
                 event = await asyncio.wait_for(queue.get(), timeout=heartbeat)
             except asyncio.TimeoutError:
-                yield ': heartbeat\n\n'
+                # Comment keeps proxies idle-timers happy. The named ping is
+                # what the browser can see; a comment never reaches JavaScript.
+                yield ': heartbeat\n\n' + _format_sse('ping', {'ok': True})
                 metrics.incr_sse('sse_heartbeat_sent')
                 continue
 

@@ -229,7 +229,8 @@
     <t t-set="og_page_key" t-value="'live_board'"/>
     <t t-set="og_record" t-value="tournament"/>
 </t>
-<script src="/auction_module/static/src/js/auction_sse_client.js"></script>
+<script src="/auction_module/static/src/js/auction_connectivity.js?v=5"></script>
+<script src="/auction_module/static/src/js/auction_sse_client.js?v=5"></script>
 <script src="/auction_module/static/src/js/live_bid_tick.js?v=4"></script>
 <script src="/auction_module/static/src/js/sold_coin_sound.js?v=4"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
@@ -3007,6 +3008,9 @@ body.lbx .lbx-hero>*,body.lbx .lbx-player>*,body.lbx .lbx-mid,body.lbx .lbx-righ
 .lbx-live-dot{width:calc(var(--u)*11);height:calc(var(--u)*11);min-width:7px;min-height:7px;border-radius:50%;background:#fff;box-shadow:0 0 0 4px rgba(255,255,255,.3);animation:lbxBlink 1.4s ease-in-out infinite}
 @keyframes lbxBlink{0%,100%{opacity:1}50%{opacity:.35}}
 body.lb-thankyou-active .lbx-live{background:#16a34a;box-shadow:0 0 22px rgba(22,163,74,.5)}
+.lbx-live.is-reconnecting{background:#8a5a00;box-shadow:0 0 22px rgba(138,90,0,.45);letter-spacing:.06em}
+.lbx-live.is-offline{background:#8e1b2c;box-shadow:0 0 22px rgba(142,27,44,.5);letter-spacing:.06em}
+.lbx-live.is-back{background:#0e6b3c;box-shadow:0 0 22px rgba(14,107,60,.45);letter-spacing:.06em}
 .lbx-hdr-status{font:700 max(10px,calc(var(--u)*26))/1 var(--x-cond);letter-spacing:.22em;text-transform:uppercase}
 .lbx-hdr-right{display:flex;align-items:center;justify-content:flex-end;gap:calc(var(--u)*22);flex:1 1 0}
 .lbx-clock{font:700 max(10px,calc(var(--u)*26))/1 var(--x-cond);letter-spacing:.08em;font-variant-numeric:tabular-nums}
@@ -3413,7 +3417,7 @@ html[data-theme] body.lbx #lb-brk-logo .lb-brk-logo-ph{font-size:calc(var(--u)*1
     </div>
   </div>
   <div class="lbx-hdr-center">
-    <div class="lbx-live" id="lbx-live"><span class="lbx-live-dot"></span> LIVE</div>
+    <div class="lbx-live" id="lbx-live"><span class="lbx-live-dot"></span><span class="lbx-live-label">LIVE</span></div>
     <div class="lbx-hdr-status">Player Auction</div>
   </div>
   <div class="lbx-hdr-right">
@@ -3914,7 +3918,7 @@ html[data-theme] body.lbx #lb-brk-logo .lb-brk-logo-ph{font-size:calc(var(--u)*1
         }
       }
 
-      if (liveBadge) liveBadge.innerHTML = '<span class="lbx-live-dot"></span> COMPLETE';
+      setLbLiveText('COMPLETE');
 
       buildLbTyConfetti();
       if (entering) replayLbTyCeremony();
@@ -3922,9 +3926,7 @@ html[data-theme] body.lbx #lb-brk-logo .lb-brk-logo-ph{font-size:calc(var(--u)*1
       document.body.classList.remove('lb-thankyou-active');
       overlay.classList.remove('active');
       overlay.setAttribute('aria-hidden', 'true');
-      if (liveBadge && _lbTyPhase === 'completed') {
-        liveBadge.innerHTML = '<span class="lbx-live-dot"></span> LIVE';
-      }
+      if (liveBadge && _lbTyPhase === 'completed') setLbLiveText('LIVE');
     }
     _lbTyPhase = phase;
   }
@@ -4723,11 +4725,44 @@ html[data-theme] body.lbx #lb-brk-logo .lb-brk-logo-ph{font-size:calc(var(--u)*1
         updateAds(data.advertisers || []);
   }
 
+  function setLbLiveText(text) {
+    var liveBadge = document.querySelector('.lbx-live');
+    if (!liveBadge) return;
+    if (window.AuctionConnectivity && window.AuctionConnectivity.state && window.AuctionConnectivity.state() !== 'online') return;
+    if (liveBadge.classList.contains('is-reconnecting') || liveBadge.classList.contains('is-offline') || liveBadge.classList.contains('is-back')) return;
+    var label = liveBadge.querySelector('.lbx-live-label');
+    if (!label) {
+      liveBadge.innerHTML = '<span class="lbx-live-dot"></span><span class="lbx-live-label"></span>';
+      label = liveBadge.querySelector('.lbx-live-label');
+    }
+    if (label) label.textContent = text;
+  }
+
+  var _pollInFlight = false;
   function poll() {
-    fetch(document.documentElement.dataset.liveDataUrl, { cache: 'no-store' })
-      .then(r => r.json())
-      .then(data => { applyLiveBoardData(data); })
-      .catch(function() {});
+    if (_pollInFlight) return;
+    _pollInFlight = true;
+    var abortCtrl = (typeof AbortController !== 'undefined') ? new AbortController() : null;
+    var abortTimer = abortCtrl ? setTimeout(function () { abortCtrl.abort(); }, 4000) : null;
+    fetch(document.documentElement.dataset.liveDataUrl, {
+      cache: 'no-store',
+      signal: abortCtrl ? abortCtrl.signal : undefined
+    })
+      .then(function (r) {
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        return r.json();
+      })
+      .then(function (data) {
+        try { applyLiveBoardData(data); } catch (e) {}
+        if (window.AuctionConnectivity) window.AuctionConnectivity.noteSuccess();
+      })
+      .catch(function () {
+        if (window.AuctionConnectivity) window.AuctionConnectivity.noteFailure();
+      })
+      .then(function () {
+        if (abortTimer) clearTimeout(abortTimer);
+        _pollInFlight = false;
+      });
   }
 
   // Initial load + periodic refresh with Page Visibility pause
@@ -4740,14 +4775,28 @@ html[data-theme] body.lbx #lb-brk-logo .lb-brk-logo-ph{font-size:calc(var(--u)*1
   });
   window.addEventListener('beforeunload', function() { stopPolling(); clearInterval(_clockTimer); });
   window.__acApplyLiveBoard = applyLiveBoardData;
+  if (window.AuctionConnectivity) window.AuctionConnectivity.start({ staleMs: 6000 });
+  function applyLiveBoardLive(data) {
+    applyLiveBoardData(data);
+    if (window.AuctionConnectivity) window.AuctionConnectivity.noteSuccess();
+  }
   var _sseCtl = null;
   if (window.AuctionChampSSE && window.AuctionChampSSE.enabled(document.documentElement)) {
     _sseCtl = window.AuctionChampSSE.bind({
       url: document.documentElement.dataset.sseUrl,
-      apply: applyLiveBoardData,
+      apply: applyLiveBoardLive,
       startPoll: function () { poll(); startPolling(); },
       stopPoll: stopPolling,
       onStampExpiry: function () { poll(); },
+      onOpen: function () {
+        if (window.AuctionConnectivity) window.AuctionConnectivity.noteStreamOpen();
+      },
+      onPing: function () {
+        if (window.AuctionConnectivity) window.AuctionConnectivity.noteStreamBeat();
+      },
+      onError: function () {
+        if (window.AuctionConnectivity) window.AuctionConnectivity.noteFailure();
+      },
     });
   } else {
     poll();

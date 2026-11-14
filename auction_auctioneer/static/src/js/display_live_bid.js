@@ -6,6 +6,9 @@
         return;
     }
     window.__acLiveBidBooted = true;
+    if (window.AuctionConnectivity) {
+        window.AuctionConnectivity.start({ staleMs: 8000 });
+    }
 
     var DATA_URL = '/auction/auctioneer/data';
     var BID_URL = '/auction/auctioneer/place-bid';
@@ -187,6 +190,10 @@
         xhr.onload = function () {
             if (xhr.status === 401 || xhr.status === 403) {
                 cb('denied', null);
+                return;
+            }
+            if (xhr.status < 200 || xhr.status >= 300) {
+                cb(new Error('http'), null);
                 return;
             }
             try { cb(null, JSON.parse(xhr.responseText)); }
@@ -685,17 +692,93 @@
         });
     }
 
+    var zoneRecovering = false;
+    function preloadZonePhoto(src) {
+        return new Promise(function (resolve) {
+            if (!src) { resolve(); return; }
+            var pre = new Image();
+            var done = false;
+            function finish() { if (done) return; done = true; resolve(); }
+            pre.onload = finish;
+            pre.onerror = finish;
+            setTimeout(finish, 1500);
+            pre.src = src;
+        });
+    }
+    function installPlayerZone(zone, newZone, doc, newId) {
+        var scripts = newZone.querySelectorAll('script');
+        var s;
+        for (s = scripts.length - 1; s >= 0; s--) {
+            if (scripts[s].parentNode) scripts[s].parentNode.removeChild(scripts[s]);
+        }
+        document.body.setAttribute('data-player-id', newId);
+        var mystery = (doc.body && doc.body.getAttribute('data-is-mystery')) || '0';
+        document.body.setAttribute('data-is-mystery', mystery);
+        document.body.removeAttribute('data-mystery-revealed');
+        var nodes = Array.prototype.slice.call(newZone.childNodes);
+        if (typeof zone.replaceChildren === 'function') {
+            zone.replaceChildren.apply(zone, nodes);
+        } else {
+            while (zone.firstChild) zone.removeChild(zone.firstChild);
+            for (s = 0; s < nodes.length; s++) zone.appendChild(nodes[s]);
+        }
+        var nextLeft = doc.querySelector('[data-players-left]');
+        var curLeft = document.querySelector('[data-players-left]');
+        if (nextLeft && curLeft) curLeft.textContent = nextLeft.textContent;
+        if (typeof window.acMysteryApplyFromBody === 'function') window.acMysteryApplyFromBody();
+        if (typeof window.acStampPlayerZone === 'function') window.acStampPlayerZone(zone);
+        if (typeof window.acLiveBidStageMoved === 'function') window.acLiveBidStageMoved(newId);
+    }
+    /* After a connectivity gap, paint the server's current player card.
+       Do not call changeImage or acCommitPlayerOnStage — those write stage. */
+    function recoverPlayerZoneIfStale(snapshotPlayerId) {
+        if (zoneRecovering) return;
+        var snapId = parseInt(snapshotPlayerId || '0', 10) || 0;
+        var stageId = stagePlayerId();
+        if (!snapId || !stageId || snapId === stageId) return;
+        var zone = document.querySelector('.hud-arena[data-player-zone]');
+        if (!zone) return;
+        var overlay = document.getElementById('ac-next-overlay');
+        if (overlay && overlay.style.display === 'flex') return;
+        zoneRecovering = true;
+        fetch(window.location.pathname, { cache: 'no-store', credentials: 'same-origin' })
+            .then(function (r) {
+                if (!r.ok) throw new Error('http');
+                return r.text();
+            })
+            .then(function (html) {
+                var doc = new DOMParser().parseFromString(html, 'text/html');
+                var newId = doc.body && doc.body.getAttribute('data-player-id');
+                if (!newId || String(newId) === String(document.body.getAttribute('data-player-id'))) return;
+                var newZone = doc.querySelector('.hud-arena[data-player-zone]');
+                if (!newZone) return;
+                var img = doc.getElementById('loadImage');
+                var src = img && img.getAttribute('src');
+                return preloadZonePhoto(src).then(function () {
+                    installPlayerZone(zone, newZone, doc, newId);
+                });
+            })
+            .catch(function () { /* keep the card already on screen */ })
+            .then(function () { zoneRecovering = false; });
+    }
+
     function poll() {
         if (!padEl()) return;
         getJson(dataUrl(), function (err, data) {
-            if (err || !data || data.error === 'not_auctioneer') {
+            if (err === 'denied' || (data && data.error === 'not_auctioneer')) {
                 allowed = false;
-                accessDenied = !!(data && data.error === 'not_auctioneer');
+                accessDenied = true;
                 applyChrome();
                 return;
             }
+            if (err || !data) {
+                if (window.AuctionConnectivity) window.AuctionConnectivity.noteFailure();
+                return;
+            }
+            var recovered = window.AuctionConnectivity ? window.AuctionConnectivity.noteSuccess() : false;
             accessDenied = false;
             render(data);
+            if (recovered && data.current_player) recoverPlayerZoneIfStale(data.current_player.id);
         });
     }
 
@@ -1177,14 +1260,22 @@
             wrapChangeImage();
             var payload = null;
             try { payload = ev && ev.data ? JSON.parse(ev.data) : null; } catch (e1) { payload = null; }
+            if (!payload) return;
             applyProjectorSnapshot(payload);
+            var recovered = window.AuctionConnectivity ? window.AuctionConnectivity.noteSuccess() : false;
+            if (recovered) {
+                var p = payload.player || payload.current_player;
+                recoverPlayerZoneIfStale(p && p.id);
+            }
         }
         es.addEventListener('snapshot', onEvt);
         es.addEventListener('auction.update', onEvt);
         es.onopen = function () {
             stopHttpPoll();
+            if (window.AuctionConnectivity) window.AuctionConnectivity.noteStreamOpen();
         };
         es.onerror = function () {
+            if (window.AuctionConnectivity) window.AuctionConnectivity.noteFailure();
             startHttpPoll();
         };
     }

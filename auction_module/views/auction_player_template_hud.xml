@@ -667,6 +667,7 @@
         }
         hudFitPlayerName(scope);
       }
+      window.acStampPlayerZone = hudStampIcons;
       function hudFitPlayerName(root) {
         if (!window.matchMedia || !window.matchMedia('(max-width: 1399px)').matches) return;
         var scope = (root &amp;&amp; root.querySelectorAll) ? root : document;

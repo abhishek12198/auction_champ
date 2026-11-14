@@ -329,6 +329,9 @@ html:not([data-theme="standard"]) .pj-recent-band{
 .pj-live-pill{display:inline-flex;align-items:center;gap:.35rem;background:var(--danger);
   color:#fff;font-weight:800;font-size:.7rem;letter-spacing:.14em;padding:.28rem .7rem;
   border-radius:999px;box-shadow:0 0 14px rgba(229,57,74,.45);flex-shrink:0}
+.pj-live-pill.is-reconnecting{background:#8a5a00;box-shadow:0 0 14px rgba(138,90,0,.45)}
+.pj-live-pill.is-offline{background:#8e1b2c;box-shadow:0 0 14px rgba(142,27,44,.5)}
+.pj-live-pill.is-back{background:#0e6b3c;box-shadow:0 0 14px rgba(14,107,60,.45)}
 .pj-live-pill-dot{width:.55rem;height:.55rem;border-radius:50%;background:#fff;
   animation:pjPulse 1.2s ease-in-out infinite}
 @keyframes pjPulse{0%,100%{opacity:1}50%{opacity:.35}}
@@ -2186,7 +2189,8 @@ html:not([data-theme="standard"]) .pj-recent-band{
   window.PJ_BOARD_CLOSE_URL = '/' + PJ_DB + '/auction/projector/' + PJ_SLUG + '/boards/close';
   window.PJ_BOARD_SHOW_URL = '/' + PJ_DB + '/auction/projector/' + PJ_SLUG + '/boards/show';
 </script>
-<script src="/auction_module/static/src/js/auction_sse_client.js"></script>
+<script src="/auction_module/static/src/js/auction_connectivity.js?v=4"></script>
+<script src="/auction_module/static/src/js/auction_sse_client.js?v=4"></script>
 <script src="/auction_module/static/src/js/live_bid_tick.js?v=4"></script>
 <script src="/auction_module/static/src/js/sold_coin_sound.js?v=4"></script>
 <t t-call="auction_module.point_unit_bootstrap">
@@ -2202,7 +2206,7 @@ html:not([data-theme="standard"]) .pj-recent-band{
     <div class="pj-edition"><t t-esc="(theme or 'vanilla').upper()"/> EDITION</div>
     <div class="pj-bar-center">
       <span class="pj-pa-text">Auction</span>
-      <span class="pj-live-pill"><span class="pj-live-pill-dot"></span>LIVE</span>
+      <span class="pj-live-pill" id="pjLivePill"><span class="pj-live-pill-dot"></span><span class="pj-live-pill-label">LIVE</span></span>
     </div>
     <div class="pj-bar-right">
       <div class="pj-clock-block">
@@ -3967,18 +3971,33 @@ html:not([data-theme="standard"]) .pj-recent-band{
   function poll() {
     if (_pjPollInFlight || !_pjPollAllowed) return;
     _pjPollInFlight = true;
+    var abortCtrl = (typeof AbortController !== 'undefined') ? new AbortController() : null;
+    var abortTimer = abortCtrl ? setTimeout(function () { abortCtrl.abort(); }, 2500) : null;
     fetch(window.PJ_DATA_URL, {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({jsonrpc:'2.0',method:'call',params:{}}),
-      cache: 'no-store'
+      cache: 'no-store',
+      signal: abortCtrl ? abortCtrl.signal : undefined
     })
-    .then(function(r){ return r.json(); })
+    .then(function(r){
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      return r.json();
+    })
     .then(function(json) {
+      if (!json || json.error) throw new Error('rpc');
       applyProjectorResult(json.result || {});
+      if (window.AuctionConnectivity) window.AuctionConnectivity.noteSuccess();
     })
-    .catch(function(e){ console.error('[Projector] poll error:', e); })
-    .then(function() { _pjPollInFlight = false; schedulePjPoll(); });
+    .catch(function(e){
+      if (window.AuctionConnectivity) window.AuctionConnectivity.noteFailure();
+      console.error('[Projector] poll error:', e);
+    })
+    .then(function() {
+      if (abortTimer) clearTimeout(abortTimer);
+      _pjPollInFlight = false;
+      schedulePjPoll();
+    });
   }
 
   function tickClock() {
@@ -3992,13 +4011,29 @@ html:not([data-theme="standard"]) .pj-recent-band{
   }
 
   window.__acApplyProjector = applyProjectorResult;
+  if (window.AuctionConnectivity) {
+    window.AuctionConnectivity.start({ staleMs: 2500 });
+  }
+  function applyProjectorLive(result) {
+    applyProjectorResult(result);
+    if (window.AuctionConnectivity) window.AuctionConnectivity.noteSuccess();
+  }
   if (window.AuctionChampSSE && window.PJ_SSE_ENABLED === '1') {
     window.AuctionChampSSE.bind({
       url: window.PJ_EVENTS_URL,
-      apply: applyProjectorResult,
+      apply: applyProjectorLive,
       startPoll: function () { startPjPolling(); poll(); },
       stopPoll: stopPjPolling,
       onStampExpiry: function () { poll(); },
+      onOpen: function () {
+        if (window.AuctionConnectivity) window.AuctionConnectivity.noteStreamOpen();
+      },
+      onPing: function () {
+        if (window.AuctionConnectivity) window.AuctionConnectivity.noteStreamBeat();
+      },
+      onError: function () {
+        if (window.AuctionConnectivity) window.AuctionConnectivity.noteFailure();
+      },
     });
   } else {
     poll();
