@@ -53,11 +53,26 @@
     if (next === 'reconnecting') pill.classList.add('is-reconnecting');
     else if (next === 'offline') pill.classList.add('is-offline');
     else if (next === 'back') pill.classList.add('is-back');
-    /* Inline color so the tag changes even before a refreshed stylesheet. */
-    if (next === 'reconnecting') pill.style.background = '#8a5a00';
-    else if (next === 'offline') pill.style.background = '#8e1b2c';
-    else if (next === 'back') pill.style.background = '#0e6b3c';
-    else pill.style.background = '';
+    /* Inline color so the tag changes even before a refreshed stylesheet.
+       CONNECTION LOST is slate, so red stays reserved for LIVE. */
+    if (next === 'reconnecting') {
+      pill.style.background = '#8a5a00';
+      pill.style.boxShadow = '0 0 14px rgba(138,90,0,.45)';
+    } else if (next === 'offline') {
+      pill.style.background = '#4b5568';
+      pill.style.boxShadow = 'none';
+    } else if (next === 'back') {
+      pill.style.background = '#0e6b3c';
+      pill.style.boxShadow = '0 0 14px rgba(14,107,60,.45)';
+    } else {
+      pill.style.background = '';
+      pill.style.boxShadow = '';
+    }
+    var dot = pill.querySelector('.pj-live-pill-dot, .lbx-live-dot');
+    if (dot) {
+      dot.style.animation = next === 'offline' ? 'none' : '';
+      dot.style.opacity = next === 'offline' ? '0.45' : '';
+    }
     pillLabel(pill).textContent = next === 'online' ? onlineLabel(pill) : text;
   }
 

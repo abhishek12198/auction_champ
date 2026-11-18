@@ -603,6 +603,43 @@
                                             <span>/ 3 shown</span>
                                         </div>
                                     </div>
+                                    <div class="ac-aa-idcard">
+                                        <div class="ac-aa-kicker">ID card</div>
+                                        <p class="ac-aa-help">
+                                            Applies to every sport. Turn this on to require an ID card
+                                            on the Game step of player registration. Front and Back
+                                            start on; turn either off if you only need one side.
+                                        </p>
+                                        <group>
+                                            <field name="need_id_card" widget="boolean_toggle"/>
+                                            <field name="id_card_front_required" widget="boolean_toggle"
+                                                   attrs="{'invisible': [('need_id_card', '=', False)]}"/>
+                                            <field name="id_card_back_required" widget="boolean_toggle"
+                                                   attrs="{'invisible': [('need_id_card', '=', False)]}"/>
+                                        </group>
+                                    </div>
+                                    <div class="ac-aa-football"
+                                         attrs="{'invisible': [('tournament_type', '!=', 'football')]}">
+                                        <div class="ac-aa-kicker">Football profile fields</div>
+                                        <p class="ac-aa-help">
+                                            Turn these on to collect and show them on the player
+                                            registration form, the projector, the live board, and
+                                            both Lucky Dip and Roll Call showcases. They stay hidden
+                                            until you enable them.
+                                        </p>
+                                        <group col="2">
+                                            <group>
+                                                <field name="show_football_age" widget="boolean_toggle"/>
+                                                <field name="show_football_work_rate" widget="boolean_toggle"/>
+                                                <field name="show_football_height" widget="boolean_toggle"/>
+                                            </group>
+                                            <group>
+                                                <field name="show_football_weight" widget="boolean_toggle"/>
+                                                <field name="show_football_playing_style" widget="boolean_toggle"/>
+                                                <field name="show_football_strength" widget="boolean_toggle"/>
+                                            </group>
+                                        </group>
+                                    </div>
                                     <field name="other_attribute_label_ids" nolabel="1" class="ac-aa-list">
                                         <tree editable="bottom">
                                             <field name="sequence" widget="handle"/>

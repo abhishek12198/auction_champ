@@ -317,12 +317,21 @@
         if (paymentRequired() && !hasPaymentProof()) {
             add(3, document.getElementById('paymentSection') || document.getElementById('paymentInput'), 'Payment proof');
         }
+        [['idCardFrontInput', 'idCardFrontGate', 'ID card front'], ['idCardBackInput', 'idCardBackGate', 'ID card back']].forEach(function (row) {
+            var input = document.getElementById(row[0]);
+            var gate = document.getElementById(row[1]);
+            if (!input || !gate) return;
+            var ok = !!(input.files && input.files[0]);
+            gate.value = ok ? 'ok' : '';
+            if (!ok) add(2, input, row[2]);
+        });
 
         var els = form.querySelectorAll('input, select, textarea');
         for (var i = 0; i < els.length; i++) {
             var el = els[i];
             if (el.disabled || el.type === 'hidden' || el.type === 'submit' || el.type === 'button' || el.type === 'file') continue;
             if (el.id === 'paymentProofGate' || el.name === 'payment_proof_gate') continue;
+            if (el.id === 'idCardFrontGate' || el.id === 'idCardBackGate') continue;
             if (!el.checkValidity()) add(stepOf(el), el, fieldCaption(el));
         }
         return issues;

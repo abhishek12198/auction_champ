@@ -468,6 +468,38 @@ class TeamPoolWizard(models.TransientModel):
             n = self._default_matches_per_team(pools)
         return max(1, n)
 
+    def _coerce_match_counts(self, raw, pool_count):
+        """One match-count per pool. A single number applies to every pool."""
+        pool_count = max(0, int(pool_count or 0))
+        if isinstance(raw, (list, tuple)):
+            nums = []
+            for item in raw:
+                try:
+                    nums.append(max(1, int(item or 1)))
+                except (TypeError, ValueError):
+                    nums.append(1)
+            if not nums:
+                nums = [1]
+            if pool_count:
+                if len(nums) < pool_count:
+                    nums.extend([nums[-1]] * (pool_count - len(nums)))
+                return nums[:pool_count]
+            return nums
+        try:
+            n = max(1, int(raw or 1))
+        except (TypeError, ValueError):
+            n = 1
+        if not pool_count:
+            return [n]
+        return [n] * pool_count
+
+    def _match_count_list(self, pools):
+        raw = getattr(self, '_match_counts', None)
+        n = self._league_matches_n(pools)
+        if not raw:
+            return [n] * len(pools or [])
+        return self._coerce_match_counts(raw, len(pools or []))
+
     def _feasible_regular_n(self, team_count, n, max_n=None):
         """Nearest n where every team can have exactly n matches (handshaking).
 
@@ -707,6 +739,7 @@ class TeamPoolWizard(models.TransientModel):
         pool_labels = self._get_pool_labels()
         ftype = self.fixture_type
         n = self._league_matches_n(pools)
+        counts = self._match_count_list(pools)
         matches = []
 
         if ftype == 'pool_rr':
@@ -715,7 +748,8 @@ class TeamPoolWizard(models.TransientModel):
                 pool_teams = list(pool)
                 if len(pool_teams) < 2:
                     continue
-                pool_n = min(n, len(pool_teams) - 1)
+                pool_n = counts[pi - 1] if pi - 1 < len(counts) else n
+                pool_n = min(pool_n, len(pool_teams) - 1)
                 # Circulant → every team gets the same match count (auto-adjusts
                 # when requested N is impossible, e.g. 3 teams × 1 → 2)
                 selected, _eff_n = self._circulant_regular_pairs(pool_teams, pool_n)
@@ -928,6 +962,7 @@ class TeamPoolWizard(models.TransientModel):
             'subtitle': fixture_data.get('subtitle') or '',
             'fixture_type': fixture_data.get('fixture_type') or 'pool_rr',
             'outside_n': fixture_data.get('outside_n') or 1,
+            'outside_ns': fixture_data.get('outside_ns') or False,
             'matches': matches,
         }
 
@@ -1145,6 +1180,9 @@ class TeamPoolWizard(models.TransientModel):
             'outside_n': int(outside_n or (fixture_data or {}).get('outside_n') or 1),
             'matches': matches,
         }
+        raw_ns = (fixture_data or {}).get('outside_ns')
+        if isinstance(raw_ns, (list, tuple)) and raw_ns:
+            fix_payload['outside_ns'] = self._coerce_match_counts(raw_ns, len(raw_ns))
         try:
             tournament.write({
                 'pool_draw_json': json.dumps(pool_payload),
@@ -1399,6 +1437,11 @@ class TeamPoolWizard(models.TransientModel):
             'outside_n': int(outside_n or fixture_data.get('outside_n') or 1),
             'matches': matches,
         }
+        raw_ns = fixture_data.get('outside_ns')
+        if isinstance(raw_ns, (list, tuple)) and raw_ns:
+            payload['outside_ns'] = self._coerce_match_counts(
+                raw_ns, len(structure) or len(raw_ns)
+            )
         refreshed = self._client_refresh_fixture(payload)
         tournament.write({
             'fixture_schedule_json': json.dumps(payload),
@@ -1420,13 +1463,14 @@ class TeamPoolWizard(models.TransientModel):
         if not structure:
             raise UserError('Generate pools first before creating a fixture.')
 
+        counts = self._coerce_match_counts(outside_pool_count, len(structure))
         wiz = self.create({
             'team_ids': [(6, 0, [tid for pool in structure for tid in pool])],
             'selected_team_count': sum(len(p) for p in structure),
             'pool_count': len(structure),
             'pool_structure_json': json.dumps(structure),
             'fixture_type': fixture_type or 'pool_rr',
-            'outside_pool_count': max(1, int(outside_pool_count or 1)),
+            'outside_pool_count': counts[0] if counts else 1,
             'pool_name_ids': [
                 (0, 0, {
                     'pool_index': i,
@@ -1439,6 +1483,7 @@ class TeamPoolWizard(models.TransientModel):
                 for i in range(1, len(structure) + 1)
             ],
         })
+        wiz._match_counts = counts
         pools = wiz._load_pools()
         matches = wiz._generate_matches(pools)
         if not matches:
@@ -1457,6 +1502,14 @@ class TeamPoolWizard(models.TransientModel):
             'cross_pool_rr': 'Cross Pool Round Robin (N = %s)' % wiz.outside_pool_count,
             'custom_outside': 'Custom Cross Pool (N = %s)' % wiz.outside_pool_count,
         }
+        subtitle = type_labels.get(wiz.fixture_type, '')
+        if wiz.fixture_type == 'pool_rr' and len(set(counts)) > 1:
+            labels = wiz._get_pool_labels()
+            bits = [
+                '%s N=%d' % (labels.get(i, wiz._pool_label(i)), counts[i - 1])
+                for i in range(1, len(counts) + 1)
+            ]
+            subtitle = 'Pool Round Robin (%s)' % ', '.join(bits)
         cache = {}
 
         def _payload(team):
@@ -1475,9 +1528,10 @@ class TeamPoolWizard(models.TransientModel):
         ]
         result = {
             'tournament': tournament,
-            'subtitle': type_labels.get(wiz.fixture_type, ''),
+            'subtitle': subtitle,
             'fixture_type': wiz.fixture_type,
             'outside_n': wiz.outside_pool_count,
+            'outside_ns': counts,
             'matches': matches_data,
         }
         # Live-publish to projector (5s reveal to match console)

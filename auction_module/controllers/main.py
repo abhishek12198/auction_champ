@@ -9330,6 +9330,11 @@ def _football_display_payload(player):
             'use_other_attributes': False,
         }
     extras = player.extra_attributes_payload()
+    tour = player.tournament_id
+
+    def _shown(flag):
+        return getattr(tour, flag, False) is True
+
     return {
         **shared,
         'tournament_type': 'football',
@@ -9337,10 +9342,18 @@ def _football_display_payload(player):
         'dominant_position_code': player.dominant_position_id.code if player.dominant_position_id else '',
         'secondary_positions': [p.code or p.name for p in player.secondary_position_ids],
         'preferred_foot': foot_map.get(player.preferred_foot, ''),
-        'age': player.age or '',
-        'work_rate': rate_map.get(player.work_rate, ''),
-        'playing_styles': [{'name': s.name, 'icon': s.icon or ''} for s in player.playing_style_ids],
-        'strengths': [{'name': s.name, 'icon': s.icon or ''} for s in player.strength_ids],
+        'age': (player.age or '') if _shown('show_football_age') else '',
+        'height': (player.height or '') if _shown('show_football_height') else '',
+        'weight': (player.weight or '') if _shown('show_football_weight') else '',
+        'work_rate': rate_map.get(player.work_rate, '') if _shown('show_football_work_rate') else '',
+        'playing_styles': (
+            [{'name': s.name, 'icon': s.icon or ''} for s in player.playing_style_ids]
+            if _shown('show_football_playing_style') else []
+        ),
+        'strengths': (
+            [{'name': s.name, 'icon': s.icon or ''} for s in player.strength_ids]
+            if _shown('show_football_strength') else []
+        ),
         'other_attributes': extras,
         'extra_attributes': extras,
         'use_other_attributes': False,
@@ -9615,6 +9628,30 @@ def _build_player_vals_from_post(request, tournament, locked_tier=None):
             "Payment proof is required. Please upload a receipt or payment screenshot."
         )
 
+    def _id_card_upload(field_name):
+        uploaded = files.get(field_name)
+        if not uploaded or not uploaded.filename:
+            return False
+        content_type = (getattr(uploaded, 'content_type', '') or '').lower()
+        if content_type and not content_type.startswith('image/'):
+            raise ValueError("ID card must be an image (JPG, PNG, or WEBP).")
+        raw = uploaded.read()
+        if len(raw) > 5 * 1024 * 1024:
+            raise ValueError("ID card image must be 5 MB or smaller.")
+        return base64.b64encode(raw)
+
+    id_card_front_data = False
+    id_card_back_data = False
+    if tournament and tournament.need_id_card:
+        if tournament.id_card_front_required:
+            id_card_front_data = _id_card_upload('id_card_front')
+            if not id_card_front_data:
+                raise ValueError("ID card front is required.")
+        if tournament.id_card_back_required:
+            id_card_back_data = _id_card_upload('id_card_back')
+            if not id_card_back_data:
+                raise ValueError("ID card back is required.")
+
     address = (post.get('address') or '').strip()
     if tournament and tournament.player_address_required and not address:
         raise ValueError("Location / Address is required.")
@@ -9639,6 +9676,8 @@ def _build_player_vals_from_post(request, tournament, locked_tier=None):
         'state':         'draft',
         'photo':         photo_data,
         'payment_proof': payment_proof_data,
+        'id_card_front': id_card_front_data,
+        'id_card_back':  id_card_back_data,
         'amount_paid':   bool(payment_proof_data),
     }
 
@@ -9658,24 +9697,29 @@ def _build_player_vals_from_post(request, tournament, locked_tier=None):
         if sec_ids:
             vals['secondary_position_ids'] = [(6, 0, sec_ids)]
 
-        style_ids = [int(v) for v in post.getlist('playing_style_ids') if v.isdigit()]
-        if style_ids:
-            vals['playing_style_ids'] = [(6, 0, style_ids)]
+        if tournament.show_football_playing_style:
+            style_ids = [int(v) for v in post.getlist('playing_style_ids') if v.isdigit()]
+            if style_ids:
+                vals['playing_style_ids'] = [(6, 0, style_ids)]
 
-        strength_ids = [int(v) for v in post.getlist('strength_ids') if v.isdigit()]
-        if strength_ids:
-            vals['strength_ids'] = [(6, 0, strength_ids)]
+        if tournament.show_football_strength:
+            strength_ids = [int(v) for v in post.getlist('strength_ids') if v.isdigit()]
+            if strength_ids:
+                vals['strength_ids'] = [(6, 0, strength_ids)]
 
         if post.get('preferred_foot'):
             vals['preferred_foot'] = post.get('preferred_foot')
-        if post.get('work_rate'):
+        if tournament.show_football_work_rate and post.get('work_rate'):
             vals['work_rate'] = post.get('work_rate')
 
-        raw_age = post.get('age')
-        if raw_age and raw_age.isdigit():
-            vals['age'] = int(raw_age)
-        vals['height'] = (post.get('height') or '').strip()
-        vals['weight'] = (post.get('weight') or '').strip()
+        if tournament.show_football_age:
+            raw_age = post.get('age')
+            if raw_age and raw_age.isdigit():
+                vals['age'] = int(raw_age)
+        if tournament.show_football_height:
+            vals['height'] = (post.get('height') or '').strip()
+        if tournament.show_football_weight:
+            vals['weight'] = (post.get('weight') or '').strip()
     elif is_badminton:
         # ── Badminton profile (isolated from cricket / football) ────────────
         cat = (post.get('badminton_category') or '').strip()

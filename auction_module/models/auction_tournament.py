@@ -215,6 +215,21 @@ class AuctionTournament(models.Model):
              'and wait for Next Player.',
     )
 
+    @api.onchange('need_id_card')
+    def _onchange_need_id_card(self):
+        if self.need_id_card:
+            self.id_card_front_required = True
+            self.id_card_back_required = True
+
+    @api.constrains('need_id_card', 'id_card_front_required', 'id_card_back_required')
+    def _check_id_card_sides(self):
+        for rec in self:
+            if rec.need_id_card and not rec.id_card_front_required and not rec.id_card_back_required:
+                raise ValidationError(_(
+                    'Turn on Front or Back when ID card is required, '
+                    'or turn off Need ID Card?'
+                ))
+
     @api.onchange('player_appearance_algorithm')
     def _onchange_lucky_dip_drawer_default(self):
         if self.player_appearance_algorithm == 'random':
@@ -276,6 +291,42 @@ class AuctionTournament(models.Model):
     extra_attr_display_count = fields.Integer(
         string='Shown Additional Attributes',
         compute='_compute_extra_attr_display_count',
+    )
+    show_football_age = fields.Boolean(
+        string='Show Age',
+        default=False,
+        help='Show Age on the football registration form, projector, live board, '
+             'and player showcase. Hidden by default.',
+    )
+    show_football_work_rate = fields.Boolean(
+        string='Show Work Rate',
+        default=False,
+        help='Show Work Rate on the football registration form, projector, live board, '
+             'and player showcase. Hidden by default.',
+    )
+    show_football_height = fields.Boolean(
+        string='Show Height',
+        default=False,
+        help='Show Height on the football registration form, projector, live board, '
+             'and player showcase. Hidden by default.',
+    )
+    show_football_weight = fields.Boolean(
+        string='Show Weight',
+        default=False,
+        help='Show Weight on the football registration form, projector, live board, '
+             'and player showcase. Hidden by default.',
+    )
+    show_football_playing_style = fields.Boolean(
+        string='Show Playing Style',
+        default=False,
+        help='Show Playing Style on the football registration form, projector, live board, '
+             'and player showcase. Hidden by default.',
+    )
+    show_football_strength = fields.Boolean(
+        string='Show Strength',
+        default=False,
+        help='Show Strength on the football registration form, projector, live board, '
+             'and player showcase. Hidden by default.',
     )
     template_image = fields.Binary('Template Image')
     report_footer = fields.Binary('Footer')
@@ -431,6 +482,22 @@ class AuctionTournament(models.Model):
         default=False,
         help='When enabled, players must upload a payment proof attachment on the '
              'public registration form. When disabled, the upload is optional.',
+    )
+    need_id_card = fields.Boolean(
+        string='Need ID Card?',
+        default=False,
+        help='When enabled, the Game step of player registration asks for an ID card. '
+             'Applies to every sport.',
+    )
+    id_card_front_required = fields.Boolean(
+        string='Front?',
+        default=True,
+        help='Require the front of the ID card on the registration form.',
+    )
+    id_card_back_required = fields.Boolean(
+        string='Back?',
+        default=True,
+        help='Require the back of the ID card on the registration form.',
     )
     payment_qr_image = fields.Binary(
         string='Payment QR / Scanner',
@@ -1759,6 +1826,9 @@ class AuctionTournament(models.Model):
                 # team balance & payment config
                 'team_max_points', 'payment_qr_image', 'payment_instruction',
                 'payment_proof_required',
+                'need_id_card', 'id_card_front_required', 'id_card_back_required',
+                'show_football_age', 'show_football_work_rate', 'show_football_height',
+                'show_football_weight', 'show_football_playing_style', 'show_football_strength',
                 # YouTube overlay / watch embed
                 'youtube_url',
                 # tournament poster on the registration page

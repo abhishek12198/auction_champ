@@ -441,6 +441,21 @@ class AuctionTeamPlayer(models.Model):
     blood_group = fields.Char("Blood Group")
     p_type =   fields.Char("Type")
     payment_proof = fields.Binary("Payment Proof", attachment=True, help="Uploaded payment screenshot/receipt from registration form.")
+    id_card_front = fields.Binary(
+        "ID Card Front",
+        attachment=True,
+        help="Front of the ID card uploaded on the registration form.",
+    )
+    id_card_back = fields.Binary(
+        "ID Card Back",
+        attachment=True,
+        help="Back of the ID card uploaded on the registration form.",
+    )
+    tournament_need_id_card = fields.Boolean(
+        related='tournament_id.need_id_card',
+        string='Need ID Card?',
+        readonly=True,
+    )
 
     @api.depends('contact', 'tournament_id.expose_player_contact')
     def _compute_masked_contact(self):

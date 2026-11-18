@@ -71,6 +71,8 @@ odoo.define('auction_module.PoolGenerator', function (require) {
                 fixtureTypes: [],
                 fixtureType: 'pool_rr',
                 outsideN: 1,
+                poolMatchNs: null,
+                _poolMatchKey: '',
                 fixture: null,
                 reservations: {},
                 reserveSearch: '',
@@ -240,17 +242,98 @@ odoo.define('auction_module.PoolGenerator', function (require) {
                 this.state.fixture = data.saved_fixture;
                 this.state.fixtureType = data.saved_fixture.fixture_type || this.state.fixtureType;
                 this.state.outsideN = data.saved_fixture.outside_n || this._defaultMatchesPerTeam();
+                this._restorePoolMatchCounts(data.saved_fixture.outside_ns);
                 if (this.state.structure) this.state.step = 4;
             }
         },
 
         _defaultMatchesPerTeam: function () {
             // (teams in pool) − 1; unequal pools → smallest pool size − 1
-            var structure = this.state.structure || [];
-            var sizes = structure.map(function (p) { return (p || []).length; })
-                .filter(function (n) { return n > 1; });
+            var sizes = this._poolTeamCounts().filter(function (n) { return n > 1; });
             if (!sizes.length) return 1;
             return Math.max(1, Math.min.apply(null, sizes) - 1);
+        },
+        _poolTeamCounts: function () {
+            return (this.state.structure || []).map(function (p) {
+                return (p || []).length;
+            });
+        },
+        _poolsUneven: function () {
+            var sizes = this._poolTeamCounts().filter(function (n) { return n > 0; });
+            if (sizes.length < 2) return false;
+            return Math.min.apply(null, sizes) !== Math.max.apply(null, sizes);
+        },
+        _splitMatchCounts: function () {
+            return this.state.fixtureType === 'pool_rr' && this._poolsUneven();
+        },
+        _maxMatchesForSize: function (size) {
+            return Math.max(1, (parseInt(size, 10) || 0) - 1);
+        },
+        _poolDisplayName: function (i) {
+            var names = this.state.poolNames || [];
+            var row = names[i];
+            if (row && (row.custom_name || row.default_label)) {
+                return row.custom_name || row.default_label;
+            }
+            var pools = this.state.pools || [];
+            if (pools[i] && pools[i].name) return pools[i].name;
+            return 'Pool ' + String.fromCharCode(65 + i);
+        },
+        _ensurePoolMatchCounts: function () {
+            var sizes = this._poolTeamCounts();
+            var key = sizes.join(',');
+            if (this.state._poolMatchKey === key &&
+                    this.state.poolMatchNs &&
+                    this.state.poolMatchNs.length === sizes.length) {
+                return;
+            }
+            var hadKey = !!this.state._poolMatchKey;
+            var self = this;
+            this.state.poolMatchNs = sizes.map(function (sz) {
+                return self._maxMatchesForSize(sz);
+            });
+            this.state._poolMatchKey = key;
+            if (hadKey && !this._splitMatchCounts()) {
+                this.state.outsideN = this._defaultMatchesPerTeam();
+            }
+        },
+        _restorePoolMatchCounts: function (raw) {
+            if (!raw || !raw.length) return;
+            var sizes = this._poolTeamCounts();
+            if (!sizes.length || raw.length !== sizes.length) return;
+            var self = this;
+            this.state.poolMatchNs = raw.map(function (n, i) {
+                var maxN = self._maxMatchesForSize(sizes[i]);
+                return Math.max(1, Math.min(maxN, parseInt(n, 10) || maxN));
+            });
+            this.state._poolMatchKey = sizes.join(',');
+            this.state.outsideN = this.state.poolMatchNs[0] || this.state.outsideN;
+        },
+        _readMatchCountInputs: function () {
+            var inputs = this.el ? this.el.querySelectorAll('.pg-outside-n') : [];
+            if (!inputs.length) return;
+            var self = this;
+            if (inputs.length === 1 && !inputs[0].hasAttribute('data-pool-idx')) {
+                this.state.outsideN = Math.max(1, parseInt(inputs[0].value, 10) || 1);
+                return;
+            }
+            this._ensurePoolMatchCounts();
+            var sizes = this._poolTeamCounts();
+            Array.prototype.forEach.call(inputs, function (input) {
+                var idx = parseInt(input.getAttribute('data-pool-idx'), 10);
+                if (isNaN(idx) || idx < 0 || idx >= sizes.length) return;
+                var maxN = self._maxMatchesForSize(sizes[idx]);
+                var n = Math.max(1, Math.min(maxN, parseInt(input.value, 10) || 1));
+                self.state.poolMatchNs[idx] = n;
+                input.value = n;
+            });
+        },
+        _matchCountsArg: function () {
+            this._readMatchCountInputs();
+            if (this._splitMatchCounts()) {
+                return (this.state.poolMatchNs || []).slice();
+            }
+            return this.state.outsideN;
         },
         _selectedIds: function () {
             var ids = [];
@@ -1004,18 +1087,46 @@ odoo.define('auction_module.PoolGenerator', function (require) {
                     '<div class="pg-ftype-hint">' + esc(ft.hint || '') + '</div></div>';
             }).join('');
 
-            var outside = [
-                '<div class="pg-outside-field">',
-                '<label class="pg-field-label">Matches per team (league round)</label>',
-                '<input class="pg-input pg-outside-n" type="number" min="1" inputmode="numeric" value="' + this.state.outsideN + '"/>',
-                '</div>',
-            ].join('');
+            this._ensurePoolMatchCounts();
+            var outside;
+            if (this._splitMatchCounts()) {
+                var selfCounts = this;
+                var sizes = this._poolTeamCounts();
+                var fields = sizes.map(function (sz, i) {
+                    var maxN = selfCounts._maxMatchesForSize(sz);
+                    var value = (selfCounts.state.poolMatchNs && selfCounts.state.poolMatchNs[i]) || maxN;
+                    value = Math.max(1, Math.min(maxN, value));
+                    var hint = 'Max ' + maxN + ' (teams − 1)';
+                    if (sz % 2 === 1) {
+                        hint += '. Odd team count: use an even number of matches.';
+                    }
+                    return '<div class="pg-outside-field">' +
+                        '<label class="pg-field-label">' + esc(selfCounts._poolDisplayName(i)) +
+                        ' · ' + sz + ' teams</label>' +
+                        '<input class="pg-input pg-outside-n" type="number" min="1" max="' + maxN +
+                        '" data-pool-idx="' + i + '" inputmode="numeric" value="' + value + '"/>' +
+                        '<div class="pg-outside-hint">' + esc(hint) + '</div>' +
+                        '</div>';
+                }).join('');
+                outside = '<div class="pg-outside-fields">' +
+                    '<div class="pg-field-label" style="width:100%">Matches per team in each pool</div>' +
+                    fields + '</div>';
+            } else {
+                outside = [
+                    '<div class="pg-outside-field">',
+                    '<label class="pg-field-label">Matches per team (league round)</label>',
+                    '<input class="pg-input pg-outside-n" type="number" min="1" inputmode="numeric" value="' + this.state.outsideN + '"/>',
+                    '</div>',
+                ].join('');
+            }
 
             var guide = [
                 '<div class="pg-fx-guide">',
                 '<div class="pg-fx-guide-title">How Matches per Team works</div>',
                 '<ul>',
                 '<li><b>Default</b> = (teams in that pool) − 1 (full round robin inside the pool).</li>',
+                '<li>When pools have different team counts, each pool has its own match count. ',
+                'A pool of 5 defaults to 4; a pool of 4 defaults to 3.</li>',
                 '<li>Every team gets <b>exactly</b> this many league matches. Opponents are chosen randomly.</li>',
                 '<li><b>Pool Round Robin</b> — opponents from the <em>same</em> pool.</li>',
                 '<li><b>Cross Pool / Custom</b> — opponents from <em>other</em> pools (keep pool sizes equal).</li>',
@@ -1225,6 +1336,8 @@ odoo.define('auction_module.PoolGenerator', function (require) {
                 self.state.pools = res.pools;
                 self.state.tournamentName = res.tournament_name;
                 self.state.fixture = null;
+                self.state.poolMatchNs = null;
+                self.state._poolMatchKey = '';
                 self.state.outsideN = self._defaultMatchesPerTeam();
                 self.state.step = 3;
                 self._render();
@@ -1453,7 +1566,19 @@ odoo.define('auction_module.PoolGenerator', function (require) {
             this._render();
         },
         _onOutsideN: function (ev) {
-            this.state.outsideN = Math.max(1, parseInt(ev.currentTarget.value, 10) || 1);
+            var raw = Math.max(1, parseInt(ev.currentTarget.value, 10) || 1);
+            var idxAttr = ev.currentTarget.getAttribute('data-pool-idx');
+            if (idxAttr == null || idxAttr === '') {
+                this.state.outsideN = raw;
+                return;
+            }
+            var idx = parseInt(idxAttr, 10);
+            var sizes = this._poolTeamCounts();
+            var maxN = this._maxMatchesForSize(sizes[idx] || 2);
+            var n = Math.max(1, Math.min(maxN, raw));
+            this._ensurePoolMatchCounts();
+            this.state.poolMatchNs[idx] = n;
+            ev.currentTarget.value = n;
         },
         _onGenerateFixture: function () {
             var self = this;
@@ -1466,7 +1591,7 @@ odoo.define('auction_module.PoolGenerator', function (require) {
             var rpc = this._pgRpc({
                 model: 'auction.team.pool.wizard',
                 method: 'client_generate_fixture',
-                args: [this.state.structure, this._nameList(), this.state.fixtureType, this.state.outsideN],
+                args: [this.state.structure, this._nameList(), this.state.fixtureType, this._matchCountsArg()],
             });
             Promise.all([rpc, this._waitReveal(5000)]).then(function (pair) {
                 var res = pair[0];

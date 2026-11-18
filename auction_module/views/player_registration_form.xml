@@ -19,7 +19,7 @@
           rel="stylesheet"/>
 
     <!-- Registration form CSS -->
-    <link rel="stylesheet" href="/auction_module/static/src/css/player_registration.css?v=1.5.981"/>
+    <link rel="stylesheet" href="/auction_module/static/src/css/player_registration.css?v=1.5.988"/>
     <link rel="stylesheet" href="/auction_module/static/src/css/player_registration_pro.css?v=1.6.1"/>
 
     <!-- ── Per-theme CSS custom properties ────────────────────── -->
@@ -1051,13 +1051,13 @@
                             </select>
                         </div>
 
-                        <div>
+                        <div t-if="tournament.show_football_age">
                             <label class="reg-label" for="playerAge">Age</label>
                             <input type="number" id="playerAge" name="age" class="reg-input"
                                    placeholder="e.g. 24" min="0" max="99"/>
                         </div>
 
-                        <div>
+                        <div t-if="tournament.show_football_work_rate">
                             <label class="reg-label" for="workRate">Work Rate</label>
                             <select id="workRate" name="work_rate" class="reg-select">
                                 <option value="">— Select —</option>
@@ -1067,13 +1067,13 @@
                             </select>
                         </div>
 
-                        <div>
+                        <div t-if="tournament.show_football_height">
                             <label class="reg-label" for="playerHeight">Height <span class="reg-opt">(optional)</span></label>
                             <input type="text" id="playerHeight" name="height" class="reg-input"
                                    placeholder="e.g. 180 cm" maxlength="16"/>
                         </div>
 
-                        <div>
+                        <div t-if="tournament.show_football_weight">
                             <label class="reg-label" for="playerWeight">Weight <span class="reg-opt">(optional)</span></label>
                             <input type="text" id="playerWeight" name="weight" class="reg-input"
                                    placeholder="e.g. 75 kg" maxlength="16"/>
@@ -1095,7 +1095,7 @@
                     </div>
 
                     <!-- Playing Style — chips -->
-                    <div style="margin-top:16px">
+                    <div t-if="tournament.show_football_playing_style" style="margin-top:16px">
                         <label class="reg-label">Playing Style <span class="reg-opt">(pick any that apply)</span></label>
                         <div class="reg-chip-group">
                             <t t-foreach="styles" t-as="sty">
@@ -1110,7 +1110,7 @@
                     </div>
 
                     <!-- Strengths — chips -->
-                    <div style="margin-top:16px">
+                    <div t-if="tournament.show_football_strength" style="margin-top:16px">
                         <label class="reg-label">Strengths <span class="reg-opt">(pick any that apply)</span></label>
                         <div class="reg-chip-group">
                             <t t-foreach="strengths" t-as="strg">
@@ -1482,6 +1482,68 @@
                             <option value="4XL">4XL</option>
                         </select>
                     </div>
+                </div>
+            </div>
+            </t>
+
+            <t t-if="tournament and tournament.need_id_card and (tournament.id_card_front_required or tournament.id_card_back_required)">
+            <div class="reg-section" id="idCardSection" data-reg-step="2">
+                <div class="reg-section-header">
+                    <div class="reg-section-strip"/>
+                    <h3>ID Card <span class="req">*</span></h3>
+                    <span class="reg-section-icon">🪪</span>
+                    <span class="reg-section-num">05</span>
+                </div>
+                <p class="reg-idcard-note">Upload a clear photo of the ID card. This is required before you can continue.</p>
+                <div class="reg-idcard-row">
+                    <t t-if="tournament.id_card_front_required">
+                    <div class="reg-idcard-slot" id="idCardFrontSlot">
+                        <label class="reg-label" for="idCardFrontInput">Front <span class="req">*</span></label>
+                        <div class="reg-idcard-frame" id="idCardFrontFrame">
+                            <img id="idCardFrontPreview" alt="ID card front preview" hidden="hidden"/>
+                            <span class="reg-idcard-placeholder" id="idCardFrontPlaceholder">Front side</span>
+                        </div>
+                        <div class="reg-photo-actions">
+                            <label for="idCardFrontInput" class="reg-file-btn">
+                                <span class="reg-file-btn-text">Upload front</span>
+                            </label>
+                            <button type="button" id="idCardFrontClear"
+                                    class="reg-file-btn reg-file-btn-clear is-hidden">
+                                <span class="reg-file-btn-text">Clear</span>
+                            </button>
+                        </div>
+                        <input type="file" id="idCardFrontInput" name="id_card_front"
+                               accept="image/*" class="reg-file-input"/>
+                        <input type="text" id="idCardFrontGate" name="id_card_front_gate"
+                               class="reg-payment-gate" value="" required="required"
+                               tabindex="-1" autocomplete="off" aria-label="ID card front required"/>
+                        <p class="reg-file-hint">JPG · PNG · WEBP · Max 5 MB</p>
+                    </div>
+                    </t>
+                    <t t-if="tournament.id_card_back_required">
+                    <div class="reg-idcard-slot" id="idCardBackSlot">
+                        <label class="reg-label" for="idCardBackInput">Back <span class="req">*</span></label>
+                        <div class="reg-idcard-frame" id="idCardBackFrame">
+                            <img id="idCardBackPreview" alt="ID card back preview" hidden="hidden"/>
+                            <span class="reg-idcard-placeholder" id="idCardBackPlaceholder">Back side</span>
+                        </div>
+                        <div class="reg-photo-actions">
+                            <label for="idCardBackInput" class="reg-file-btn">
+                                <span class="reg-file-btn-text">Upload back</span>
+                            </label>
+                            <button type="button" id="idCardBackClear"
+                                    class="reg-file-btn reg-file-btn-clear is-hidden">
+                                <span class="reg-file-btn-text">Clear</span>
+                            </button>
+                        </div>
+                        <input type="file" id="idCardBackInput" name="id_card_back"
+                               accept="image/*" class="reg-file-input"/>
+                        <input type="text" id="idCardBackGate" name="id_card_back_gate"
+                               class="reg-payment-gate" value="" required="required"
+                               tabindex="-1" autocomplete="off" aria-label="ID card back required"/>
+                        <p class="reg-file-hint">JPG · PNG · WEBP · Max 5 MB</p>
+                    </div>
+                    </t>
                 </div>
             </div>
             </t>
@@ -1973,6 +2035,65 @@
         });
     }
 
+    function bindIdCardSlot(inputId, previewId, placeholderId, frameId, clearId, gateId) {
+        var input = document.getElementById(inputId);
+        var preview = document.getElementById(previewId);
+        var placeholder = document.getElementById(placeholderId);
+        var frame = document.getElementById(frameId);
+        var clearBtn = document.getElementById(clearId);
+        var gate = document.getElementById(gateId);
+        if (!input) return;
+        function showPreview(src) {
+            if (preview) {
+                preview.src = src;
+                preview.hidden = false;
+            }
+            if (placeholder) placeholder.hidden = true;
+            if (frame) frame.classList.add('has-photo');
+            if (clearBtn) clearBtn.classList.remove('is-hidden');
+            if (gate) gate.value = 'ok';
+        }
+        function clearPreview() {
+            if (preview) {
+                preview.removeAttribute('src');
+                preview.hidden = true;
+            }
+            if (placeholder) placeholder.hidden = false;
+            if (frame) frame.classList.remove('has-photo');
+            if (clearBtn) clearBtn.classList.add('is-hidden');
+            if (gate) gate.value = '';
+            input.value = '';
+        }
+        input.addEventListener('change', function () {
+            var file = input.files &amp;&amp; input.files[0];
+            if (!file) {
+                clearPreview();
+                return;
+            }
+            if (file.type &amp;&amp; file.type.indexOf('image/') !== 0) {
+                clearPreview();
+                window.alert('Upload a JPG, PNG, or WEBP image.');
+                return;
+            }
+            if (file.size &gt; 5 * 1024 * 1024) {
+                clearPreview();
+                window.alert('ID card image must be 5 MB or smaller.');
+                return;
+            }
+            var reader = new FileReader();
+            reader.onload = function (ev) { showPreview(ev.target.result); };
+            reader.readAsDataURL(file);
+        });
+        if (clearBtn) {
+            clearBtn.addEventListener('click', function (ev) {
+                ev.preventDefault();
+                clearPreview();
+            });
+        }
+    }
+    bindIdCardSlot('idCardFrontInput', 'idCardFrontPreview', 'idCardFrontPlaceholder', 'idCardFrontFrame', 'idCardFrontClear', 'idCardFrontGate');
+    bindIdCardSlot('idCardBackInput', 'idCardBackPreview', 'idCardBackPlaceholder', 'idCardBackFrame', 'idCardBackClear', 'idCardBackGate');
+
     // Cropper toolbar
     function bindTool(id, fn) {
         var el = document.getElementById(id);
@@ -2375,6 +2496,28 @@
                 return;
             }
             clearPaymentMissing();
+
+            [['idCardFrontInput', 'idCardFrontGate', 'ID card front'], ['idCardBackInput', 'idCardBackGate', 'ID card back']].forEach(function (row) {
+                var input = document.getElementById(row[0]);
+                var gate = document.getElementById(row[1]);
+                if (!input || !gate) return;
+                var ok = !!(input.files &amp;&amp; input.files[0]);
+                gate.value = ok ? 'ok' : '';
+            });
+            var frontGate = document.getElementById('idCardFrontGate');
+            var backGate = document.getElementById('idCardBackGate');
+            if ((frontGate &amp;&amp; !frontGate.value) || (backGate &amp;&amp; !backGate.value)) {
+                e.preventDefault();
+                e.stopPropagation();
+                var idSection = document.getElementById('idCardSection');
+                if (idSection) idSection.classList.add('mob-open');
+                var missingSide = (frontGate &amp;&amp; !frontGate.value) ? 'front' : 'back';
+                showRegTopWarning(
+                    'ID card ' + missingSide + ' is required. Upload it in the Game step.',
+                    idSection || frontGate || backGate
+                );
+                return;
+            }
 
             if (!form.checkValidity()) {
                 e.preventDefault();
@@ -2997,7 +3140,7 @@
 </script>
 <script src="/auction_module/static/src/js/auction_sse_client.js"></script>
 <script src="/auction_module/static/src/js/player_registration_roster.js?v=1.5.661"></script>
-<script src="/auction_module/static/src/js/player_registration_steps.js?v=1.5.987"></script>
+<script src="/auction_module/static/src/js/player_registration_steps.js?v=1.5.988"></script>
 
 </body>
 </html>

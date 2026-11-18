@@ -28,7 +28,7 @@
     var text = 'LIVE';
     var bg = '';
     if (kind === 'reconnecting') { text = 'RECONNECTING'; bg = '#8a5a00'; }
-    else if (kind === 'offline') { text = 'CONNECTION LOST'; bg = '#8e1b2c'; }
+    else if (kind === 'offline') { text = 'CONNECTION LOST'; bg = '#4b5568'; }
     else if (kind === 'back') { text = 'BACK ONLINE'; bg = '#0e6b3c'; }
     var i;
     for (i = 0; i < pills.length; i++) {
@@ -50,6 +50,12 @@
       }
       label.textContent = shown;
       pill.style.background = bg;
+      pill.style.boxShadow = kind === 'offline' ? 'none' : '';
+      var dot = pill.querySelector('.pj-live-pill-dot, .lbx-live-dot');
+      if (dot) {
+        dot.style.animation = kind === 'offline' ? 'none' : '';
+        dot.style.opacity = kind === 'offline' ? '0.45' : '';
+      }
       pill.classList.remove('is-reconnecting', 'is-offline', 'is-back');
       if (kind === 'reconnecting' || kind === 'offline' || kind === 'back') pill.classList.add('is-' + kind);
     }

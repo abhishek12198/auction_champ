@@ -1088,9 +1088,26 @@
 .pg-ftype-title { font-weight: 800; margin-bottom: 4px; color: #f0f5ff; }
 .pg-ftype-hint { font-size: .8rem; color: rgba(190, 210, 240, 0.65); line-height: 1.4; }
 
+.pg-outside-fields {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 16px;
+  margin: 4px 0 14px;
+}
 .pg-outside-field {
   max-width: 280px;
   margin: 4px 0 14px;
+}
+.pg-outside-fields .pg-outside-field {
+  flex: 1 1 220px;
+  max-width: 320px;
+  margin: 0;
+}
+.pg-outside-hint {
+  margin-top: 6px;
+  font-size: .75rem;
+  line-height: 1.35;
+  color: rgba(190, 210, 240, 0.7);
 }
 
 .pg-fixture-board {

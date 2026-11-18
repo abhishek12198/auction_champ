@@ -694,20 +694,27 @@ def _balance_player_profile(player, mystery, is_football):
         ]
         if secondary:
             attrs.append({'k': 'Secondary', 'v': ', '.join(secondary)})
-        if player.age:
+        tour = getattr(player, 'tournament_id', None)
+
+        def _shown(flag):
+            return getattr(tour, flag, False) is True
+
+        if player.age and _shown('show_football_age'):
             attrs.append({'k': 'Age', 'v': str(player.age)})
         rate = _RATE_LABEL.get(player.work_rate, '')
-        if rate:
+        if rate and _shown('show_football_work_rate'):
             attrs.append({'k': 'Work Rate', 'v': rate})
         tags = []
-        for style in player.playing_style_ids:
-            label = ('%s %s' % (style.icon or '', style.name or '')).strip()
-            if label:
-                tags.append(label)
-        for strength in player.strength_ids:
-            label = ('%s %s' % (strength.icon or '', strength.name or '')).strip()
-            if label:
-                tags.append(label)
+        if _shown('show_football_playing_style'):
+            for style in player.playing_style_ids:
+                label = ('%s %s' % (style.icon or '', style.name or '')).strip()
+                if label:
+                    tags.append(label)
+        if _shown('show_football_strength'):
+            for strength in player.strength_ids:
+                label = ('%s %s' % (strength.icon or '', strength.name or '')).strip()
+                if label:
+                    tags.append(label)
         if tags:
             attrs.append({'k': 'Tags', 'v': ' · '.join(tags)})
         for extra in player.extra_attributes_payload():
@@ -915,6 +922,11 @@ def _serialize_registered_player(player, db_name, is_football, show_org, show_ad
         data['address'] = (player.address or '').strip()
     if is_football:
         pos = player.dominant_position_id
+        tour = player.tournament_id
+
+        def _shown(flag):
+            return getattr(tour, flag, False) is True
+
         data.update({
             'position': pos.name if pos else (player.role or ''),
             'position_code': pos.code if pos else '',
@@ -922,12 +934,20 @@ def _serialize_registered_player(player, db_name, is_football, show_org, show_ad
                 p.code or p.name for p in player.secondary_position_ids
             ],
             'preferred_foot': foot_labels.get(player.preferred_foot, '') or '',
-            'age': player.age or 0,
-            'height': (player.height or '').strip(),
-            'weight': (player.weight or '').strip(),
-            'work_rate': work_labels.get(player.work_rate, '') or '',
-            'styles': [s.name for s in player.playing_style_ids if s.name],
-            'strengths': [s.name for s in player.strength_ids if s.name],
+            'age': (player.age or 0) if _shown('show_football_age') else 0,
+            'height': (player.height or '').strip() if _shown('show_football_height') else '',
+            'weight': (player.weight or '').strip() if _shown('show_football_weight') else '',
+            'work_rate': (
+                work_labels.get(player.work_rate, '') or ''
+            ) if _shown('show_football_work_rate') else '',
+            'styles': (
+                [s.name for s in player.playing_style_ids if s.name]
+                if _shown('show_football_playing_style') else []
+            ),
+            'strengths': (
+                [s.name for s in player.strength_ids if s.name]
+                if _shown('show_football_strength') else []
+            ),
             'other_attributes': player.extra_attributes_payload(),
             'extra_attributes': player.extra_attributes_payload(),
             'use_other_attributes': False,

@@ -508,6 +508,7 @@
                         <field name="tournament_type" invisible="1"/>
                         <field name="enable_jersey_section" invisible="1"/>
                         <field name="has_extra_attributes" invisible="1"/>
+                        <field name="tournament_need_id_card" invisible="1"/>
                         <field name="photo_url" invisible="1"/>
                         <field name="use_other_attributes" invisible="1"/>
                         <field name="icon_player" string="Key / Icon Player"
@@ -683,6 +684,19 @@
                                         <field name="payment_url" string="Payment Proof URL"
                                                widget="url"/>
                                         <field name="notes"/>
+                                    </group>
+                                </group>
+                            </page>
+                            <page string="ID Card"
+                                  attrs="{'invisible': [('tournament_need_id_card', '=', False)]}">
+                                <group>
+                                    <group string="Front">
+                                        <field name="id_card_front" widget="image" nolabel="1"
+                                               options="{'size': [420, 260]}"/>
+                                    </group>
+                                    <group string="Back">
+                                        <field name="id_card_back" widget="image" nolabel="1"
+                                               options="{'size': [420, 260]}"/>
                                     </group>
                                 </group>
                             </page>

@@ -317,6 +317,7 @@ class TestSliceBalancePlayers(unittest.TestCase):
             batting_style='Right Hand Bat',
             bowling_style='Right Arm Off Spin',
         )
+        cricket.extra_attributes_payload.return_value = []
         role, attrs = _balance_player_profile(cricket, False, False)
         self.assertEqual(role, 'Allrounder')
         keys = [a['k'] for a in attrs]
@@ -339,6 +340,13 @@ class TestSliceBalancePlayers(unittest.TestCase):
         sec.code = 'CAM'
         sec.name = 'Attacking Mid'
         football.secondary_position_ids = [sec]
+        tour = mock.Mock()
+        tour.show_football_age = True
+        tour.show_football_work_rate = True
+        tour.show_football_playing_style = False
+        tour.show_football_strength = False
+        football.tournament_id = tour
+        football.extra_attributes_payload.return_value = []
         role, attrs = _balance_player_profile(football, False, True)
         self.assertEqual(role, 'Striker')
         mapped = {a['k']: a['v'] for a in attrs}
@@ -346,6 +354,13 @@ class TestSliceBalancePlayers(unittest.TestCase):
         self.assertEqual(mapped.get('Secondary'), 'CAM')
         self.assertEqual(mapped.get('Age'), '24')
         self.assertEqual(mapped.get('Work Rate'), 'High')
+        tour.show_football_age = False
+        tour.show_football_work_rate = False
+        _role, hidden = _balance_player_profile(football, False, True)
+        hidden_keys = [a['k'] for a in hidden]
+        self.assertNotIn('Age', hidden_keys)
+        self.assertNotIn('Work Rate', hidden_keys)
+        self.assertIn('Foot', hidden_keys)
 
 
 class TestSeqZeroIsValid(unittest.TestCase):

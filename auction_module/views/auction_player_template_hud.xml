@@ -196,16 +196,16 @@
               <t t-if="player.preferred_foot">
                 <div class="hud-stat-row"><span class="hud-stat-key">Preferred Foot</span><span class="hud-stat-val"><t t-esc="player.preferred_foot.capitalize()"/></span></div>
               </t>
-              <t t-if="player.work_rate">
+              <t t-if="player.work_rate and player.tournament_id.show_football_work_rate">
                 <div class="hud-stat-row"><span class="hud-stat-key">Work Rate</span><span class="hud-stat-val"><t t-esc="player.work_rate.capitalize()"/></span></div>
               </t>
-              <t t-if="player.age">
+              <t t-if="player.age and player.tournament_id.show_football_age">
                 <div class="hud-stat-row"><span class="hud-stat-key">Age</span><span class="hud-stat-val"><t t-esc="player.age"/></span></div>
               </t>
-              <t t-if="player.height">
+              <t t-if="player.height and player.tournament_id.show_football_height">
                 <div class="hud-stat-row"><span class="hud-stat-key">Height</span><span class="hud-stat-val"><t t-esc="player.height"/></span></div>
               </t>
-              <t t-if="player.weight">
+              <t t-if="player.weight and player.tournament_id.show_football_weight">
                 <div class="hud-stat-row"><span class="hud-stat-key">Weight</span><span class="hud-stat-val"><t t-esc="player.weight"/></span></div>
               </t>
               <t t-if="player.blood_group">

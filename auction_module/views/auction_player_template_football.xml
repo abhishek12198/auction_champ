@@ -349,7 +349,7 @@
                                         <div class="fbc-val"><t t-esc="foot_map.get(player.preferred_foot, '—')"/></div>
                                     </div>
                                 </div>
-                                <div class="fbc-cell">
+                                <div class="fbc-cell" t-if="player.tournament_id.show_football_age">
                                     <div class="fbc-ic">📅</div>
                                     <div class="fbc-cell-body">
                                         <div class="fbc-lbl">Age</div>
@@ -386,7 +386,7 @@
                             </div>
 
                             <!-- Playing Style -->
-                            <t t-if="player.playing_style_ids">
+                            <t t-if="player.playing_style_ids and player.tournament_id.show_football_playing_style">
                                 <div class="fbc-sec">
                                     <div class="fbc-ic">🏃</div>
                                     <div class="fbc-sec-main">
@@ -401,16 +401,18 @@
                             </t>
 
                             <!-- Strengths (+ work rate) -->
-                            <t t-if="player.strength_ids or player.work_rate">
+                            <t t-if="(player.strength_ids and player.tournament_id.show_football_strength) or (player.work_rate and player.tournament_id.show_football_work_rate)">
                                 <div class="fbc-sec">
                                     <div class="fbc-ic">💪</div>
                                     <div class="fbc-sec-main">
                                         <div class="fbc-lbl">Strengths</div>
                                         <div class="fbc-chips">
-                                            <t t-foreach="player.strength_ids" t-as="strg">
-                                                <span class="fbc-chip"><t t-esc="strg.name"/></span>
+                                            <t t-if="player.tournament_id.show_football_strength">
+                                                <t t-foreach="player.strength_ids" t-as="strg">
+                                                    <span class="fbc-chip"><t t-esc="strg.name"/></span>
+                                                </t>
                                             </t>
-                                            <t t-if="player.work_rate">
+                                            <t t-if="player.work_rate and player.tournament_id.show_football_work_rate">
                                                 <span class="fbc-chip"><t t-esc="player.work_rate.capitalize()"/> Work Rate</span>
                                             </t>
                                         </div>

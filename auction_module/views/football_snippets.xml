@@ -5,13 +5,19 @@
          color:inherit so it adapts to every card theme (light or dark).
          Skipped when Other Attributes are populated (those replace this block). -->
     <template id="football_tag_chips">
-        <t t-if="player.tournament_type == 'football' and (player.playing_style_ids or player.strength_ids)">
+        <t t-set="show_styles" t-value="player.tournament_id.show_football_playing_style"/>
+        <t t-set="show_strengths" t-value="player.tournament_id.show_football_strength"/>
+        <t t-if="player.tournament_type == 'football' and ((show_styles and player.playing_style_ids) or (show_strengths and player.strength_ids))">
             <div class="ac-fb-chip-row" style="display:flex; flex-wrap:wrap; gap:8px; margin-top:10px;">
-                <t t-foreach="player.playing_style_ids" t-as="sty">
-                    <span style="display:inline-flex; align-items:center; gap:5px; background:rgba(120,144,180,0.18); border:1px solid rgba(120,144,180,0.45); border-radius:999px; padding:5px 12px; font-size:0.8rem; font-weight:600; letter-spacing:0.3px; color:inherit;"><t t-esc="sty.icon"/> <t t-esc="sty.name"/></span>
+                <t t-if="show_styles">
+                    <t t-foreach="player.playing_style_ids" t-as="sty">
+                        <span style="display:inline-flex; align-items:center; gap:5px; background:rgba(120,144,180,0.18); border:1px solid rgba(120,144,180,0.45); border-radius:999px; padding:5px 12px; font-size:0.8rem; font-weight:600; letter-spacing:0.3px; color:inherit;"><t t-esc="sty.icon"/> <t t-esc="sty.name"/></span>
+                    </t>
                 </t>
-                <t t-foreach="player.strength_ids" t-as="strg">
-                    <span style="display:inline-flex; align-items:center; gap:5px; background:rgba(230,160,90,0.18); border:1px solid rgba(230,160,90,0.45); border-radius:999px; padding:5px 12px; font-size:0.8rem; font-weight:600; letter-spacing:0.3px; color:inherit;"><t t-esc="strg.icon"/> <t t-esc="strg.name"/></span>
+                <t t-if="show_strengths">
+                    <t t-foreach="player.strength_ids" t-as="strg">
+                        <span style="display:inline-flex; align-items:center; gap:5px; background:rgba(230,160,90,0.18); border:1px solid rgba(230,160,90,0.45); border-radius:999px; padding:5px 12px; font-size:0.8rem; font-weight:600; letter-spacing:0.3px; color:inherit;"><t t-esc="strg.icon"/> <t t-esc="strg.name"/></span>
+                    </t>
                 </t>
             </div>
         </t>
