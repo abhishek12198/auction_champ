@@ -33,22 +33,33 @@
         <div class="reg-payment-layout">
           <div class="reg-payment-left">
             <div class="reg-payment-instruction">
-              <span class="reg-payment-instruction-icon">₹</span>
-              <span class="reg-payment-instruction-text">
-                Registration fee:
-                <strong t-esc="registration_fee_label or ('{:,.2f}'.format(registration_fee or 0))"/>
-                <t t-if="razorpay_mode == 'mandatory'">
-                  — payment is <strong>mandatory</strong>. Razorpay checkout opens on this page after you submit.
-                </t>
-                <t t-else="">
-                  — payment is <strong>optional</strong>. You can pay after registration or skip for now.
-                </t>
+              <span class="reg-payment-instruction-mark" aria-hidden="true">₹</span>
+              <span class="reg-payment-instruction-copy">
+                <span class="reg-payment-instruction-kicker">Registration fee</span>
+                <span class="reg-payment-instruction-text">
+                  <strong t-esc="registration_fee_label or ('{:,.2f}'.format(registration_fee or 0))"/>
+                  <t t-if="razorpay_mode == 'mandatory'">
+                    — payment is <strong>mandatory</strong>. Razorpay checkout opens on this page after you submit.
+                  </t>
+                  <t t-else="">
+                    — payment is <strong>optional</strong>. You can pay after registration or skip for now.
+                  </t>
+                </span>
               </span>
             </div>
             <t t-if="tournament and tournament.payment_instruction">
-              <div class="reg-payment-instruction" style="margin-top:10px;">
-                <span class="reg-payment-instruction-icon">💡</span>
-                <span class="reg-payment-instruction-text" t-esc="tournament.payment_instruction"/>
+              <div class="reg-payment-instruction">
+                <span class="reg-payment-instruction-mark" aria-hidden="true">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                    <circle cx="12" cy="12" r="9"/>
+                    <path d="M12 11v6"/>
+                    <path d="M12 8h.01"/>
+                  </svg>
+                </span>
+                <span class="reg-payment-instruction-copy">
+                  <span class="reg-payment-instruction-kicker">How to pay</span>
+                  <span class="reg-payment-instruction-text" t-esc="tournament.payment_instruction"/>
+                </span>
               </div>
             </t>
           </div>
@@ -110,8 +121,17 @@
             </div>
             <t t-if="tournament and tournament.payment_instruction">
               <div class="reg-payment-instruction">
-                <span class="reg-payment-instruction-icon">💡</span>
-                <span class="reg-payment-instruction-text" t-esc="tournament.payment_instruction"/>
+                <span class="reg-payment-instruction-mark" aria-hidden="true">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                    <circle cx="12" cy="12" r="9"/>
+                    <path d="M12 11v6"/>
+                    <path d="M12 8h.01"/>
+                  </svg>
+                </span>
+                <span class="reg-payment-instruction-copy">
+                  <span class="reg-payment-instruction-kicker">How to pay</span>
+                  <span class="reg-payment-instruction-text" t-esc="tournament.payment_instruction"/>
+                </span>
               </div>
             </t>
           </div>

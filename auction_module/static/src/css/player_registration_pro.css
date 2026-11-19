@@ -1861,6 +1861,27 @@ body.reg-page.reg-page--steps[data-reg-theme="standard"] .reg-footer img {
     outline-offset: 3px;
     box-shadow: 0 0 0 4px rgba(233, 69, 96, .18);
 }
+.reg-page--steps .reg-payment-instruction {
+    background:
+        linear-gradient(var(--da-gold, #F5C842), var(--da-gold, #F5C842)) left / 5px 100% no-repeat,
+        linear-gradient(180deg, #fff 0%, var(--da-field, #fff8dc) 100%);
+    border-color: var(--da-gold, #F5C842);
+    box-shadow: 0 12px 26px rgba(0, 0, 0, .28);
+}
+.reg-page--steps .reg-payment-instruction-kicker {
+    font-family: var(--reg-font-sport);
+    font-weight: 400;
+    letter-spacing: .16em;
+    color: #8a5a00;
+}
+.reg-page--steps .reg-payment-instruction-text {
+    color: var(--da-field-ink, #1a1208);
+    font-family: var(--reg-font-body);
+    font-size: 1.12rem;
+    font-weight: 600;
+    letter-spacing: 0;
+    text-transform: none;
+}
 .reg-page--steps .reg-step.reg-step-missing:not(.is-on) {
     border-color: #e94560;
     box-shadow: 0 0 0 2px rgba(233, 69, 96, .28);

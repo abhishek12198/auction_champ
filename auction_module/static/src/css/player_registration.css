@@ -1488,22 +1488,54 @@ input[type="file"].reg-file-input { display: none; }
 .reg-payment-instruction {
     display: flex;
     align-items: flex-start;
-    gap: 10px;
-    background: rgba(var(--reg-accent-rgb), .07);
-    border: 1px solid rgba(var(--reg-accent-rgb), .25);
-    border-left: 4px solid var(--reg-accent);
-    border-radius: 10px;
-    padding: 12px 14px;
+    gap: 12px;
+    padding: 14px 16px 15px 18px;
+    background:
+        linear-gradient(#F5C842, #F5C842) left / 5px 100% no-repeat,
+        linear-gradient(180deg, #fffdf8 0%, #fff3c4 100%);
+    border: 1px solid #e6c15a;
+    border-radius: 14px;
+    box-shadow: 0 10px 24px rgba(16, 18, 32, .16);
 }
-.reg-payment-instruction-icon {
-    font-size: 1.1rem;
-    flex-shrink: 0;
-    line-height: 1.5;
+.reg-payment-instruction-mark {
+    flex: 0 0 36px;
+    width: 36px;
+    height: 36px;
+    margin-top: 1px;
+    border-radius: 10px;
+    background: #111d2c;
+    color: #F5C842;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Oswald', 'Barlow Condensed', sans-serif;
+    font-size: 1.05rem;
+    font-weight: 600;
+    line-height: 1;
+}
+.reg-payment-instruction-copy {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+.reg-payment-instruction-kicker {
+    font-family: 'Oswald', 'Barlow Condensed', sans-serif;
+    font-size: .78rem;
+    font-weight: 600;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: #8a5a00;
+    line-height: 1.2;
 }
 .reg-payment-instruction-text {
-    font-size: .855rem;
-    color: var(--reg-section-title);
-    line-height: 1.65;
+    font-family: 'Source Sans 3', 'Segoe UI', sans-serif;
+    font-size: 1.12rem;
+    font-weight: 600;
+    color: #1a1208;
+    line-height: 1.45;
+    letter-spacing: 0;
+    text-transform: none;
     white-space: pre-wrap;
 }
 
