@@ -325,26 +325,44 @@
         } catch (e) { /* ignore */ }
     }
 
-    function absUrl(url) {
+    function photoKey(url) {
+        if (!url) {
+            return '';
+        }
         try {
-            return new URL(url, window.location.href).href;
+            var parsed = new URL(url, window.location.href);
+            return parsed.pathname + '|sz=' + (parsed.searchParams.get('sz') || '');
         } catch (e) {
-            return String(url || '');
+            return String(url).replace(/([?&])v=[^&]*/g, '');
         }
     }
 
-    function photoMatches(img, url) {
-        if (!img || !url || !img.complete || !img.naturalWidth) {
-            return false;
+    function pixelKey(img) {
+        if (!img) {
+            return '';
         }
-        var cur = img.currentSrc || img.src || '';
-        return !!cur && absUrl(cur) === absUrl(url);
+        return photoKey(img.currentSrc || img.src || '');
+    }
+
+    function hotSrc(url) {
+        var key = photoKey(url);
+        if (!key) {
+            return '';
+        }
+        var pool = [photoEl, document.getElementById('ytovCerPhoto'), document.getElementById('ytovCerLogo'), bidTeamLogoEl];
+        for (var i = 0; i < pool.length; i++) {
+            var im = pool[i];
+            if (im && im.naturalWidth && pixelKey(im) === key) {
+                return im.currentSrc || im.src || '';
+            }
+        }
+        if (photoReady[url]) {
+            return url;
+        }
+        return '';
     }
 
     function swapPhoto(img, placeholder, url, label) {
-        if (placeholder && label != null) {
-            placeholder.textContent = label;
-        }
         if (!img) {
             return;
         }
@@ -354,18 +372,33 @@
             img.removeAttribute('src');
             img.removeAttribute('data-src-set');
             img.classList.remove('is-on');
+            if (placeholder && label != null) {
+                placeholder.textContent = label;
+            }
             show(placeholder, true);
             return;
         }
-        if (img.getAttribute('data-src-set') === url && photoMatches(img, url)) {
-            img.classList.add('is-on');
+        var key = photoKey(url);
+        var pixels = pixelKey(img);
+        if (img.classList.contains('is-on') && img.naturalWidth && pixels === key) {
+            img.setAttribute('data-src-set', url);
             img.removeAttribute('hidden');
             show(placeholder, false);
             return;
         }
+        var hot = hotSrc(url);
         var want = url;
+        function showInitial() {
+            if (placeholder && label != null) {
+                placeholder.textContent = label;
+            }
+            show(placeholder, true);
+        }
         function reveal() {
-            if (img.getAttribute('data-src-set') !== want || !photoMatches(img, want)) {
+            if (img.getAttribute('data-src-set') !== want || !img.complete || !img.naturalWidth) {
+                return;
+            }
+            if (pixelKey(img) !== key) {
                 return;
             }
             photoReady[want] = true;
@@ -373,8 +406,6 @@
             img.removeAttribute('hidden');
             show(placeholder, false);
         }
-        img.classList.remove('is-on');
-        show(placeholder, true);
         img.onload = function () {
             photoReady[want] = true;
             reveal();
@@ -384,10 +415,22 @@
                 return;
             }
             img.classList.remove('is-on');
-            show(placeholder, true);
+            showInitial();
         };
         img.setAttribute('data-src-set', want);
-        if (!photoMatches(img, want)) {
+        if (hot) {
+            if ((img.currentSrc || img.src) !== hot) {
+                img.src = hot;
+            }
+            reveal();
+            if (!img.classList.contains('is-on')) {
+                show(placeholder, false);
+            }
+            return;
+        }
+        img.classList.remove('is-on');
+        showInitial();
+        if (pixels && pixels !== key) {
             img.removeAttribute('src');
         }
         if (!photoReady[want]) {

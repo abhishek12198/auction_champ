@@ -232,7 +232,7 @@
     <t t-set="pu_tournament" t-value="tournament"/>
   </t>
   <script src="/auction_module/static/src/js/auction_sse_client.js"/>
-  <script src="/auction_module/static/src/js/youtube_overlay.js?v=2.3.9obs"/>
+  <script src="/auction_module/static/src/js/youtube_overlay.js?v=2.4.0obs"/>
 </body>
 </html>
 </template>
