@@ -823,11 +823,24 @@ body.ac-actions-locked .ac-livebid-tile,
     gap: 8px;
     margin: 14px 0 12px;
 }
-.ac-livebid-modal-limits div {
+.ac-livebid-modal-limits div,
+.ac-livebid-maxcall {
     padding: 8px 10px;
     border-radius: 8px;
     border: 1px solid var(--lb-tile-line);
     background: var(--lb-tile);
+}
+.ac-livebid-maxcall {
+    width: 100%;
+    text-align: left;
+    font: inherit;
+    color: inherit;
+    cursor: pointer;
+}
+.ac-livebid-maxcall:hover,
+.ac-livebid-maxcall:focus-visible {
+    border-color: var(--lb-accent);
+    background: color-mix(in srgb, var(--lb-accent) 18%, var(--lb-tile));
 }
 .ac-livebid-modal-limits span {
     display: block;

@@ -479,6 +479,11 @@
     color: #fff !important;
 }
 
+.o_form_view .o_at_helper_btn_squad {
+    background: linear-gradient(135deg, #1e3a8a 0%, #f5c842 100%) !important;
+    color: #fff !important;
+}
+
 .o_form_view .o_at_helper_btn_yt {
     background: linear-gradient(135deg, #b91c1c 0%, #ef4444 100%) !important;
     color: #fff !important;

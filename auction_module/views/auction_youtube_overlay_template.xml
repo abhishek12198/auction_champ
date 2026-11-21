@@ -22,7 +22,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="1"/>
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&amp;family=Exo+2:wght@500;600;700;800;900&amp;family=Barlow+Condensed:wght@600;700&amp;display=swap" rel="stylesheet"/>
-  <link rel="stylesheet" t-att-href="'/auction_module/static/src/css/youtube_overlay.css?v=1.5.991obs'"/>
+  <link rel="stylesheet" t-att-href="'/auction_module/static/src/css/youtube_overlay.css?v=2.3.8obs'"/>
 </head>
 <body>
   <t t-if="page == 'watch'">
@@ -47,32 +47,26 @@
   </t>
 
   <div id="ytov-root" class="auctionchamp-live-overlay" data-state="idle" data-conn="connecting">
-    <header class="bc-top">
-      <div class="bc-brand">
-        <img class="bc-brand-logo" src="/auction_module/static/src/assets/images/logo.svg" alt="AuctionChamp"/>
-        <span class="bc-live" id="ytovConn"><span class="bc-live-dot"/>LIVE</span>
-      </div>
-      <div class="bc-tournament">
-        <svg class="bc-trophy" viewBox="0 0 48 32" aria-hidden="true">
-          <path d="M8 14c0-6 4-10 10-10h2c1 4 4 6 8 6h8c-2 6-8 10-16 10-4 0-8-2-10-5l-2-1z" fill="#f5c451"/>
-          <path d="M24 20v6M18 28h12" stroke="#f5c451" stroke-width="2" fill="none" stroke-linecap="round"/>
-        </svg>
-        <t t-if="tournament_logo_url">
-          <img class="bc-t-logo" t-att-src="tournament_logo_url" alt=""/>
-        </t>
-        <span class="bc-t-copy">
-          <span class="bc-t-name"><t t-esc="tournament.name if tournament else 'AuctionChamp'"/></span>
-          <t t-if="tournament and tournament.description">
-            <span class="bc-t-desc"><t t-esc="tournament.description"/></span>
+    <header class="bc-corner">
+      <img class="bc-brand-logo" src="/auction_module/static/src/assets/images/logo.svg" alt="AuctionChamp"/>
+      <span class="bc-live" id="ytovConn"><span class="bc-live-dot"></span>LIVE</span>
+      <t t-if="tournament">
+        <span class="ytov-tour-rule" aria-hidden="true"></span>
+        <span class="ytov-tour" id="ytovTour">
+          <t t-if="tournament_logo_url">
+            <img class="ytov-tour-logo" t-att-src="tournament_logo_url" alt=""/>
           </t>
+          <span class="ytov-tour-copy">
+            <span class="ytov-tour-name"><t t-esc="tournament.name"/></span>
+            <span class="ytov-tour-desc" t-if="tournament.description"><t t-esc="tournament.description"/></span>
+          </span>
         </span>
-        <svg class="bc-trophy" viewBox="0 0 48 32" aria-hidden="true">
-          <path d="M40 14c0-6-4-10-10-10h-2c-1 4-4 6-8 6H12c2 6 8 10 16 10 4 0 8-2 10-5l2-1z" fill="#f5c451"/>
-          <path d="M24 20v6M18 28h12" stroke="#f5c451" stroke-width="2" fill="none" stroke-linecap="round"/>
-        </svg>
-      </div>
+      </t>
     </header>
-
+    <div class="ytov-clock" id="ytovTimer" hidden="hidden">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13" r="7" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 13V9M9 4h6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      <span id="ytovTimerVal">00:00</span>
+    </div>
     <div class="bc-notices">
       <div class="pause-banner" id="ytovPaused" hidden="hidden">AUCTION PAUSED</div>
       <div class="complete-banner" id="ytovCompleted" hidden="hidden">
@@ -82,12 +76,7 @@
       <div class="wait-chip" id="ytovWait">COMING UP NEXT</div>
     </div>
 
-    <div class="bc-punch" id="ytovPunch" data-kind="sold" hidden="hidden">
-      <div class="bc-punch-glow"></div>
-      <div class="bc-punch-seal">
-        <img class="bc-punch-mark" src="/auction_module/static/img/sold_overlay_gray.png" alt=""/>
-      </div>
-    </div>
+    <div class="bc-punch" id="ytovPunch" data-kind="sold" hidden="hidden"></div>
 
     <section class="bc-lower" id="ytovStatus" hidden="hidden">
       <div class="bc-status-card" id="ytovStatusCard">
@@ -97,30 +86,53 @@
 
     <section class="bc-lower" id="ytovPlayer" hidden="hidden">
       <div class="ipl-player-card">
+        <span class="ac-sweep" aria-hidden="true"></span>
         <div class="bc-photo-col">
-          <div class="ipl-photo-ph" id="ytovPhotoPh">&#9733;</div>
-          <img class="ipl-photo" id="ytovPhoto" alt="" src="/auction_module/static/description/icon.png"/>
-          <span class="bc-icon" id="ytovIcon" hidden="hidden">&#9819; ICON</span>
+          <div class="ac-photo-frame">
+            <div class="ipl-photo-ph" id="ytovPhotoPh">&#9733;</div>
+            <img class="ipl-photo" id="ytovPhoto" alt=""/>
+          </div>
+          <span class="bc-icon" id="ytovIcon" hidden="hidden">ICON</span>
           <span class="ipl-lot" id="ytovLot" hidden="hidden"></span>
+          <div class="ytov-photo-status" id="ytovStamp" data-kind="sold" hidden="hidden">
+            <div class="ytov-status-glow" aria-hidden="true"></div>
+            <div class="ytov-status-seal" aria-hidden="true">
+              <div class="ytov-status-seal-ring"></div>
+              <div class="ytov-status-seal-ring ytov-status-seal-ring--inner"></div>
+              <svg class="ytov-status-seal-svg" viewBox="0 0 200 200" aria-hidden="true">
+                <defs>
+                  <path id="ytovSealArcTop" d="M38,58 A80,80 0 0,1 162,58"/>
+                  <path id="ytovSealArcBot" d="M36,158 A80,80 0 0,0 164,158"/>
+                </defs>
+                <text id="ytovSealArcTopText" fill="currentColor" font-size="18" font-weight="800" letter-spacing="3.8">
+                  <textPath href="#ytovSealArcTop" startOffset="50%" text-anchor="middle">SOLD TO</textPath>
+                </text>
+                <text id="ytovSealArcBotText" fill="currentColor" font-size="16" font-weight="800" letter-spacing="1.4">
+                  <textPath href="#ytovSealArcBot" startOffset="50%" text-anchor="middle">TEAM</textPath>
+                </text>
+              </svg>
+              <div class="ytov-status-seal-core">
+                <img class="ytov-status-seal-mark" src="/auction_module/static/img/sold_overlay_gray.png" alt=""/>
+                <img class="ytov-status-seal-logo" id="ytovSealLogo" alt="" hidden="hidden"/>
+              </div>
+            </div>
+          </div>
         </div>
         <div class="bc-player">
+          <div class="ac-sold-head" id="ytovSoldHead" hidden="hidden">PLAYER SOLD</div>
+          <div class="ac-kicker" id="ytovKicker"></div>
           <div class="ipl-name" id="ytovName"></div>
           <div class="ipl-order" id="ytovOrder" hidden="hidden"></div>
           <div class="ipl-identity">
             <div class="ipl-identity-main" id="ytovChips"></div>
           </div>
           <div class="bc-meta" id="ytovMeta"></div>
-          <div class="ipl-stamp" id="ytovStamp" hidden="hidden"></div>
         </div>
         <div class="bc-bid" id="ytovLiveBox">
           <div class="bc-bid-label" id="ytovLiveLabel" hidden="hidden"></div>
           <div class="bc-bid-row">
             <span class="bc-bid-val" id="ytovBidVal"></span>
-            <svg class="bc-gavel" viewBox="0 0 64 64" aria-hidden="true">
-              <path d="M18 38l16-16 8 8-16 16-8-8z" fill="#f5c451"/>
-              <path d="M14 42l8 8" stroke="#f5c451" stroke-width="6" stroke-linecap="round"/>
-              <path d="M28 50h22" stroke="#f5c451" stroke-width="5" stroke-linecap="round"/>
-            </svg>
+            <span class="ac-inc" id="ytovInc" hidden="hidden"></span>
           </div>
           <div class="bc-base" id="ytovBase">BASE <span id="ytovBaseVal"></span></div>
         </div>
@@ -131,22 +143,76 @@
             <span class="ipl-bid-team-ph" id="ytovBidTeamLogoPh" hidden="hidden"></span>
             <span class="bc-team-name" id="ytovBidTeamName"></span>
           </div>
-          <div class="bc-timer" id="ytovTimer" hidden="hidden">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13" r="7" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 13V9M9 4h6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-            <span id="ytovTimerVal">00:00</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="bc-lower" id="ytovNext" hidden="hidden">
+      <div class="ytov-next-card">
+        <div class="ytov-next-kicker">NEXT PLAYER</div>
+        <div class="ytov-next-line">will load in</div>
+        <div class="ytov-next-num" id="ytovNextNum">0</div>
+        <div class="ytov-next-unit" id="ytovNextUnit">seconds</div>
+      </div>
+    </section>
+
+    <section class="ytov-ceremony" id="ytovCeremony" hidden="hidden">
+      <div class="ytov-spot" aria-hidden="true"></div>
+      <div class="ytov-stage">
+        <div class="ytov-card" id="ytovCerCard">
+          <t t-if="tournament">
+            <div class="ytov-card-head">
+              <t t-if="tournament_logo_url">
+                <img class="ytov-card-head-logo" t-att-src="tournament_logo_url" alt=""/>
+              </t>
+              <span class="ytov-card-head-copy">
+                <span class="ytov-card-head-name"><t t-esc="tournament.name"/></span>
+                <span class="ytov-card-head-desc" t-if="tournament.description"><t t-esc="tournament.description"/></span>
+              </span>
+            </div>
+          </t>
+          <div class="ytov-card-photo">
+            <div class="ytov-cer-ph" id="ytovCerPh">&#9733;</div>
+            <img id="ytovCerPhoto" alt=""/>
           </div>
+          <div class="ytov-panel">
+            <div class="ytov-card-name" id="ytovCerName">
+              <span class="ytov-card-first" id="ytovCerFirst"></span>
+              <span class="ytov-card-last" id="ytovCerLast"></span>
+            </div>
+            <div class="ytov-ribbon-sub" id="ytovCerLine"></div>
+            <div class="ytov-card-stats" id="ytovCerAttrs" hidden="hidden"></div>
+            <div class="ytov-card-foot">
+              <div class="ytov-card-seal" id="ytovCerSeal" data-kind="sold">
+                <img class="ytov-status-seal-mark" src="/auction_module/static/img/sold_overlay_gray.png" alt=""/>
+                <span class="ytov-card-seal-word" id="ytovCerSealWord">SOLD</span>
+              </div>
+              <span class="ytov-sold-to" id="ytovCerTo" hidden="hidden">TO</span>
+              <div class="ytov-crest" id="ytovCerCrest">
+                <div class="ytov-crest-ring">
+                  <img class="ytov-cer-logo" id="ytovCerLogo" alt="" hidden="hidden"/>
+                  <span class="ytov-cer-logo-ph" id="ytovCerLogoPh" hidden="hidden"></span>
+                </div>
+                <div class="ytov-crest-name" id="ytovCerTeam"></div>
+              </div>
+            </div>
+            <div class="ytov-card-price" id="ytovCerPts"></div>
+            <div class="ytov-card-pills" id="ytovCerRole" hidden="hidden"></div>
+          </div>
+          <span class="ytov-card-sheen" aria-hidden="true"></span>
         </div>
       </div>
     </section>
 
     <footer class="bc-ticker" id="ytovTicker" hidden="hidden">
+      <div class="bc-stat"><span>IN AUCTION</span><b id="ytovInAuction">0</b></div>
       <div class="bc-stat"><span>SOLD</span><b id="ytovSold">0</b></div>
-      <div class="bc-stat"><span>REMAINING</span><b id="ytovRemain">0</b></div>
-      <div class="bc-stat bc-stat-spend"><span>TOTAL SPEND</span><b id="ytovSpend">0</b></div>
+      <div class="bc-stat"><span>UNSOLD</span><b id="ytovUnsold">0</b></div>
       <div class="bc-recent">
         <span class="bc-recent-label">RECENT SALES</span>
         <div class="bc-recent-track" id="ytovRecent"></div>
       </div>
+      <div class="bc-stat bc-stat-spend"><span>TOTAL SPEND</span><b id="ytovSpend">0</b></div>
       <div class="sponsor-display" id="ytovSponsor" hidden="hidden">
         <div class="sponsor-track" id="ytovSponsorTrack"></div>
       </div>
@@ -166,7 +232,7 @@
     <t t-set="pu_tournament" t-value="tournament"/>
   </t>
   <script src="/auction_module/static/src/js/auction_sse_client.js"/>
-  <script src="/auction_module/static/src/js/youtube_overlay.js?v=1.5.990obs"/>
+  <script src="/auction_module/static/src/js/youtube_overlay.js?v=2.3.7obs"/>
 </body>
 </html>
 </template>

@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+<template id="auction_squad_screen" name="Tournament Squad View">
+  <html lang="en"
+        t-att-data-json-url="'/' + (db_name or '') + '/' + (tournament_slug or '') + '/auction/show/team/balance/json'"
+        t-att-data-sse-url="'/' + (db_name or '') + '/' + (tournament_slug or '') + '/auction/show/team/balance/events'"
+        t-att-data-sse-enabled="'1' if sse_enabled else '0'"
+        t-att-data-screen-idle="'0'">
+    <head>
+      <meta charset="UTF-8"/>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+      <title>Squad View</title>
+      <script src="/auction_module/static/src/js/screen_idle.js?v=1"></script>
+      <link rel="stylesheet" href="/auction_module/static/src/css/squad_screen.css?v=12"/>
+    </head>
+    <body class="sq-body">
+      <div class="sq-app" id="sqApp"
+           t-att-data-name="tournament.name or ''"
+           t-att-data-edition="edition or ''"
+           t-att-data-logo="logo_url or ''">
+        <header class="sq-head">
+          <img class="sq-brand-logo" src="/auction_module/static/src/assets/images/logo.svg" alt="AuctionChamp"/>
+          <h1 class="sq-title">Tournament Squad View</h1>
+          <div class="sq-tour">
+            <img class="sq-tour-logo" alt="" hidden="hidden"/>
+            <span class="sq-tour-name" id="sqTourName"><t t-esc="tournament.name or ''"/></span>
+            <span class="sq-edition" id="sqEdition" t-if="edition"><t t-esc="edition"/></span>
+          </div>
+          <button type="button" class="sq-live is-wait" id="sqLive">
+            <span class="sq-dot"></span>
+            <span class="sq-live-label">Connecting</span>
+          </button>
+          <button type="button" class="sq-fs" id="sqFs">Full screen</button>
+        </header>
+        <main class="sq-rows" id="sqRows" style="--teams:1">
+          <div class="sq-empty">Loading squads</div>
+        </main>
+        <footer class="sq-foot">
+          <span id="sqTeams">Total teams  0</span>
+          <span class="sq-sep">/</span>
+          <span id="sqSize">Squad size  0</span>
+          <span class="sq-sep">/</span>
+          <span id="sqPurse">Max points  0</span>
+          <span class="sq-powered">Powered by <img class="sq-powered-logo" src="/auction_module/static/src/assets/images/logo.svg" alt="AuctionChamp"/></span>
+        </footer>
+      </div>
+      <script src="/auction_module/static/src/js/auction_sse_client.js?v=3"></script>
+      <script src="/auction_module/static/src/js/squad_screen.js?v=8"></script>
+    </body>
+  </html>
+</template>
+</odoo>

@@ -80,17 +80,20 @@ class StartAuction(models.TransientModel):
         tournament = self.env['auction.tournament']
         tournament_id = self.env.context.get('default_tournament_id') or self.env.context.get('active_tournament_id')
         if tournament_id:
-            tournament = self.env['auction.tournament'].browse(tournament_id)
-            if tournament.exists():
+            tournament = self.env['auction.tournament'].browse(tournament_id).exists()
+            if tournament:
                 res['tournament_id'] = tournament.id
                 if 'team_ids' in fields_list:
-                    res['team_ids'] = [(6, 0, tournament.team_ids.ids)]
-        # Only offer tiers that belong to this tournament (fall back to all when
-        # the wizard is opened without a tournament context).
-        tier_domain = [('is_an_icon_tier', '!=', True)]
+                    res['team_ids'] = [(6, 0, tournament._tournament_team_records().ids)]
+        # Tiers configured on this tournament, including when the navbar
+        # Active Tournament is a different one. Without a tournament, fall
+        # back to the tiers this user can already see.
         if tournament:
-            tier_domain.append(('tournament_id', '=', tournament.id))
-        tiers = self.env['auction.player.tier'].search(tier_domain)
+            tiers = tournament._rule_tiers()
+        else:
+            tiers = self.env['auction.player.tier'].search([
+                ('is_an_icon_tier', '=', False),
+            ])
         if tiers and 'tier_limit_ids' in fields_list:
             single = len(tiers) == 1
             max_players = res.get('max_players') or 0
@@ -274,7 +277,20 @@ class StartAuction(models.TransientModel):
             raise ValidationError("All selected teams must belong to the same tournament.")
         tournament_id = self.tournament_id or team_tournaments[:1] or self.env['auction.tournament'].search([('active', '=', True)], limit=1)
         bid_slab_data = [(0, 0, {'from_amount': line.from_amount, 'to_amount': line.to_amount,'increment': line.increment}) for line in self.auction_bid_slab_ids]
-        tier_limit_data = [(0, 0, {'tier_id': line.tier_id.id, 'max_players': line.max_players, 'base_point': line.base_point, 'max_call': line.max_call}) for line in self.tier_limit_ids]
+        if self.tier_limit_ids:
+            tier_limit_data = [(0, 0, {'tier_id': line.tier_id.id, 'max_players': line.max_players, 'base_point': line.base_point, 'max_call': line.max_call}) for line in self.tier_limit_ids]
+        else:
+            # The dialog can open with an empty table when tier rows are
+            # hidden by the navbar tournament. Still write one limit per
+            # configured non-icon tier.
+            source = tournament_id._rule_tiers() if tournament_id else self.env['auction.player.tier']
+            single = len(source) == 1
+            tier_limit_data = [(0, 0, {
+                'tier_id': tier.id,
+                'max_players': self.max_players if single and self.max_players else 1,
+                'base_point': self.base_point if single and self.base_point else 0,
+                'max_call': 0,
+            }) for tier in source]
         if self.team_ids:
             existing_auctions  = auction_obj.search([('team_id', 'in', self.team_ids.ids)])
             if existing_auctions:
@@ -285,8 +301,8 @@ class StartAuction(models.TransientModel):
                     'total_point': self.max_points,
                     'max_players': self.max_players,
                     'base_point': self.base_point,
-                    'auction_bid_slab_ids': bid_slab_data,
-                    'tier_limit_ids': tier_limit_data,
+                    'auction_bid_slab_ids': [(0, 0, dict(cmd[2])) for cmd in bid_slab_data],
+                    'tier_limit_ids': [(0, 0, dict(cmd[2])) for cmd in tier_limit_data],
                 }
 
                 auction_data.update({'tournament_id': team.tournament_id.id or tournament_id.id})

@@ -299,12 +299,28 @@ class TestSliceBalancePlayers(unittest.TestCase):
             _snapshot_schema_ok,
         )
         self.assertFalse(_snapshot_schema_ok('bal', {'teams': [], 'seq': 1}))
-        self.assertTrue(_snapshot_schema_ok('bal', {'players': {}, 'seq': 1}))
+        self.assertFalse(_snapshot_schema_ok('bal', {'players': {}, 'seq': 1}))
+        self.assertTrue(_snapshot_schema_ok('bal', {
+            'players': {}, 'seq': 1, 'squad_meta': {}, 'teams': [],
+        }))
         self.assertFalse(_snapshot_schema_ok('bal', {
             'players': {'sold': [{'id': 1, 'name': 'A'}], 'unsold': [], 'auction': []},
+            'squad_meta': {},
+        }))
+        self.assertFalse(_snapshot_schema_ok('bal', {
+            'players': {},
+            'squad_meta': {},
+            'teams': [{'id': 1, 'remaining_points': 10}],
+        }))
+        self.assertFalse(_snapshot_schema_ok('bal', {
+            'players': {'sold': [{'id': 1, 'name': 'A', 'attrs': [], 'photo_url': '/x/photo?sz=bs'}], 'unsold': [], 'auction': []},
+            'squad_meta': {'name': 'Cup'},
+            'teams': [{'id': 1, 'name': 'Eagles'}],
         }))
         self.assertTrue(_snapshot_schema_ok('bal', {
-            'players': {'sold': [{'id': 1, 'name': 'A', 'attrs': [], 'photo_url': '/x/photo?sz=bs'}], 'unsold': [], 'auction': []},
+            'players': {'sold': [{'id': 1, 'name': 'A', 'attrs': [], 'photo_url': '/x/photo?sz=bs', 'sold_seq': 9}], 'unsold': [], 'auction': []},
+            'squad_meta': {'name': 'Cup'},
+            'teams': [{'id': 1, 'name': 'Eagles'}],
         }))
         self.assertTrue(_snapshot_schema_ok('pj', {'player': {}, 'seq': 1}))
 

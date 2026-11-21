@@ -872,6 +872,13 @@ class AuctionTournament(models.Model):
         help='Public live bid summary / team balance dashboard '
              '(/…/auction/show/team/balance).',
     )
+    squad_view_url = fields.Char(
+        string='Squad View URL',
+        compute='_compute_urls',
+        store=False,
+        help='Full-screen squad board for a TV or projector. Updates from the '
+             'same live socket as Bid Summary when a player is sold.',
+    )
     projector_screen_idle_min = fields.Integer(
         string='Projector screen idle (minutes)',
         default=0,
@@ -1032,8 +1039,11 @@ class AuctionTournament(models.Model):
             if rec.slug:
                 rec.bid_summary_url = '{}/{}/{}/auction/show/team/balance'.format(
                     base_url, db_name, rec.slug)
+                rec.squad_view_url = '{}/{}/{}/auction/squad'.format(
+                    base_url, db_name, rec.slug)
             else:
                 rec.bid_summary_url = False
+                rec.squad_view_url = False
 
     def get_slug_url_catalog(self, slug=None):
         """Public URLs derived from a tournament slug (registration, live, projector)."""
@@ -1081,11 +1091,48 @@ class AuctionTournament(models.Model):
                 'detail': _('Team purse / bid summary screen.'),
             },
             {
+                'name': _('Squad View'),
+                'url': '{}/auction/squad'.format(prefix),
+                'detail': _('Full-screen team squad board for a TV or projector.'),
+            },
+            {
                 'name': _('Payment Tracker'),
                 'url': '{}/auction/payment-marker'.format(prefix),
                 'detail': _('Payment marker / tracker page.'),
             },
         ]
+
+    def read(self, fields=None, load='_classic_read'):
+        # The navbar Active Tournament scopes teams and tiers. Opening a
+        # different organizer tournament must still load that tournament's
+        # own teams and tiers, otherwise Set Auction Rules has nothing to copy.
+        if (
+            len(self) == 1
+            and self.id
+            and not self.env.context.get('auction_reading_tournament')
+        ):
+            self = self.with_context(
+                auction_reading_tournament=True,
+                default_tournament_id=self.id,
+                active_model='auction.tournament',
+                active_id=self.id,
+                active_ids=[self.id],
+            )
+        return super().read(fields=fields, load=load)
+
+    def _rule_tiers(self):
+        """Non-icon tiers used to prefill Set Auction Rules.
+
+        Skips the navbar tournament scope. Tiers configured on this
+        tournament stay visible here even when another tournament is active.
+        """
+        self.ensure_one()
+        return self.env['auction.player.tier'].sudo().with_context(
+            auction_skip_tournament_security=True,
+        ).search([
+            ('tournament_id', '=', self.id),
+            ('is_an_icon_tier', '=', False),
+        ])
 
     @api.depends('team_ids')
     def _compute_has_teams(self):
@@ -3614,6 +3661,23 @@ class AuctionTournament(models.Model):
             'target': 'new',
         }
 
+    def action_open_squad_display(self):
+        """Open the public full-screen Squad View in a new tab."""
+        self.ensure_one()
+        url = self.squad_view_url
+        if not url:
+            if self.slug:
+                url = '/%s/%s/auction/squad' % (self.env.cr.dbname, self.slug)
+            else:
+                raise UserError(_(
+                    'Squad View is not available until the tournament has a name/slug.'
+                ))
+        return {
+            'type': 'ir.actions.act_url',
+            'url': url,
+            'target': 'new',
+        }
+
     def action_open_pool_generator(self):
         """Open Pool & Fixture Generator scoped to this tournament."""
         self.ensure_one()
@@ -4285,6 +4349,7 @@ class AuctionTournament(models.Model):
         'action_open_youtube_watch',
         'action_open_live_board',
         'action_open_bid_summary',
+        'action_open_squad_display',
         'action_open_revoke_transactions',
         'action_open_pool_generator',
         'action_share_whatsapp',
@@ -4670,6 +4735,7 @@ class AuctionTournament(models.Model):
                 'projector': rec.projector_url or '',
                 'live_board': rec.live_board_url or '',
                 'bid_summary': rec.bid_summary_url or '',
+                'squad_view': rec.squad_view_url or '',
                 'youtube_overlay': rec.youtube_overlay_url or '',
                 'youtube_watch': rec.youtube_watch_url or '',
             },

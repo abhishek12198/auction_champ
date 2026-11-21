@@ -13,6 +13,9 @@
     var root = document.getElementById('ytov-root');
     var waitEl = document.getElementById('ytovWait');
     var playerEl = document.getElementById('ytovPlayer');
+    var nextEl = document.getElementById('ytovNext');
+    var nextNumEl = document.getElementById('ytovNextNum');
+    var nextUnitEl = document.getElementById('ytovNextUnit');
     var cardEl = playerEl ? playerEl.querySelector('.ipl-player-card') : null;
     var photoEl = document.getElementById('ytovPhoto');
     var photoPhEl = document.getElementById('ytovPhotoPh');
@@ -34,12 +37,15 @@
     var bidTeamNameEl = document.getElementById('ytovBidTeamName');
     var teamLabelEl = document.getElementById('ytovTeamLabel');
     var stampEl = document.getElementById('ytovStamp');
+    var soldHeadEl = document.getElementById('ytovSoldHead');
+    var incEl = document.getElementById('ytovInc');
     var pausedEl = document.getElementById('ytovPaused');
     var completeEl = document.getElementById('ytovCompleted');
     var completeStatsEl = document.getElementById('ytovCompleteStats');
     var tickerEl = document.getElementById('ytovTicker');
     var soldEl = document.getElementById('ytovSold');
-    var remainEl = document.getElementById('ytovRemain');
+    var inAuctionEl = document.getElementById('ytovInAuction');
+    var unsoldCountEl = document.getElementById('ytovUnsold');
     var spendEl = document.getElementById('ytovSpend');
     var recentEl = document.getElementById('ytovRecent');
     var sponsorEl = document.getElementById('ytovSponsor');
@@ -49,10 +55,12 @@
     var teamRowEl = document.getElementById('ytovTeamRow');
     var punchEl = document.getElementById('ytovPunch');
 
-    var PLACEHOLDER_PHOTO = '/auction_module/static/description/icon.png';
-    var INTRO_MS = 1200;
-    var POLL_MIN = 2000;
-    var POLL_MAX = 8000;
+    var INTRO_MS = 1100;
+    var animKey = '';
+    var enterUntil = 0;
+    var amountFrame = 0;
+    var POLL_MIN = 250;
+    var POLL_MAX = 400;
 
     var pollTimer = null;
     var pollAllowed = false;
@@ -75,6 +83,7 @@
     var clockTimer = null;
     var timerPoll = null;
     var preloaded = {};
+    var photoReady = {};
     var sponsorKey = '';
     var recentKey = '';
     var connState = 'CONNECTING';
@@ -227,6 +236,78 @@
         return bits.slice(0, 6).join('');
     }
 
+    function splitName(name) {
+        var parts = String(name || '').trim().split(/\s+/).filter(Boolean);
+        if (!parts.length) {
+            return {first: '', last: ''};
+        }
+        if (parts.length === 1) {
+            return {first: '', last: parts[0]};
+        }
+        return {first: parts.slice(0, -1).join(' '), last: parts[parts.length - 1]};
+    }
+
+    function teamInitials(name) {
+        var words = String(name || '').trim().split(/\s+/).filter(Boolean);
+        if (!words.length) {
+            return '';
+        }
+        var first = words[0].replace(/[^A-Za-z0-9]/g, '');
+        if (first.length >= 2 && first.length <= 4 && first === first.toUpperCase()) {
+            return first;
+        }
+        if (words.length === 1) {
+            return first.slice(0, 3).toUpperCase();
+        }
+        return words.map(function (word) {
+            return word.charAt(0);
+        }).join('').slice(0, 4).toUpperCase();
+    }
+
+    function ceremonyPills(p) {
+        var items = [];
+        var role = roleText(p);
+        if (role) {
+            items.push({text: role, kind: 'fill'});
+        }
+        if (p.tier_name) {
+            items.push({text: p.tier_name, kind: items.length ? 'line' : 'fill'});
+        }
+        return items.map(function (item) {
+            return '<span class="ytov-pill ytov-pill-' + item.kind + '"><i>' + esc(item.text) + '</i></span>';
+        }).join('');
+    }
+
+    function ceremonyStats(p) {
+        var bits = [];
+        function add(k, v) {
+            v = styleLabel(v);
+            if (v) {
+                bits.push('<div class="ytov-stat"><em>' + esc(k) + '</em><b>' + esc(v) + '</b></div>');
+            }
+        }
+        add('Age', p.age);
+        var sport = p.tournament_type || '';
+        if (sport === 'football') {
+            add('Foot', p.preferred_foot);
+        } else if (sport === 'badminton') {
+            add('Hand', p.preferred_hand || p.preferred_foot);
+        } else if (sport === 'kabaddi') {
+            add('Club', p.previous_club);
+        } else {
+            add('Batting', p.batting_style);
+            add('Bowling', p.bowling_style);
+        }
+        add('Location', p.location || p.current_team);
+        (p.other_attributes || p.extra_attributes || []).forEach(function (row) {
+            if (!row) {
+                return;
+            }
+            add(row.label, row.value);
+        });
+        return bits.slice(0, 5).join('');
+    }
+
     function preload(url) {
         if (!url || preloaded[url]) {
             return;
@@ -234,6 +315,9 @@
         preloaded[url] = true;
         try {
             var im = new Image();
+            im.onload = function () {
+                photoReady[url] = true;
+            };
             im.src = url;
         } catch (e) { /* ignore */ }
     }
@@ -274,25 +358,38 @@
         setTimeout(fitCanvas, 280);
     }
 
+    function initialOf(name) {
+        var text = String(name || '').trim();
+        return text ? text.charAt(0).toUpperCase() : '\u2605';
+    }
+
     function setPhoto(url, name) {
-        var src = url || PLACEHOLDER_PHOTO;
-        if (photoEl) {
-            photoEl.onerror = function () {
-                photoEl.removeAttribute('src');
-                photoEl.classList.remove('is-on');
-                show(photoPhEl, true);
-            };
-            if (photoEl.getAttribute('data-src-set') !== src) {
-                photoEl.setAttribute('data-src-set', src);
-                photoEl.src = src;
-            }
-            photoEl.alt = name || '';
-            photoEl.classList.add('is-on');
-            show(photoPhEl, !url);
+        if (photoPhEl) {
+            photoPhEl.textContent = initialOf(name);
         }
-        if (url) {
-            preload(url);
+        if (!photoEl) {
+            return;
         }
+        photoEl.alt = name || '';
+        if (!url) {
+            photoEl.removeAttribute('src');
+            photoEl.removeAttribute('data-src-set');
+            photoEl.classList.remove('is-on');
+            show(photoPhEl, true);
+            return;
+        }
+        photoEl.onerror = function () {
+            photoEl.removeAttribute('src');
+            photoEl.classList.remove('is-on');
+            show(photoPhEl, true);
+        };
+        if (photoEl.getAttribute('data-src-set') !== url) {
+            photoEl.setAttribute('data-src-set', url);
+            photoEl.src = url;
+        }
+        photoEl.classList.add('is-on');
+        show(photoPhEl, false);
+        preload(url);
     }
 
     function setStageLabel(word, teamWord) {
@@ -340,40 +437,369 @@
         }
         show(teamRowEl, !!(name || logoUrl));
         show(bidTeamEl, true);
+        fitTeamName();
+    }
+
+    function fitTeamName() {
+        var el = bidTeamNameEl;
+        if (!el) {
+            return;
+        }
+        var len = String(el.textContent || '').length;
+        var size = 32;
+        if (len > 12) size = 28;
+        if (len > 16) size = 24;
+        if (len > 20) size = 20;
+        if (len > 26) size = 17;
+        if (len > 32) size = 14;
+        el.style.letterSpacing = size >= 28 ? '.04em' : '0';
+        el.style.fontSize = size + 'px';
+        var guard = 0;
+        while (guard < 22 && size > 11 && el.clientWidth > 0 && el.scrollWidth > el.clientWidth + 1) {
+            size -= 1;
+            el.style.fontSize = size + 'px';
+            guard += 1;
+        }
+    }
+
+    if (document.fonts && document.fonts.ready) {
+        document.fonts.ready.then(function () { fitTeamName(); });
+    }
+
+    function setSealArc(id, value) {
+        var el = document.getElementById(id);
+        if (!el) {
+            return null;
+        }
+        var path = el.querySelector('textPath');
+        if (path) {
+            path.textContent = value || '';
+            path.removeAttribute('textLength');
+        }
+        return path;
+    }
+
+    function fitSealTeam(teamName, textId) {
+        textId = textId || 'ytovSealArcBotText';
+        var arc = document.getElementById(textId);
+        var path = setSealArc(textId, teamName);
+        if (!arc) {
+            return;
+        }
+        var len = String(teamName || '').length || 1;
+        var size = 15;
+        if (len > 12) { size = 13; }
+        if (len > 16) { size = 11.5; }
+        if (len > 20) { size = 10; }
+        if (len > 26) { size = 8.5; }
+        arc.setAttribute('font-size', String(size));
+        arc.setAttribute('letter-spacing', len > 18 ? '0' : '0.8');
+        if (path && len > 16) {
+            path.setAttribute('textLength', '250');
+            path.setAttribute('lengthAdjust', 'spacingAndGlyphs');
+        }
+    }
+
+    function setCeremonyPhoto(photo, ph, player) {
+        var url = player && player.photo_url ? player.photo_url : '';
+        if (!photo) {
+            return;
+        }
+        if (!url) {
+            photo.onload = null;
+            photo.onerror = null;
+            photo.removeAttribute('src');
+            photo.removeAttribute('data-src-set');
+            photo.classList.remove('is-on');
+            show(ph, true);
+            return;
+        }
+        if (photo.getAttribute('data-src-set') === url && photo.classList.contains('is-on') && photo.complete && photo.naturalWidth) {
+            show(ph, false);
+            return;
+        }
+        photo.classList.remove('is-on');
+        show(ph, true);
+        photo.onload = function () {
+            if (photo.getAttribute('data-src-set') !== url) {
+                return;
+            }
+            photoReady[url] = true;
+            photo.classList.add('is-on');
+            show(ph, false);
+        };
+        photo.onerror = function () {
+            if (photo.getAttribute('data-src-set') !== url) {
+                return;
+            }
+            photo.classList.remove('is-on');
+            show(ph, true);
+        };
+        photo.setAttribute('data-src-set', url);
+        if (!photoReady[url]) {
+            preload(url);
+        }
+        photo.src = url;
+        if (photo.complete && photo.naturalWidth) {
+            photoReady[url] = true;
+            photo.classList.add('is-on');
+            show(ph, false);
+        }
+    }
+
+    function hideCeremony() {
+        var el = document.getElementById('ytovCeremony');
+        if (!el) {
+            return;
+        }
+        el.classList.remove('is-on');
+        show(el, false);
+    }
+
+    function showCeremony(player, amount, teamName, logoUrl, fresh, kind) {
+        var el = document.getElementById('ytovCeremony');
+        if (!el || !player) {
+            return;
+        }
+        var photo = document.getElementById('ytovCerPhoto');
+        var ph = document.getElementById('ytovCerPh');
+        var first = document.getElementById('ytovCerFirst');
+        var last = document.getElementById('ytovCerLast');
+        var role = document.getElementById('ytovCerRole');
+        var attrs = document.getElementById('ytovCerAttrs');
+        var team = document.getElementById('ytovCerTeam');
+        var ptsEl = document.getElementById('ytovCerPts');
+        var logo = document.getElementById('ytovCerLogo');
+        var logoPh = document.getElementById('ytovCerLogoPh');
+        var crest = document.getElementById('ytovCerCrest');
+        var card = document.getElementById('ytovCerCard');
+        var seal = document.getElementById('ytovCerSeal');
+        kind = kind || 'sold';
+        var sold = kind === 'sold';
+        var parts = splitName(player.name);
+        if (first) {
+            first.textContent = parts.first;
+        }
+        if (last) {
+            last.textContent = parts.last;
+        }
+        if (role) {
+            role.innerHTML = ceremonyPills(player);
+        }
+        var line = document.getElementById('ytovCerLine');
+        if (line) {
+            var roleName = roleText(player);
+            var tierName = styleLabel(player.tier_name);
+            line.innerHTML =
+                (roleName ? '<span class="ytov-fact"><em>ROLE</em><b>' + esc(roleName) + '</b></span>' : '') +
+                (tierName ? '<span class="ytov-fact"><em>TIER</em><b>' + esc(tierName) + '</b></span>' : '');
+        }
+        if (attrs) {
+            attrs.innerHTML = '';
+        }
+        if (team) {
+            team.textContent = teamName || '';
+        }
+        if (ptsEl) {
+            if (sold) {
+                ptsEl.textContent = pts(amount);
+                show(ptsEl, true);
+            } else {
+                ptsEl.textContent = '';
+                show(ptsEl, false);
+            }
+        }
+        if (card) {
+            card.classList.toggle('is-unsold', kind === 'unsold');
+            card.classList.toggle('is-withdrawn', kind === 'withdrawn');
+        }
+        if (seal) {
+            seal.setAttribute('data-kind', sold ? 'sold' : (kind === 'withdrawn' ? 'withdrawn' : 'unsold'));
+        }
+        var sealWord = document.getElementById('ytovCerSealWord');
+        if (sealWord) {
+            sealWord.textContent = sold ? 'SOLD' : (kind === 'withdrawn' ? 'WITHDRAWN' : 'UNSOLD');
+        }
+        if (ph) {
+            ph.textContent = initialOf(player.name);
+        }
+        setCeremonyPhoto(photo, ph, player);
+        if (logo) {
+            if (logoUrl) {
+                logo.src = logoUrl;
+                logo.removeAttribute('hidden');
+                show(logoPh, false);
+            } else {
+                logo.setAttribute('hidden', 'hidden');
+                if (logoPh) {
+                    logoPh.textContent = teamInitials(teamName);
+                }
+                show(logoPh, !!teamName);
+            }
+        }
+        if (team) {
+            show(team, sold && !!teamName);
+        }
+        show(crest, sold && !!teamName);
+        show(document.getElementById('ytovCerTo'), sold && !!teamName);
+        show(el, true);
+        if (fresh || !el.classList.contains('is-on')) {
+            el.classList.remove('is-on');
+            void el.offsetWidth;
+            el.classList.add('is-on');
+        }
     }
 
     function hidePunch() {
-        if (!punchEl) {
-            return;
+        show(stampEl, false);
+        hideCeremony();
+        if (punchEl) {
+            punchEl.classList.remove('is-on');
+            punchEl.setAttribute('hidden', 'hidden');
         }
-        punchEl.classList.remove('is-on');
-        punchEl.setAttribute('hidden', 'hidden');
     }
 
     function showPunch(kind) {
-        if (!punchEl) {
+        if (!stampEl) {
             return;
         }
-        var same = punchEl.getAttribute('data-kind') === kind && punchEl.classList.contains('is-on') && !punchEl.hasAttribute('hidden');
-        punchEl.setAttribute('data-kind', kind);
-        punchEl.removeAttribute('hidden');
-        if (!same) {
-            punchEl.classList.remove('is-on');
-            void punchEl.offsetWidth;
-            punchEl.classList.add('is-on');
+        var sold = kind === 'sold';
+        stampEl.setAttribute('data-kind', sold ? 'sold' : (kind === 'withdrawn' ? 'withdrawn' : 'unsold'));
+        setSealArc('ytovSealArcTopText', sold ? 'SOLD TO' : 'NO BID');
+        var team = '';
+        if (sold && bidTeamNameEl) {
+            team = bidTeamNameEl.textContent || '';
+        }
+        fitSealTeam(sold ? (String(team || 'TEAM').toUpperCase()) : (kind === 'withdrawn' ? 'WITHDRAWN' : 'UNSOLD'));
+        var logo = document.getElementById('ytovSealLogo');
+        var logoSrc = sold && bidTeamLogoEl && !bidTeamLogoEl.hasAttribute('hidden') ? bidTeamLogoEl.getAttribute('src') : '';
+        if (logo) {
+            if (logoSrc) {
+                logo.src = logoSrc;
+                logo.classList.add('is-on');
+                logo.removeAttribute('hidden');
+            } else {
+                logo.classList.remove('is-on');
+                logo.setAttribute('hidden', 'hidden');
+            }
+        }
+        show(stampEl, true);
+        if (punchEl) {
+            punchEl.setAttribute('hidden', 'hidden');
         }
     }
 
-    function shortName(name) {
-        var parts = String(name || '').trim().split(/\s+/);
-        if (parts.length < 2) {
-            return parts[0] || '';
+    function setSoldHead(text) {
+        if (!soldHeadEl) {
+            return;
         }
-        return parts[0] + ' ' + parts[parts.length - 1].charAt(0) + '.';
+        if (!text) {
+            show(soldHeadEl, false);
+            return;
+        }
+        soldHeadEl.textContent = text;
+        show(soldHeadEl, true);
+    }
+
+    function reduceMotion() {
+        try {
+            return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        } catch (e) {
+            return false;
+        }
+    }
+
+    function teamAccent(team) {
+        if (team && team.color) {
+            return String(team.color);
+        }
+        var key = String((team && (team.id || team.name)) || '0');
+        var n = 0;
+        var i;
+        for (i = 0; i < key.length; i++) {
+            n = (n + key.charCodeAt(i) * (i + 1)) % 6;
+        }
+        return ['#C91E32', '#1D4ED8', '#0F766E', '#B45309', '#6D28D9', '#0369A1'][n];
+    }
+
+    function paintAmount(el, target, animate) {
+        target = Math.round(Number(target) || 0);
+        if (!el) {
+            return;
+        }
+        var prev = Number(el.getAttribute('data-n'));
+        if (amountFrame) {
+            cancelAnimationFrame(amountFrame);
+            amountFrame = 0;
+        }
+        if (!animate || reduceMotion() || !isFinite(prev) || prev === target) {
+            el.textContent = pts(target);
+            el.setAttribute('data-n', String(target));
+            return;
+        }
+        var t0 = (window.performance && performance.now) ? performance.now() : Date.now();
+        function step(now) {
+            var k = Math.min(1, (now - t0) / 520);
+            var eased = 1 - Math.pow(1 - k, 3);
+            el.textContent = pts(Math.round(prev + (target - prev) * eased));
+            if (k < 1) {
+                amountFrame = requestAnimationFrame(step);
+            } else {
+                amountFrame = 0;
+            }
+        }
+        el.setAttribute('data-n', String(target));
+        amountFrame = requestAnimationFrame(step);
+    }
+
+    function paintIncrement(amount, base) {
+        if (!incEl) {
+            return;
+        }
+        var prev = Number(lastBid || 0);
+        var delta = 0;
+        if (prev > 0 && amount > prev) {
+            delta = amount - prev;
+        } else if (!prev && base > 0 && amount > base) {
+            delta = amount - base;
+        }
+        if (delta > 0) {
+            incEl.textContent = '+' + pts(delta);
+            show(incEl, true);
+        } else {
+            show(incEl, false);
+        }
+    }
+
+    function armCard(uiState, playerId) {
+        if (!cardEl) {
+            return false;
+        }
+        var sealed = uiState === 'SOLD' || uiState === 'UNSOLD' || uiState === 'WITHDRAWN';
+        if (uiState === 'PLAYER_INTRO') {
+            cardEl.classList.add('is-enter');
+            enterUntil = Date.now() + INTRO_MS;
+        } else if (Date.now() >= enterUntil) {
+            cardEl.classList.remove('is-enter');
+        }
+        if (!sealed) {
+            animKey = '';
+            cardEl.classList.remove('is-play');
+            return false;
+        }
+        var key = uiState + ':' + playerId;
+        if (key === animKey) {
+            return false;
+        }
+        animKey = key;
+        cardEl.classList.remove('is-play');
+        void cardEl.offsetWidth;
+        cardEl.classList.add('is-play');
+        return true;
     }
 
     function paintRecent(list) {
-        var rows = (list || []).filter(function (row) { return row && row.kind !== 'unsold'; }).slice(0, 3);
+        var rows = (list || []).filter(function (row) { return row && row.kind !== 'unsold'; }).slice(0, 5);
         var key = rows.map(function (row) {
             return (row.player_name || '') + '|' + (row.points || 0);
         }).join(',');
@@ -390,7 +816,8 @@
                 ? '<img alt="" src="' + esc(row.player_photo_url) + '"/>'
                 : '<span class="bc-sale-ph">&#9733;</span>';
             el.innerHTML = photo +
-                '<span class="bc-sale-copy"><span class="bc-sale-name">' + esc(shortName(row.player_name)) + '</span>' +
+                '<span class="bc-sale-copy"><span class="bc-sale-name">' + esc(String(row.player_name || '').toUpperCase()) + '</span>' +
+                '<span class="bc-sale-team">' + esc(String(row.team_name || '').toUpperCase()) + '</span>' +
                 '<span class="bc-sale-pts">' + esc(pts(row.points)) + '</span></span>';
             recentEl.appendChild(el);
             if (row.player_photo_url) {
@@ -403,7 +830,8 @@
         var prog = (result && result.progress) || {};
         var total = Number(prog.total || 0);
         var sold = Number(prog.sold || 0);
-        var remain = prog.remaining != null ? Number(prog.remaining) : Math.max(total - sold, 0);
+        var unsold = prog.unsold != null ? Number(prog.unsold) : 0;
+        var inAuction = prog.in_auction != null ? Number(prog.in_auction) : Number(prog.auction || 0);
         var spend = 0;
         var teams = (result && result.teams) || [];
         for (var i = 0; i < teams.length; i++) {
@@ -416,8 +844,11 @@
         if (soldEl) {
             soldEl.textContent = String(sold);
         }
-        if (remainEl) {
-            remainEl.textContent = String(remain);
+        if (inAuctionEl) {
+            inAuctionEl.textContent = String(inAuction);
+        }
+        if (unsoldCountEl) {
+            unsoldCountEl.textContent = String(unsold);
         }
         if (spendEl) {
             spendEl.textContent = pts(spend);
@@ -425,7 +856,7 @@
         paintRecent(result && result.recent_bids);
         show(tickerEl, total > 0 || sold > 0);
         if (completeStatsEl) {
-            completeStatsEl.textContent = sold + ' SOLD  ·  ' + remain + ' REMAINING  ·  SPEND ' + pts(spend);
+            completeStatsEl.textContent = inAuction + ' IN AUCTION  ·  ' + sold + ' SOLD  ·  ' + unsold + ' UNSOLD  ·  SPEND ' + pts(spend);
         }
     }
 
@@ -515,7 +946,6 @@
         timerEl.classList.toggle('is-low', !clock.held && secs > 0 && secs <= 10);
         timerEl.classList.toggle('is-held', !!clock.held || !!clock.frozen);
         show(timerEl, true);
-        show(bidTeamEl, true);
     }
 
     function syncClock(timer) {
@@ -616,6 +1046,9 @@
         if (uiState === 'UNSOLD' && lastState !== 'UNSOLD') {
             return 'player_unsold';
         }
+        if (uiState === 'WITHDRAWN' && lastState !== 'WITHDRAWN') {
+            return 'player_withdrawn';
+        }
         if (bidAmt && bidAmt !== lastBid) {
             return 'bid_updated';
         }
@@ -695,6 +1128,40 @@
         }, delay + 40);
     }
 
+    var nextTimer = null;
+
+    function nextSecondsLeft() {
+        if (!holdUntil) {
+            return 0;
+        }
+        return Math.max(0, Math.ceil((holdUntil - Date.now()) / 1000));
+    }
+
+    function paintNextLoad() {
+        var n = nextSecondsLeft();
+        if (nextNumEl) {
+            nextNumEl.textContent = String(n);
+        }
+        if (nextUnitEl) {
+            nextUnitEl.textContent = n === 1 ? 'second' : 'seconds';
+        }
+    }
+
+    function setNextLoad(on) {
+        show(nextEl, !!on);
+        if (!on) {
+            if (nextTimer) {
+                clearInterval(nextTimer);
+                nextTimer = null;
+            }
+            return;
+        }
+        paintNextLoad();
+        if (!nextTimer) {
+            nextTimer = setInterval(paintNextLoad, 250);
+        }
+    }
+
     function bridgeTitle(result) {
         var phase = ((result && result.wait_phase) || {}).phase || '';
         if (phase === 'loading_unsold') {
@@ -752,15 +1219,15 @@
         var soldAmt = p ? Number(p.sold_points || 0) : 0;
         var baseAmt = p ? Number(p.base_price || 0) : 0;
         var pState = p ? (p.state || 'auction') : '';
-        var resultHold = pState === 'sold' || pState === 'unsold';
+        var resultHold = pState === 'sold' || pState === 'unsold' || pState === 'withdrawn';
         syncCelebration(p, result, resultHold);
-        var celebrating = resultHold && p && holdPlayerId === p.id && Date.now() < holdUntil;
+        var celebrating = resultHold && !!p;
         var uiState = 'IDLE';
 
         if (paused && !completed) {
             uiState = 'PAUSED';
         } else if (celebrating) {
-            uiState = pState === 'unsold' ? 'UNSOLD' : 'SOLD';
+            uiState = pState === 'unsold' ? 'UNSOLD' : (pState === 'withdrawn' ? 'WITHDRAWN' : 'SOLD');
         } else if (completed) {
             uiState = 'COMPLETED';
         } else if (resultHold) {
@@ -781,6 +1248,7 @@
         }
 
         setUiState(uiState);
+        setNextLoad(uiState === 'SOLD' || uiState === 'UNSOLD' || uiState === 'WITHDRAWN');
         paintTicker(result);
         rotateSponsors(result.advertisers || []);
         show(completeEl, uiState === 'COMPLETED');
@@ -788,6 +1256,7 @@
 
         if (uiState === 'PAUSED' || uiState === 'BRIDGE') {
             show(playerEl, false);
+            animKey = '';
             hidePunch();
             setTimerActive(false);
             show(waitEl, false);
@@ -806,6 +1275,7 @@
 
         if (uiState === 'COMPLETED' || !p) {
             show(playerEl, false);
+            animKey = '';
             hidePunch();
             setTimerActive(false);
             if (waitEl) {
@@ -822,10 +1292,17 @@
         }
 
         show(waitEl, false);
-        show(playerEl, true);
+        show(playerEl, uiState !== 'SOLD' && uiState !== 'UNSOLD' && uiState !== 'WITHDRAWN');
         if (cardEl) {
-            cardEl.classList.remove('is-sold', 'is-unsold', 'has-live-bid');
+            cardEl.classList.remove('is-sold', 'is-unsold', 'is-withdrawn', 'has-live-bid');
+            cardEl.style.setProperty('--team', teamAccent(
+                (p.current_bid_team && (p.current_bid_team.id || p.current_bid_team.name))
+                    ? p.current_bid_team
+                    : {name: p.team_name || ''}
+            ));
         }
+        var sealFresh = (uiState === 'SOLD' || uiState === 'UNSOLD' || uiState === 'WITHDRAWN')
+            && ((uiState + ':' + p.id) !== animKey);
 
         if (nameEl) {
             nameEl.textContent = p.name || '';
@@ -856,79 +1333,68 @@
             if (cardEl) {
                 cardEl.classList.add('is-sold');
             }
+            setSoldHead('PLAYER SOLD');
             if (kickerEl) {
-                kickerEl.textContent = 'SOLD';
+                kickerEl.textContent = '';
             }
-            if (bidValEl) {
-                bidValEl.textContent = pts(soldAmt || bidAmt || baseAmt);
-            }
+            paintAmount(bidValEl, soldAmt || bidAmt || baseAmt, false);
+            show(incEl, false);
             show(liveBoxEl, true);
             show(baseWrapEl, false);
-            if (stampEl) {
-                stampEl.textContent = 'SOLD';
-            }
-            show(stampEl, true);
-            setTeam(soldTeamName, soldLogo, '', 'Sold to');
-            showPunch('sold');
+            setTeam(soldTeamName, soldLogo, 'SOLD FOR', 'Sold to');
+            showCeremony(p, soldAmt || bidAmt || baseAmt, soldTeamName, soldLogo, sealFresh, 'sold');
             setTimerActive(false);
-        } else if (uiState === 'UNSOLD') {
+        } else if (uiState === 'UNSOLD' || uiState === 'WITHDRAWN') {
+            var withdrawn = uiState === 'WITHDRAWN';
             if (cardEl) {
-                cardEl.classList.add('is-unsold');
+                cardEl.classList.add(withdrawn ? 'is-withdrawn' : 'is-unsold');
             }
+            setSoldHead(withdrawn ? 'PLAYER WITHDRAWN' : 'PLAYER UNSOLD');
             if (kickerEl) {
-                kickerEl.textContent = 'UNSOLD';
-            }
-            if (liveLabelEl) {
-                liveLabelEl.textContent = 'UNSOLD';
+                kickerEl.textContent = '';
             }
             if (bidValEl) {
-                bidValEl.textContent = '—';
+                bidValEl.textContent = '\u2014';
+                bidValEl.removeAttribute('data-n');
             }
+            show(incEl, false);
             show(liveBoxEl, true);
             show(baseWrapEl, false);
-            if (stampEl) {
-                stampEl.textContent = 'UNSOLD';
-            }
-            show(stampEl, true);
-            setTeam('', '', 'Unsold');
-            showPunch('unsold');
+            setTeam('', '', withdrawn ? 'WITHDRAWN' : 'UNSOLD', withdrawn ? 'Withdrawn' : 'Unsold');
+            showCeremony(p, 0, '', '', sealFresh, withdrawn ? 'withdrawn' : 'unsold');
             setTimerActive(false);
         } else if (bidAmt) {
             if (cardEl) {
                 cardEl.classList.add('has-live-bid');
             }
+            setSoldHead('');
             if (kickerEl) {
                 kickerEl.textContent = 'ON AUCTION';
             }
-            if (liveLabelEl) {
-                liveLabelEl.textContent = 'CURRENT BID';
-            }
-            if (bidValEl) {
-                bidValEl.textContent = pts(bidAmt);
-            }
+            paintIncrement(bidAmt, baseAmt);
+            paintAmount(bidValEl, bidAmt, false);
             show(liveBoxEl, true);
             show(baseWrapEl, baseAmt > 0);
-            show(stampEl, false);
             hidePunch();
-            setTeam(team.name, team.logo_url, 'Current Bid', 'Top Bidder');
+            setTeam(team.name, team.logo_url, 'CURRENT BID', 'Top Bidder');
             setTimerActive(true);
             if (uiState === 'BID_UPDATE') {
                 pulseBid();
             }
         } else {
+            setSoldHead('');
             if (kickerEl) {
                 kickerEl.textContent = 'ON AUCTION';
             }
-            if (bidValEl) {
-                bidValEl.textContent = pts(baseAmt);
-            }
+            paintAmount(bidValEl, baseAmt, false);
+            show(incEl, false);
             show(liveBoxEl, true);
             show(baseWrapEl, false);
-            show(stampEl, false);
             hidePunch();
-            setTeam('', '', '', 'Now Auctioning');
+            setTeam('', '', 'BASE PRICE', 'Now Auctioning');
             setTimerActive(true);
         }
+        armCard(uiState, p.id);
 
         if (uiState === 'PLAYER_INTRO') {
             if (introTimer) {
@@ -983,23 +1449,27 @@
         return Math.min(POLL_MAX, POLL_MIN * Math.pow(1.5, failStreak));
     }
 
-    function schedule() {
-        if (!pollAllowed) {
-            return;
-        }
-        pollTimer = setTimeout(poll, pollDelay());
-    }
-
     function poll() {
         if (!pollAllowed) {
             return;
         }
-        fetchOnce(schedule);
+        var started = Date.now();
+        pollTimer = true;
+        fetchOnce(function () {
+            if (!pollAllowed) {
+                pollTimer = null;
+                return;
+            }
+            var wait = Math.max(40, pollDelay() - (Date.now() - started));
+            pollTimer = setTimeout(poll, wait);
+        });
     }
 
     function startPoll() {
-        setConn(connState === 'CONNECTING' ? 'CONNECTING' : 'RECONNECTING');
         pollAllowed = true;
+        if (connState === 'OFFLINE') {
+            setConn('RECONNECTING');
+        }
         if (!pollTimer) {
             poll();
         }
@@ -1023,26 +1493,139 @@
     }
     scheduleFit();
 
+    function previewKind() {
+        var match = /(?:^|[?&])preview(?:=([a-z0-9]+))?(?:&|$)/.exec(location.search || '');
+        if (!match) {
+            return '';
+        }
+        return match[1] || 'cycle';
+    }
+
+    function previewPayload(kind, bid) {
+        function pad(n) { return (n < 10 ? '0' : '') + n; }
+        var soon = new Date(Date.now() + 8 * 1000);
+        var soonStamp = soon.getUTCFullYear() + '-' + pad(soon.getUTCMonth() + 1) + '-' + pad(soon.getUTCDate())
+            + ' ' + pad(soon.getUTCHours()) + ':' + pad(soon.getUTCMinutes()) + ':' + pad(soon.getUTCSeconds());
+        var photo = 'data:image/svg+xml,' + encodeURIComponent(
+            "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 480'><defs><linearGradient id='g' x1='0' y1='0' x2='0' y2='1'><stop stop-color='#1d4e9a'/><stop offset='1' stop-color='#07142e'/></linearGradient></defs><rect width='400' height='480' fill='url(#g)'/><circle cx='200' cy='168' r='78' fill='#e8d7b0'/><path d='M80 480c18-120 68-176 120-176s102 56 120 176' fill='#123a78'/></svg>"
+        );
+        var auctioning = kind === 'intro' || kind === 'bid';
+        var player = kind === 'idle' ? null : {
+            id: 9001,
+            sl_no: '18',
+            name: 'Arjun Menon',
+            role: 'All Rounder',
+            tier_name: 'Platinum',
+            tier_color: '#D9A441',
+            batting_style: 'Right Hand',
+            bowling_style: 'Right Arm Medium',
+            age: 24,
+            location: 'Kochi',
+            photo_url: photo,
+            base_price: 10000,
+            current_bid: auctioning ? (bid || 0) : (kind === 'sold' ? 120000 : 0),
+            sold_points: kind === 'sold' ? 120000 : 0,
+            state: auctioning ? 'auction' : kind,
+            team_name: kind === 'sold' ? 'KCB Capitals' : '',
+            current_bid_team: (kind === 'bid' || kind === 'sold') ? {id: 10, name: 'KCB Capitals', color: '#C91E32'} : null,
+            tournament_type: 'cricket',
+            icon_player: true
+        };
+        return {
+            seq: Date.now(),
+            player: player,
+            progress: {total: 80, sold: 14, unsold: 6, in_auction: 60, remaining: 66, current: 15},
+            wait_phase: kind === 'idle' ? {phase: 'about_to_begin', idle_headline: 'COMING UP NEXT'} : {},
+            recent_bids: [{player_name: 'Neeraj Kumar', team_name: 'Team ASR', points: 80000, kind: 'sold'}],
+            advertisers: [],
+            auction_meta: {sold_display_seconds: 8},
+            celebration_until: (kind === 'sold' || kind === 'unsold' || kind === 'withdrawn') ? soonStamp : ''
+        };
+    }
+
+    function showPreview(kind, bid) {
+        clearHoldTimer();
+        holdPlayerId = null;
+        holdKind = '';
+        holdUntil = 0;
+        if (kind === 'intro') {
+            lastPlayerId = null;
+            lastBid = null;
+        }
+        apply(previewPayload(kind, bid || 0));
+    }
+
+    function runPreview(which) {
+        document.documentElement.classList.add('is-preview');
+        setConn('CONNECTED');
+        var dock = document.createElement('div');
+        dock.className = 'ac-preview-dock';
+        var names = ['intro', 'bid', 'sold', 'unsold', 'withdrawn', 'idle'];
+        var timer = null;
+        names.forEach(function (name) {
+            var button = document.createElement('button');
+            button.type = 'button';
+            button.textContent = name;
+            button.addEventListener('click', function () {
+                if (timer) {
+                    clearInterval(timer);
+                    timer = null;
+                }
+                animKey = '';
+                lastState = '';
+                showPreview(name, name === 'bid' ? 70000 : 0);
+            });
+            dock.appendChild(button);
+        });
+        document.body.appendChild(dock);
+        if (which && which !== '1' && which !== 'cycle') {
+            showPreview(which, which === 'bid' ? 45000 : 120000);
+            return;
+        }
+        var order = [
+            ['intro', 0],
+            ['bid', 45000],
+            ['bid', 70000],
+            ['sold', 120000],
+            ['unsold', 0],
+            ['withdrawn', 0],
+            ['idle', 0]
+        ];
+        var step = 0;
+        function tick() {
+            var row = order[step % order.length];
+            animKey = row[0] === 'intro' ? '' : animKey;
+            showPreview(row[0], row[1]);
+            step += 1;
+        }
+        tick();
+        timer = setInterval(tick, 4600);
+    }
+
     window.__acApplyProjector = apply;
     log('Boot', window.YTOV_SLUG || '');
-    if (overlayStatus === 'missing') {
+    var preview = previewKind();
+    if (preview) {
+        runPreview(preview);
+    } else if (overlayStatus === 'missing') {
         apply({ player: null, wait_phase: {} });
     }
 
-    fetchOnce(function () {
+    if (!preview) fetchOnce(function () {
         if (sseOn && window.AuctionChampSSE && eventsUrl) {
             setConn('CONNECTING');
             window.AuctionChampSSE.bind({
                 url: eventsUrl,
                 apply: apply,
                 startPoll: startPoll,
-                stopPoll: stopPoll,
+                // Keep the short poll. SSE still applies a push immediately,
+                // but a quiet stream must not leave the points card behind.
+                stopPoll: function () {},
                 onStampExpiry: function () { fetchOnce(); },
             });
-        } else {
-            setConn('CONNECTED');
-            startPoll();
         }
+        setConn('CONNECTED');
+        startPoll();
     });
 
     (function bindWatchFullscreen() {

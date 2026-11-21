@@ -990,6 +990,7 @@ odoo.define('auction_module.TournamentSettingsUser', function (require) {
                     }),
                     this._btn('Live Board', this._liveBoardOpenOpts(d)),
                     this._btn('Bid Summary', this._bidSummaryOpenOpts(d)),
+                    this._btn('Squad View', {action: 'action_open_squad_display', icon: 'fa-th-list'}),
                     this._btn('YouTube overlay', {action: 'action_open_youtube_overlay', icon: 'fa-youtube-play'}),
                     this._btn('YouTube watch', {action: 'action_open_youtube_watch', icon: 'fa-play-circle'}),
                 ].join('')),
@@ -997,6 +998,7 @@ odoo.define('auction_module.TournamentSettingsUser', function (require) {
                     this._linkCard('Projector', u.projector, 'action_open_projector_link', '', '', 'tsu-mobile-disable'),
                     this._linkCard('Public live board', u.live_board, 'action_open_live_board', '', '', '', this._liveBoardOpenOpts(d)),
                     this._linkCard('Bid Summary', u.bid_summary, 'action_open_bid_summary', '', '', '', this._bidSummaryOpenOpts(d)),
+                    this._linkCard('Squad View', u.squad_view, 'action_open_squad_display'),
                     this._linkCard('YouTube overlay', u.youtube_overlay, 'action_open_youtube_overlay'),
                 '</div>',
                 '<div class="tsu-card tsu-field is-edit"><label>YouTube stream URL</label>' +

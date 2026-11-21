@@ -817,6 +817,19 @@
         if (incBtn) incBtn.disabled = !!(max && value >= max);
     }
 
+    function setBidInput(value) {
+        var input = document.getElementById('acLbBidInput');
+        if (input) input.value = value;
+        if (selectedTeam) validateCustom(selectedTeam, value);
+        var wrap = document.getElementById('acLbPresets');
+        if (!wrap) return;
+        var btns = wrap.querySelectorAll('.ac-livebid-preset');
+        for (var b = 0; b < btns.length; b++) {
+            var pv = parseInt(btns[b].getAttribute('data-preset'), 10) || 0;
+            btns[b].classList.toggle('is-on', pv === value);
+        }
+    }
+
     function openCustom(teamId) {
         if (actionsLocked()) return;
         var modal = modalEl();
@@ -1062,19 +1075,15 @@
             closeCustom();
             return;
         }
+        if (ev.target.closest('#acLbModalMaxBtn') && selectedTeam) {
+            var maxPts = Number(maxCall(selectedTeam) || 0);
+            if (maxPts > 0) setBidInput(maxPts);
+            return;
+        }
         var presetBtn = ev.target.closest('#acLbPresets [data-preset]');
         if (presetBtn && selectedTeam) {
             var pv = parseInt(presetBtn.getAttribute('data-preset'), 10) || 0;
-            var pin = document.getElementById('acLbBidInput');
-            if (pin) pin.value = pv;
-            validateCustom(selectedTeam, pv);
-            var wrap = document.getElementById('acLbPresets');
-            if (wrap) {
-                var btns = wrap.querySelectorAll('.ac-livebid-preset');
-                for (var b = 0; b < btns.length; b++) {
-                    btns[b].classList.toggle('is-on', btns[b] === presetBtn);
-                }
-            }
+            setBidInput(pv);
             return;
         }
         var modal = modalEl();

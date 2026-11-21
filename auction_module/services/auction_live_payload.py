@@ -621,6 +621,7 @@ def build_balance_payload(env, tournament):
         ('tournament_id', '=', tournament.id),
         ('team_id.tournament_id', '=', tournament.id),
     ])
+    auctions.mapped('team_id')
     auctions.mapped('player_ids.tier_id')
     auctions.mapped('tier_limit_ids.tier_id')
     auctions.mapped('auction_bid_slab_ids')
@@ -631,20 +632,44 @@ def build_balance_payload(env, tournament):
         [('tournament_id', '=', tournament.id), ('is_on_stage', '=', True)], limit=1
     )
     player_on_stage = on_stage if on_stage else None
+    db_name = env.cr.dbname
     teams_data = []
     for auction in auctions:
+        team = auction.team_id
         teams_data.append({
             'id': auction.id,
+            'team_id': team.id if team else 0,
+            'name': (team.name or '') if team else '',
+            'logo_url': (
+                _public_img_url(
+                    db_name, 'auction.team', team.id, 'logo', team.write_date,
+                ) if team else ''
+            ),
+            'total_point': auction.total_point or 0,
+            'max_players': auction.max_players or 0,
             'remaining_players_count': auction.remaining_players_count,
             'remaining_points': auction.remaining_points,
             'max_call': auction.get_max_bid_for_team(auction, player_on_stage),
         })
     buckets, counts = build_balance_player_buckets(env, tournament)
+    desc = ((tournament.description or '').strip() if tournament else '')
     return {
         'teams': teams_data,
         'player_counts': counts,
         'players': buckets,
         'sport': (tournament.tournament_type or 'cricket') if tournament else 'cricket',
+        # Squad View reads this same `bal` snapshot over the balance SSE socket.
+        'squad_meta': {
+            'name': (tournament.name or '') if tournament else '',
+            'edition': desc if desc and len(desc) <= 32 else '',
+            'sport': (tournament.tournament_type or 'cricket') if tournament else 'cricket',
+            'logo_url': (
+                _public_img_url(
+                    db_name, 'auction.tournament', tournament.id, 'logo',
+                    tournament.write_date,
+                ) if tournament and _has_binary(tournament, 'logo') else ''
+            ),
+        },
     }
 
 
@@ -758,6 +783,7 @@ def build_balance_player_buckets(env, tournament, db_name=None):
     players.mapped('other_attribute_ids')
     sold_ids = [p.id for p in players if p.state == 'sold']
     points_by_pid = {}
+    sold_seq_by_pid = {}
     if sold_ids:
         lines = env['auction.auction.player'].sudo().search([
             ('player_id', 'in', sold_ids),
@@ -765,6 +791,8 @@ def build_balance_player_buckets(env, tournament, db_name=None):
         ], order='id asc')
         for line in lines:
             points_by_pid[line.player_id.id] = line.points or 0
+            # Later auction line = later sale. Squad View queues newest on the left.
+            sold_seq_by_pid[line.player_id.id] = line.id
 
     auction_rows = []
     for player in players:
@@ -796,6 +824,7 @@ def build_balance_player_buckets(env, tournament, db_name=None):
                 ) if team and _has_binary(team, 'logo') else ''
             ),
             'points': points_by_pid.get(player.id, 0) if player.state == 'sold' else 0,
+            'sold_seq': sold_seq_by_pid.get(player.id, 0) if player.state == 'sold' else 0,
             'base_price': player.base_price or 0,
             'on_stage': bool(player.is_on_stage) if player.state == 'auction' else False,
             'contact': '' if mystery else (player.contact or ''),

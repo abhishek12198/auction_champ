@@ -1915,6 +1915,52 @@ class Auction(http.Controller):
         return request.make_response(data, headers)
 
     @http.route(
+        ['/<string:db_name>/<string:tournament_slug>/auction/squad'],
+        type='http', auth='none', website=False,
+    )
+    def auction_squad_screen(self, db_name, tournament_slug, **kwargs):
+        """Full-screen squad board. Live updates come from the balance Redis socket."""
+        with self._with_db(db_name) as ok:
+            if not ok:
+                return self._not_found()
+            Tournament = request.env['auction.tournament'].sudo().with_context(
+                auction_skip_tournament_security=True,
+            )
+            tournament = Tournament.search([('slug', '=', tournament_slug)], limit=1)
+            if not tournament:
+                return self._not_found()
+            try:
+                from odoo.addons.auction_module.services.auction_live_snapshot_service import (
+                    get_or_rebuild_snapshot,
+                )
+                get_or_rebuild_snapshot(request.env, tournament, 'bal')
+            except Exception:
+                _logger.debug('squad view snapshot warm failed', exc_info=True)
+            desc = (tournament.description or '').strip()
+            edition = desc if desc and len(desc) <= 32 else ''
+            logo_url = ''
+            if tournament.with_context(bin_size=True).logo:
+                logo_url = '/%s/auction/public/image/auction.tournament/%s/logo' % (
+                    db_name, tournament.id,
+                )
+            sse_enabled = request.env['ir.config_parameter'].sudo().get_param(
+                'auction.sse.enabled', 'False'
+            ) in ('True', 'true', '1')
+            html = request.render('auction_module.auction_squad_screen', {
+                'tournament': tournament,
+                'db_name': db_name,
+                'tournament_slug': tournament_slug,
+                'edition': edition,
+                'logo_url': logo_url,
+                'sse_enabled': sse_enabled,
+            }, lazy=False)
+        return request.make_response(html, [
+            ('Content-Type', 'text/html; charset=utf-8'),
+            ('Cache-Control', 'private, max-age=0, must-revalidate'),
+            ('X-Frame-Options', 'SAMEORIGIN'),
+        ])
+
+    @http.route(
         ['/<string:db_name>/<string:tournament_slug>/auction/show/team/balance/players.json'],
         type='http', auth='none', website=False,
     )
@@ -8577,6 +8623,8 @@ def _pj_progress(tournament, current_player=None, env=None):
         'total': total,
         'label': label,
         'sold': sold,
+        'unsold': counts['unsold'],
+        'in_auction': counts['auction'],
         'remaining': max(total - sold, 0),
     }
 

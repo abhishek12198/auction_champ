@@ -170,11 +170,20 @@ def _snapshot_schema_ok(kind, payload):
         players = payload.get('players')
         if not isinstance(players, dict):
             return False
+        # Squad View shares this snapshot. A payload from before team identity
+        # was added must rebuild once so the socket carries names and purses.
+        if 'squad_meta' not in payload:
+            return False
+        teams = payload.get('teams') or []
+        if teams and isinstance(teams[0], dict) and 'name' not in teams[0]:
+            return False
         for bucket in ('sold', 'unsold', 'auction'):
             rows = players.get(bucket) or []
             if rows and not isinstance(rows[0], dict):
                 return False
             if rows and 'attrs' not in rows[0]:
+                return False
+            if bucket == 'sold' and rows and 'sold_seq' not in rows[0]:
                 return False
             for row in rows[:8]:
                 photo = row.get('photo_url') or ''
@@ -184,6 +193,10 @@ def _snapshot_schema_ok(kind, payload):
         if not isinstance(payload.get('players'), list):
             return False
         if 'count' not in payload:
+            return False
+    if kind == 'pj':
+        progress = payload.get('progress') or {}
+        if isinstance(progress, dict) and progress.get('total') and 'in_auction' not in progress:
             return False
     if kind in ('pj', 'lb'):
         player = payload.get('player') if kind == 'pj' else payload.get('current_player')

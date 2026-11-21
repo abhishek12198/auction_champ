@@ -1050,6 +1050,34 @@
                                         </group>
                                     </group>
                                 </div>
+
+                                <div class="o_at_presentation_section o_at_helper_links">
+                                    <separator string="Squad View"/>
+                                    <group col="2">
+                                        <group string="Share URL">
+                                            <field name="squad_view_url" widget="CopyClipboardChar"
+                                                   readonly="1" string="Squad View URL"/>
+                                        </group>
+                                        <group string="How it works">
+                                            <div class="o_at_helper_side" colspan="2">
+                                                <div class="o_at_presentation_help">
+                                                    Open this on a TV or projector to show every team
+                                                    and its squad at once. When a player is sold, that
+                                                    team's row updates from the live auction socket
+                                                    without reloading the page.
+                                                </div>
+                                                <div class="o_at_helper_actions"
+                                                     attrs="{'invisible': [('squad_view_url', '=', False)]}">
+                                                    <button name="action_open_squad_display"
+                                                            type="object"
+                                                            string="Squad View"
+                                                            class="o_at_helper_btn o_at_helper_btn_squad"
+                                                            icon="fa-th-list"/>
+                                                </div>
+                                            </div>
+                                        </group>
+                                    </group>
+                                </div>
                             </page>
 
                             <!-- Tab: Poster & Payment Images -->

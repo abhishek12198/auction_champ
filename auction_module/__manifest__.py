@@ -126,6 +126,7 @@
         'views/auction_rules_poster_template.xml',
         'views/auction_show_balance_tracker.xml',
         'views/auction_show_balance_template1.xml',
+        'views/auction_squad_screen.xml',
         'views/auction_show_balance_template1_pistah.xml',
         'views/auction_show_balance_template1_blackberry.xml',
         'report/auction_report_template.xml',
