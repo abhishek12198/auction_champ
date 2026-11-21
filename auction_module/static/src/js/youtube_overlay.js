@@ -319,7 +319,100 @@
                 photoReady[url] = true;
             };
             im.src = url;
+            if (im.complete && im.naturalWidth) {
+                photoReady[url] = true;
+            }
         } catch (e) { /* ignore */ }
+    }
+
+    function absUrl(url) {
+        try {
+            return new URL(url, window.location.href).href;
+        } catch (e) {
+            return String(url || '');
+        }
+    }
+
+    function photoMatches(img, url) {
+        if (!img || !url || !img.complete || !img.naturalWidth) {
+            return false;
+        }
+        var cur = img.currentSrc || img.src || '';
+        return !!cur && absUrl(cur) === absUrl(url);
+    }
+
+    function swapPhoto(img, placeholder, url, label) {
+        if (placeholder && label != null) {
+            placeholder.textContent = label;
+        }
+        if (!img) {
+            return;
+        }
+        if (!url) {
+            img.onload = null;
+            img.onerror = null;
+            img.removeAttribute('src');
+            img.removeAttribute('data-src-set');
+            img.classList.remove('is-on');
+            show(placeholder, true);
+            return;
+        }
+        if (img.getAttribute('data-src-set') === url && photoMatches(img, url)) {
+            img.classList.add('is-on');
+            img.removeAttribute('hidden');
+            show(placeholder, false);
+            return;
+        }
+        var want = url;
+        function reveal() {
+            if (img.getAttribute('data-src-set') !== want || !photoMatches(img, want)) {
+                return;
+            }
+            photoReady[want] = true;
+            img.classList.add('is-on');
+            img.removeAttribute('hidden');
+            show(placeholder, false);
+        }
+        img.classList.remove('is-on');
+        show(placeholder, true);
+        img.onload = function () {
+            photoReady[want] = true;
+            reveal();
+        };
+        img.onerror = function () {
+            if (img.getAttribute('data-src-set') !== want) {
+                return;
+            }
+            img.classList.remove('is-on');
+            show(placeholder, true);
+        };
+        img.setAttribute('data-src-set', want);
+        if (!photoMatches(img, want)) {
+            img.removeAttribute('src');
+        }
+        if (!photoReady[want]) {
+            preload(want);
+        }
+        img.src = want;
+        reveal();
+    }
+
+    function warmPhotos(result) {
+        var player = result && result.player;
+        if (player && player.photo_url) {
+            preload(player.photo_url);
+        }
+        if (player && player.team_logo_url) {
+            preload(player.team_logo_url);
+        }
+        var bidTeam = player && player.current_bid_team;
+        if (bidTeam && bidTeam.logo_url) {
+            preload(bidTeam.logo_url);
+        }
+        var upcoming = (result && result.next_photo_urls) || [];
+        for (var i = 0; i < upcoming.length; i++) {
+            preload(upcoming[i]);
+        }
     }
 
     function readInset(name) {
@@ -364,32 +457,10 @@
     }
 
     function setPhoto(url, name) {
-        if (photoPhEl) {
-            photoPhEl.textContent = initialOf(name);
+        if (photoEl) {
+            photoEl.alt = name || '';
         }
-        if (!photoEl) {
-            return;
-        }
-        photoEl.alt = name || '';
-        if (!url) {
-            photoEl.removeAttribute('src');
-            photoEl.removeAttribute('data-src-set');
-            photoEl.classList.remove('is-on');
-            show(photoPhEl, true);
-            return;
-        }
-        photoEl.onerror = function () {
-            photoEl.removeAttribute('src');
-            photoEl.classList.remove('is-on');
-            show(photoPhEl, true);
-        };
-        if (photoEl.getAttribute('data-src-set') !== url) {
-            photoEl.setAttribute('data-src-set', url);
-            photoEl.src = url;
-        }
-        photoEl.classList.add('is-on');
-        show(photoPhEl, false);
-        preload(url);
+        swapPhoto(photoEl, photoPhEl, url || '', initialOf(name));
     }
 
     function setStageLabel(word, teamWord) {
@@ -502,49 +573,7 @@
 
     function setCeremonyPhoto(photo, ph, player) {
         var url = player && player.photo_url ? player.photo_url : '';
-        if (!photo) {
-            return;
-        }
-        if (!url) {
-            photo.onload = null;
-            photo.onerror = null;
-            photo.removeAttribute('src');
-            photo.removeAttribute('data-src-set');
-            photo.classList.remove('is-on');
-            show(ph, true);
-            return;
-        }
-        if (photo.getAttribute('data-src-set') === url && photo.classList.contains('is-on') && photo.complete && photo.naturalWidth) {
-            show(ph, false);
-            return;
-        }
-        photo.classList.remove('is-on');
-        show(ph, true);
-        photo.onload = function () {
-            if (photo.getAttribute('data-src-set') !== url) {
-                return;
-            }
-            photoReady[url] = true;
-            photo.classList.add('is-on');
-            show(ph, false);
-        };
-        photo.onerror = function () {
-            if (photo.getAttribute('data-src-set') !== url) {
-                return;
-            }
-            photo.classList.remove('is-on');
-            show(ph, true);
-        };
-        photo.setAttribute('data-src-set', url);
-        if (!photoReady[url]) {
-            preload(url);
-        }
-        photo.src = url;
-        if (photo.complete && photo.naturalWidth) {
-            photoReady[url] = true;
-            photo.classList.add('is-on');
-            show(ph, false);
-        }
+        swapPhoto(photo, ph, url, initialOf(player && player.name));
     }
 
     function hideCeremony() {
@@ -626,10 +655,14 @@
         setCeremonyPhoto(photo, ph, player);
         if (logo) {
             if (logoUrl) {
-                logo.src = logoUrl;
                 logo.removeAttribute('hidden');
-                show(logoPh, false);
+                swapPhoto(logo, logoPh, logoUrl, teamInitials(teamName));
             } else {
+                logo.onload = null;
+                logo.onerror = null;
+                logo.removeAttribute('src');
+                logo.removeAttribute('data-src-set');
+                logo.classList.remove('is-on');
                 logo.setAttribute('hidden', 'hidden');
                 if (logoPh) {
                     logoPh.textContent = teamInitials(teamName);
@@ -1210,6 +1243,7 @@
             }
         }
         lastKnown = result;
+        warmPhotos(result);
 
         var p = result.player;
         var wait = result.wait_phase || {};

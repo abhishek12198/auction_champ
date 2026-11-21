@@ -22,7 +22,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="1"/>
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&amp;family=Exo+2:wght@500;600;700;800;900&amp;family=Barlow+Condensed:wght@600;700&amp;display=swap" rel="stylesheet"/>
-  <link rel="stylesheet" t-att-href="'/auction_module/static/src/css/youtube_overlay.css?v=2.3.8obs'"/>
+  <link rel="stylesheet" t-att-href="'/auction_module/static/src/css/youtube_overlay.css?v=2.3.9obs'"/>
 </head>
 <body>
   <t t-if="page == 'watch'">
@@ -232,7 +232,7 @@
     <t t-set="pu_tournament" t-value="tournament"/>
   </t>
   <script src="/auction_module/static/src/js/auction_sse_client.js"/>
-  <script src="/auction_module/static/src/js/youtube_overlay.js?v=2.3.7obs"/>
+  <script src="/auction_module/static/src/js/youtube_overlay.js?v=2.3.9obs"/>
 </body>
 </html>
 </template>

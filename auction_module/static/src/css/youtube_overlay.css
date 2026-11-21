@@ -1093,6 +1093,7 @@ html[data-page="watch"] .ytov-watch-landscape { display: none; bottom: 64px; }
     object-fit: contain;
     background: #07152f;
 }
+.ytov-cer-logo:not(.is-on) { opacity: 0; }
 .ytov-cer-logo-ph {
     display: flex;
     align-items: center;
