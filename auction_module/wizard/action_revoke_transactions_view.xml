@@ -60,11 +60,11 @@
                     </div>
 
                     <div class="rt-card rt-card-sold"
-                         title="Recall all sold players. Team assignments and sale amounts for those players are reversed.">
+                         title="Recall sold players who are not icon players. Icon players already assigned to a team stay with that team.">
                         <div class="rt-card-icon"><i class="fa fa-gavel"/></div>
                         <div class="rt-card-copy">
                             <div class="rt-card-title">Restore Sold Players?</div>
-                            <div class="rt-card-sub">Recall sold players and reverse their sale</div>
+                            <div class="rt-card-sub">Recall sold players, except icon players already on a team</div>
                         </div>
                         <span class="rt-count">
                             <field name="sold_count" readonly="1" nolabel="1"/>

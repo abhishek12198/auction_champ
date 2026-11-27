@@ -65,8 +65,9 @@ class AuctionRevokeTransactionsWizard(models.TransientModel):
     revoke_sold = fields.Boolean(
         string='Restore Sold Players?',
         default=True,
-        help='Recall all sold players back to In Auction. Team assignments and '
-             'sale amounts for those players are reversed.',
+        help='Recall sold players who are not icon players. Icon players already '
+             'assigned to a team stay with that team. Team assignments and sale '
+             'amounts for the recalled players are reversed.',
     )
     revoke_unsold = fields.Boolean(
         string='Restore Unsold Players',
@@ -109,19 +110,27 @@ class AuctionRevokeTransactionsWizard(models.TransientModel):
                 ('tournament_id', '=', tid), ('is_on_stage', '=', True),
             ])
             wiz.history_count = History.search_count([('tournament_id', '=', tid)])
-            wiz.sold_count = Player.search_count([
-                ('tournament_id', '=', tid), ('state', '=', 'sold'),
-            ])
-            wiz.unsold_count = Player.search_count([
-                ('tournament_id', '=', tid), ('state', '=', 'unsold'),
-            ])
+            wiz.sold_count = Player.search_count(
+                wiz._restorable_domain('sold')
+            )
+            wiz.unsold_count = Player.search_count(
+                wiz._restorable_domain('unsold')
+            )
+
+    def _restorable_domain(self, state):
+        """Players this wizard may move. Icon players stay with their team."""
+        self.ensure_one()
+        return [
+            ('tournament_id', '=', self.tournament_id.id),
+            ('state', '=', state),
+            ('icon_player', '=', False),
+        ]
 
     def _players(self, state):
         self.ensure_one()
-        return self.env['auction.team.player'].sudo().search([
-            ('tournament_id', '=', self.tournament_id.id),
-            ('state', '=', state),
-        ])
+        return self.env['auction.team.player'].sudo().search(
+            self._restorable_domain(state)
+        )
 
     def _clear_tournament_live_bids(self, tournament):
         """Reset live bids on this tournament's players to default (0 / no team).
