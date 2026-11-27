@@ -27,14 +27,23 @@
         });
     }
 
+    function registrationTokenKey() {
+        return 'acRegToken:' + (location.pathname || '');
+    }
+    function clearStoredRegistrationToken() {
+        try { sessionStorage.removeItem(registrationTokenKey()); } catch (e) {}
+    }
+    // Success hides the form, so the guard below never runs there. Drop the
+    // token on that page or the next registration is saved as the first player.
+    if (document.querySelector('.reg-success-body')) {
+        clearStoredRegistrationToken();
+    }
+
     function installRegistrationGuard(regForm) {
         if (!regForm || regForm.getAttribute('data-reg-guard') === '1') return;
         regForm.setAttribute('data-reg-guard', '1');
         var locked = false;
 
-        function tokenKey() {
-            return 'acRegToken:' + (location.pathname || '');
-        }
         function freshToken() {
             var token = 'r' + Date.now().toString(36)
                 + Math.random().toString(36).slice(2)
@@ -55,18 +64,23 @@
             input.value = token;
         }
         function remember(token) {
-            try { sessionStorage.setItem(tokenKey(), token); } catch (e) {}
+            try { sessionStorage.setItem(registrationTokenKey(), token); } catch (e) {}
             ensureInput(token);
         }
         function currentToken() {
             var token = '';
-            try { token = sessionStorage.getItem(tokenKey()) || ''; } catch (e) {}
+            try { token = sessionStorage.getItem(registrationTokenKey()) || ''; } catch (e) {}
             if (!/^[A-Za-z0-9_-]{16,64}$/.test(token)) token = freshToken();
             remember(token);
             return token;
         }
-        if (/[?&]success=1(?:&|$)/.test(location.search || '')) {
-            try { sessionStorage.removeItem(tokenKey()); } catch (e) {}
+        if (/[?&]another=1(?:&|$)/.test(location.search || '')) {
+            clearStoredRegistrationToken();
+            try {
+                var freshUrl = new URL(location.href);
+                freshUrl.searchParams.delete('another');
+                history.replaceState(null, '', freshUrl.pathname + freshUrl.search + freshUrl.hash);
+            } catch (e2) {}
         }
         currentToken();
         regForm.addEventListener('reset', function () {

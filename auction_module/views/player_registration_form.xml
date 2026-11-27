@@ -622,7 +622,7 @@
 
                 <t t-if="tournament_slug">
                     <div class="reg-success-another">
-                        <a t-att-href="reg_path">
+                        <a t-attf-href="#{reg_path}?another=1">
                             <!-- Plus icon -->
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
                                  viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -3149,7 +3149,7 @@
 </script>
 <script src="/auction_module/static/src/js/auction_sse_client.js"></script>
 <script src="/auction_module/static/src/js/player_registration_roster.js?v=1.5.661"></script>
-<script src="/auction_module/static/src/js/player_registration_steps.js?v=1.5.988"></script>
+<script src="/auction_module/static/src/js/player_registration_steps.js?v=1.5.989"></script>
 
 </body>
 </html>

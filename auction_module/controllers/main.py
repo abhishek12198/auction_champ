@@ -7581,8 +7581,12 @@ class Auction(http.Controller):
                     return werkzeug.utils.redirect(register_path, 303)
                 posted_token = _registration_submit_token(request.httprequest.form)
                 if posted_token:
+                    posted_name = (request.httprequest.form.get('name') or '').strip()
+                    posted_contact = _normalize_registration_contact(
+                        request.httprequest.form.get('contact') or ''
+                    )
                     already = _find_recent_registration(
-                        request.env, tournament, posted_token, '', '',
+                        request.env, tournament, posted_token, posted_name, posted_contact,
                     )
                     if already:
                         from urllib.parse import urlencode
@@ -9555,24 +9559,45 @@ def _registration_advisory_lock(cr, tournament_id, token, name, contact):
         cr.execute('SELECT pg_advisory_xact_lock(%s, %s)', (k1, k2))
 
 
+def _registration_same_person(player, name, contact):
+    """True when this submit is the same player as an existing registration."""
+    if not player or not player.exists():
+        return False
+    posted_name = (name or '').strip().lower()
+    if not posted_name or posted_name != (player.name or '').strip().lower():
+        return False
+    posted_contact = _normalize_registration_contact(contact or '')
+    if not posted_contact:
+        return False
+    return bool(
+        set(_registration_contact_variants(player.contact or ''))
+        & set(_registration_contact_variants(posted_contact))
+    )
+
+
 def _find_recent_registration(env, tournament, token, name, contact):
-    """Player already stored for this form, or the same person moments ago."""
+    """Player already stored for this same submit, or the same person moments ago.
+
+    A token is only reused when the posted name and mobile match that player.
+    Register Another Player used to keep the previous token, so a different
+    person was redirected back to the first card and never created.
+    """
     Player = env['auction.team.player'].sudo()
     if token and 'registration_token' in Player._fields:
         found = Player.search([
             ('tournament_id', '=', tournament.id),
             ('registration_token', '=', token),
         ], limit=1)
-        if found:
+        if found and _registration_same_person(found, name, contact):
             return found
     norm_name = (name or '').strip()
-    norm_contact = contact or ''
+    norm_contact = _normalize_registration_contact(contact or '')
     if not norm_name or not norm_contact:
         return Player.browse()
     cutoff = fields.Datetime.now() - timedelta(seconds=120)
     return Player.search([
         ('tournament_id', '=', tournament.id),
-        ('contact', '=', norm_contact),
+        ('contact', 'in', _registration_contact_variants(norm_contact)),
         ('name', '=ilike', norm_name),
         ('create_date', '>=', fields.Datetime.to_string(cutoff)),
     ], order='id desc', limit=1)
@@ -9583,6 +9608,16 @@ def _create_registration_player(env, tournament, vals):
     token = vals.get('registration_token') or False
     name = vals.get('name') or ''
     contact = vals.get('contact') or ''
+    Player = env['auction.team.player'].sudo()
+    if token and 'registration_token' in Player._fields:
+        owner = Player.search([
+            ('tournament_id', '=', tournament.id),
+            ('registration_token', '=', token),
+        ], limit=1)
+        if owner and not _registration_same_person(owner, name, contact):
+            vals = dict(vals)
+            vals.pop('registration_token', None)
+            token = False
     _registration_advisory_lock(env.cr, tournament.id, token, name, contact)
     existing = _find_recent_registration(env, tournament, token, name, contact)
     if existing:
@@ -9828,7 +9863,16 @@ def _build_player_vals_from_post(request, tournament, locked_tier=None):
 
     reg_token = _registration_submit_token(post)
     if reg_token and 'registration_token' in Player._fields:
-        vals['registration_token'] = reg_token
+        owner = Player.sudo().search([
+            ('tournament_id', '=', tournament.id),
+            ('registration_token', '=', reg_token),
+        ], limit=1) if tournament else Player.browse()
+        # Stale token from the previous success page must not collide with
+        # the unique (tournament, token) index or attach this player to them.
+        if owner and not _registration_same_person(owner, name, contact):
+            reg_token = False
+        if reg_token:
+            vals['registration_token'] = reg_token
 
     # Jersey section (only if enabled for this tournament)
     if tournament and tournament.enable_jersey_section:
